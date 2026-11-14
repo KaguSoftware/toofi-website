@@ -1,26 +1,780 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ==========================================================================
+   Design tokens — see docs/FRONTEND_GUIDE.md
+   Neutral palette + ONE accent. Light by default, dark via prefers-color-scheme.
+   Everything visual should reference these variables (or the Tailwind names
+   mapped from them below), never raw hex values.
+   ========================================================================== */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  color-scheme: light dark;
+
+  /* Surfaces & ink */
+  --bg: #ffffff;
+  --bg-subtle: #f5f5f7; /* alternate section background */
+  --surface: #ffffff; /* cards */
+  --fg: #1d1d1f;
+  --fg-muted: #6e6e73; /* 5.0:1 on --bg */
+  --line: rgb(0 0 0 / 0.1); /* hairlines */
+
+  /* Accent (the only colour). --accent fills buttons; --accent-ink is for text/links. */
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --accent-ink: #0066cc;
+  --on-accent: #ffffff;
+
+  /* Translucent material (header, menus). Heavier = more structural. */
+  --material: rgb(255 255 255 / 0.72);
+  --material-edge: rgb(255 255 255 / 0.5); /* bright top edge: light catching glass */
+  --material-blur: 20px;
+  --focus: var(--accent);
+
+  /* Type — system stack first (SF Pro on Apple), Inter (next/font) cross-platform. */
+  --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", var(--font-inter), system-ui,
+    "Segoe UI", sans-serif;
+  --font-mono-system: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Spacing: 4px base grid, in rem so layout scales with the user's text size. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --section-y: clamp(4rem, 9vw, 8rem);
+  --gutter: clamp(1.25rem, 4vw, 2rem);
+  --container: 72rem; /* 1152px */
+  --container-narrow: 44rem; /* reading width */
+  --header-h: 3.5rem;
+
+  /* Radii */
+  --radius-sm: 0.5rem;
+  --radius: 0.875rem;
+  --radius-lg: 1.5rem;
+  --radius-pill: 999px;
+
+  /* Shadows: larger surfaces read thicker */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 1px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.08), 0 2px 6px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 24px 64px rgb(0 0 0 / 0.14), 0 4px 12px rgb(0 0 0 / 0.06);
+
+  /* Motion. Springs as linear() easings: critically damped (default) and 0.8-damped
+     (only for momentum / physical interactions). Durations are the *visual* settle time. */
+  --ease-spring: linear(0, 0.055, 0.1734, 0.3101, 0.4422, 0.5591, 0.6575, 0.7374, 0.8009, 0.8503, 0.8883, 0.9172, 0.9389, 0.9551, 0.9672, 0.9761, 0.9826, 0.9874, 0.9909, 0.9935, 0.9953, 0.9966, 0.9976, 0.9983, 1);
+  --ease-spring-bouncy: linear(0, 0.0694, 0.2212, 0.3965, 0.5618, 0.7015, 0.8104, 0.8901, 0.9447, 0.9796, 1.0001, 1.0106, 1.0147, 1.0149, 1.0132, 1.0107, 1.008, 1.0057, 1.0038, 1.0023, 1.0013, 1.0006, 1.0002, 0.9999, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-press: 100ms; /* respond instantly */
+  --dur-fast: 200ms;
+  --dur-spring: 500ms;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #000000;
+    --bg-subtle: #111113;
+    --surface: #1c1c1e;
+    --fg: #f5f5f7;
+    --fg-muted: #a1a1a6; /* 7.9:1 on --bg */
+    --line: rgb(255 255 255 / 0.14);
+    --accent: #0071e3;
+    --accent-hover: #147ce5;
+    --accent-ink: #2997ff;
+    --material: rgb(22 22 24 / 0.72);
+    --material-edge: rgb(255 255 255 / 0.08);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 8px 24px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 24px 64px rgb(0 0 0 / 0.7);
   }
 }
 
+/* Tailwind v4 mapping: bg-bg, text-fg, text-muted, border-line, bg-accent, rounded-card … */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --font-sans: var(--font-system);
+  --font-mono: var(--font-mono-system);
+  --radius-card: var(--radius);
+  --radius-panel: var(--radius-lg);
+  --shadow-card: var(--shadow-md);
+  --ease-spring: var(--ease-spring);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-system);
+  font-size: 1.0625rem; /* 17px — Apple's body size */
+  line-height: 1.5;
+  letter-spacing: 0;
+  font-optical-sizing: auto;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+/* ==========================================================================
+   Type scale. Size, weight, leading AND tracking move together:
+   big text → tight leading + negative tracking; small text → looser, slight positive.
+   ========================================================================== */
+
+.t-display {
+  font-size: clamp(2.75rem, 7.5vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.t-title {
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.t-headline {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.t-lead {
+  font-size: clamp(1.1875rem, 2vw, 1.5rem);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+  text-wrap: pretty;
+}
+.t-body {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+.t-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  letter-spacing: 0.005em;
+  color: var(--fg-muted);
+}
+.t-eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.04em; /* small text: positive tracking */
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+/* ==========================================================================
+   Layout primitives (see components/ui)
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.container[data-size="narrow"] {
+  max-width: calc(var(--container-narrow) + var(--gutter) * 2);
+}
+
+.section {
+  padding-block: var(--section-y);
+}
+.section[data-tone="subtle"] {
+  background: var(--bg-subtle);
+}
+.section[data-pad="none-top"] {
+  padding-top: 0;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* ==========================================================================
+   Buttons — feedback on press (pointer-down), spring back on release.
+   Use <Button> or className={buttonClass({ variant })} (e.g. on <c.Link>).
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0.5rem 1.4rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--dur-spring) var(--ease-spring),
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+.btn:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-press), var(--dur-fast), var(--dur-fast);
+}
+.btn[data-size="sm"],
+.btn-sm {
+  min-height: 2.25rem;
+  padding: 0.25rem 1rem;
+  font-size: 0.9375rem;
+}
+.btn[data-variant="primary"],
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.btn[data-variant="secondary"],
+.btn-secondary {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  color: var(--fg);
+}
+.btn[data-variant="ghost"],
+.btn-ghost {
+  background: transparent;
+  color: var(--accent-ink);
+  padding-inline: 0.5rem;
+}
+.btn[data-variant="inverse"],
+.btn-inverse {
+  background: var(--bg);
+  color: var(--fg);
+}
+@media (hover: hover) {
+  .btn[data-variant="primary"]:hover,
+  .btn-primary:hover {
+    background: var(--accent-hover);
+  }
+  .btn[data-variant="secondary"]:hover,
+  .btn-secondary:hover {
+    background: color-mix(in srgb, var(--fg) 14%, transparent);
+  }
+  .btn[data-variant="ghost"]:hover,
+  .btn-ghost:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+
+/* Inline text link used in footer / body chrome */
+.link-subtle {
+  color: var(--fg-muted);
+  text-decoration: none;
+  transition: color var(--dur-fast) ease;
+}
+@media (hover: hover) {
+  .link-subtle:hover {
+    color: var(--fg);
+  }
+}
+
+/* ==========================================================================
+   Site chrome
+   ========================================================================== */
+
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--dur-spring) var(--ease-spring);
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* Translucent sticky material. Content scrolls underneath. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-h);
+  background: var(--material);
+  -webkit-backdrop-filter: blur(var(--material-blur)) saturate(180%);
+  backdrop-filter: blur(var(--material-blur)) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--material-edge),
+    0 1px 0 var(--line);
+}
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+.site-brand {
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.nav-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.75rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-toggle__bars {
+  position: relative;
+  width: 1.125rem;
+  height: 0.5625rem;
+}
+.nav-toggle__bars::before,
+.nav-toggle__bars::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform var(--dur-spring) var(--ease-spring);
+}
+.nav-toggle__bars::before {
+  top: 0;
+}
+.nav-toggle__bars::after {
+  bottom: 0;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars::before {
+  transform: translateY(0.1875rem) rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars::after {
+  transform: translateY(-0.1875rem) rotate(-45deg);
+}
+
+/* Mobile: panel drops from the header (enter and exit along the same path,
+   origin anchored top-right at the toggle). It "materialises": blur + scale + fade. */
+.nav-panel {
+  position: absolute;
+  top: calc(var(--header-h) + 0.5rem);
+  right: var(--gutter);
+  left: var(--gutter);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--material);
+  -webkit-backdrop-filter: blur(calc(var(--material-blur) * 1.5)) saturate(180%);
+  backdrop-filter: blur(calc(var(--material-blur) * 1.5)) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--material-edge),
+    0 0 0 1px var(--line),
+    var(--shadow-lg);
+  transform-origin: top right;
+  opacity: 0;
+  visibility: hidden; /* removes closed links from tab order + a11y tree */
+  transform: scale(0.96) translateY(-0.5rem);
+  filter: blur(6px);
+  transition:
+    transform var(--dur-spring) var(--ease-spring),
+    opacity var(--dur-fast) ease,
+    filter var(--dur-fast) ease,
+    visibility 0s linear var(--dur-fast);
+}
+.nav-panel[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  filter: none;
+  transition-delay: 0s;
+}
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nav-list a {
+  display: block;
+  padding: 0.75rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-decoration: none;
+}
+
+@media (min-width: 48rem) {
+  .nav-toggle {
+    display: none;
+  }
+  .nav-panel {
+    position: static;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .nav-list {
+    flex-direction: row;
+    gap: var(--space-1);
+  }
+  .nav-list a {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--fg-muted);
+    transition: color var(--dur-fast) ease;
+  }
+}
+@media (min-width: 48rem) and (hover: hover) {
+  .nav-list a:hover {
+    color: var(--fg);
+  }
+}
+.nav-list a[aria-current="page"] {
+  color: var(--fg);
+}
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: var(--bg-subtle);
+  padding-block: var(--space-12) var(--space-8);
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+.site-footer__top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  justify-content: space-between;
+}
+.site-footer__social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-footer__bottom {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   Page templates
+   ========================================================================== */
+
+.hero {
+  padding-block: clamp(3.5rem, 9vw, 7rem) clamp(2rem, 5vw, 4rem);
+  text-align: center;
+}
+.hero__body {
+  max-width: 36rem;
+  margin: var(--space-6) auto 0;
+}
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  justify-content: center;
+  margin-top: var(--space-8);
+}
+.hero__media {
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-lg);
+  background: var(--bg-subtle);
+}
+.hero__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grid-cards {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cta-band {
+  text-align: center;
+  padding: clamp(3rem, 7vw, 5.5rem) var(--gutter);
+  border-radius: var(--radius-lg);
+  background: var(--fg);
+  color: var(--bg);
+}
+.cta-band .t-lead {
+  color: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.details {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+.details > * {
+  border-bottom: 1px solid var(--line);
+}
+.detail {
+  display: grid;
+  gap: var(--space-1) var(--space-8);
+  padding-block: var(--space-4);
+}
+@media (min-width: 40rem) {
+  .detail {
+    grid-template-columns: 12rem 1fr;
+    align-items: baseline;
+  }
+}
+.detail__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: var(--fg-muted);
+}
+
+.skeleton {
+  border-radius: var(--radius);
+  background: var(--bg-subtle);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ==========================================================================
+   Rich-text prose — styles content rendered by RichTextView.
+   Usage: <c.RichText className="prose" />
+   ========================================================================== */
+
+.prose {
+  text-wrap: pretty;
+}
+.prose:not(.t-lead) {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+.prose > * + * {
+  margin-top: 1.25em;
+}
+.prose h2 {
+  margin-top: 2.25em;
+  font-size: 1.75rem;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+}
+.prose h3 {
+  margin-top: 1.9em;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.prose h4 {
+  margin-top: 1.6em;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.prose h2 + *,
+.prose h3 + *,
+.prose h4 + * {
+  margin-top: 0.6em;
+}
+.prose a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--dur-fast) ease;
+}
+.prose a:hover {
+  text-decoration-color: currentColor;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+.prose li + li {
+  margin-top: 0.4em;
+}
+.prose li::marker {
+  color: var(--fg-muted);
+}
+.prose blockquote {
+  padding-left: 1.25em;
+  border-left: 2px solid var(--line);
+  color: var(--fg-muted);
+  font-size: 1.1875rem;
+  letter-spacing: -0.005em;
+}
+.prose code {
+  padding: 0.15em 0.4em;
+  border-radius: 0.35em;
+  background: var(--bg-subtle);
+  font-family: var(--font-mono-system);
+  font-size: 0.9em;
+}
+.prose hr {
+  margin-block: 2.5em;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.prose strong {
+  font-weight: 650;
+}
+/* Centred variant for hero copy etc. */
+.prose[data-align="center"] {
+  text-align: center;
+}
+
+/* ==========================================================================
+   Accessibility preferences
+   ========================================================================== */
+
+/* Reduced motion: no slides/springs/scales — keep short cross-fades. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .btn,
+  .nav-toggle__bars::before,
+  .nav-toggle__bars::after,
+  .skip-link {
+    transition-property: background-color, opacity !important;
+    transition-duration: var(--dur-fast) !important;
+  }
+  .btn:active {
+    transform: none;
+  }
+  .nav-toggle[aria-expanded="true"] .nav-toggle__bars::before,
+  .nav-toggle[aria-expanded="true"] .nav-toggle__bars::after {
+    transform: none;
+  }
+  .nav-panel {
+    transform: none;
+    filter: none;
+    transition: opacity var(--dur-fast) ease, visibility 0s linear var(--dur-fast);
+  }
+  .nav-panel[data-open="true"] {
+    transition-delay: 0s;
+  }
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* Frostier, near-solid materials. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material: var(--bg);
+    --material-blur: 0px;
+  }
+  .site-header,
+  .nav-panel {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Defined edges, stronger ink. */
+@media (prefers-contrast: more) {
+  :root {
+    --line: currentColor;
+    --fg-muted: var(--fg);
+    --material: var(--bg);
+  }
+  .card {
+    box-shadow: 0 0 0 1px var(--fg);
+  }
 }

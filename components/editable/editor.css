@@ -1,0 +1,529 @@
+/*
+ * Inline editor chrome. Loaded only in edit mode (imported by EditorRoot).
+ * Every selector is scoped under .toofi-editor-root so nothing leaks into the site,
+ * and nothing here changes the page's layout: outlines (not borders), fixed-position
+ * chrome, absolutely positioned list controls.
+ */
+
+.toofi-editor-root {
+  display: contents;
+  --toofi-accent: #2563eb;
+  --toofi-accent-fg: #fff;
+  --toofi-danger: #dc2626;
+  --toofi-chrome-bg: rgb(255 255 255 / 0.96);
+  --toofi-chrome-fg: #111827;
+  --toofi-chrome-muted: #6b7280;
+  --toofi-chrome-line: rgb(0 0 0 / 0.12);
+  --toofi-chrome-hover: rgb(0 0 0 / 0.06);
+  --toofi-shadow: 0 8px 28px rgb(0 0 0 / 0.16), 0 1px 3px rgb(0 0 0 / 0.08);
+  --toofi-outline: rgb(37 99 235 / 0.55);
+  --toofi-font: 500 13px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --toofi-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .toofi-editor-root {
+    --toofi-accent: #3b82f6;
+    --toofi-chrome-bg: rgb(24 24 27 / 0.96);
+    --toofi-chrome-fg: #f4f4f5;
+    --toofi-chrome-muted: #a1a1aa;
+    --toofi-chrome-line: rgb(255 255 255 / 0.14);
+    --toofi-chrome-hover: rgb(255 255 255 / 0.08);
+    --toofi-outline: rgb(96 165 250 / 0.7);
+  }
+}
+
+/* ───────── editable regions ───────── */
+
+/* No transition/radius here: those would override the site's own styles on the element. */
+.toofi-editor-root [data-toofi-editable] {
+  outline: 1px dashed transparent;
+  outline-offset: 3px;
+  cursor: text;
+}
+.toofi-editor-root [data-toofi-editable="image"] {
+  cursor: pointer;
+}
+.toofi-editor-root [data-toofi-editable]:hover {
+  outline-color: var(--toofi-outline);
+}
+.toofi-editor-root [data-toofi-editable]:focus,
+.toofi-editor-root [data-toofi-editable]:focus-visible,
+.toofi-editor-root [data-toofi-editable][aria-expanded="true"] {
+  outline: 2px dashed var(--toofi-accent);
+}
+.toofi-editor-root [data-toofi-editable][aria-invalid="true"],
+.toofi-editor-root .toofi-rich-host[data-invalid] [data-toofi-editable] {
+  outline: 2px solid var(--toofi-danger);
+}
+.toofi-editor-root [data-toofi-editable="image"][data-busy] {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* Placeholders for empty plaintext blocks */
+.toofi-editor-root [data-toofi-editable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Rich text: the host wrapper adds no box */
+.toofi-editor-root .toofi-rich-host {
+  display: contents;
+}
+.toofi-editor-root .toofi-rich[data-empty]::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  opacity: 0.45;
+  pointer-events: none;
+}
+.toofi-editor-root .toofi-rich:focus {
+  outline-offset: 6px;
+}
+
+/* ───────── list items ───────── */
+
+.toofi-editor-root [data-toofi-list-item] {
+  outline: 1px dashed transparent;
+  outline-offset: 6px;
+}
+.toofi-editor-root [data-toofi-list-item]:hover,
+.toofi-editor-root [data-toofi-list-item]:focus-within {
+  outline-color: var(--toofi-chrome-line);
+}
+.toofi-editor-root [data-toofi-list-item][data-dragging] {
+  z-index: 50;
+  opacity: 0.85;
+  outline: 2px solid var(--toofi-accent);
+}
+.toofi-editor-root [aria-busy="true"][data-toofi-list] {
+  cursor: progress;
+}
+
+.toofi-editor-root .toofi-item-controls {
+  position: absolute;
+  top: -14px;
+  right: -6px;
+  z-index: 40;
+  display: flex;
+  gap: 1px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--toofi-chrome-bg);
+  color: var(--toofi-chrome-fg);
+  box-shadow: var(--toofi-shadow);
+  font: var(--toofi-font);
+  opacity: 0;
+  transform: translateY(2px);
+  pointer-events: none;
+  transition:
+    opacity 120ms var(--toofi-ease),
+    transform 120ms var(--toofi-ease);
+}
+.toofi-editor-root [data-toofi-list-item]:hover > .toofi-item-controls,
+.toofi-editor-root [data-toofi-list-item]:focus-within > .toofi-item-controls,
+.toofi-editor-root [data-toofi-list-item][data-dragging] > .toofi-item-controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (hover: none) {
+  .toofi-editor-root .toofi-item-controls {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
+
+.toofi-editor-root .toofi-icon-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 6px;
+  font: var(--toofi-font);
+  font-size: 14px;
+  color: inherit;
+  cursor: pointer;
+}
+.toofi-editor-root .toofi-icon-btn:hover:not(:disabled) {
+  background: var(--toofi-chrome-hover);
+}
+.toofi-editor-root .toofi-icon-btn:focus-visible {
+  outline: 2px solid var(--toofi-accent);
+  outline-offset: 1px;
+}
+.toofi-editor-root .toofi-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.toofi-editor-root .toofi-drag {
+  cursor: grab;
+  touch-action: none;
+}
+.toofi-editor-root .toofi-drag:active {
+  cursor: grabbing;
+}
+.toofi-editor-root .toofi-danger:hover:not(:disabled) {
+  color: var(--toofi-danger);
+}
+
+.toofi-editor-root .toofi-item-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  font: var(--toofi-font);
+  color: var(--toofi-chrome-muted);
+}
+.toofi-editor-root .toofi-list-empty {
+  border-style: dashed;
+}
+
+/* ───────── fixed chrome ───────── */
+
+.toofi-editor-root .toofi-chrome {
+  /* Out of flow: never adds a box (or a flex/grid gap) to the page. */
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 2147483000;
+}
+
+.toofi-editor-root .toofi-toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 24px);
+  padding: 6px;
+  border: 1px solid var(--toofi-chrome-line);
+  border-radius: 14px;
+  background: var(--toofi-chrome-bg);
+  color: var(--toofi-chrome-fg);
+  box-shadow: var(--toofi-shadow);
+  backdrop-filter: blur(12px);
+  font: var(--toofi-font);
+  overflow-x: auto;
+  scrollbar-width: none;
+  animation: toofi-rise 200ms var(--toofi-ease);
+}
+
+@keyframes toofi-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+.toofi-editor-root .toofi-sep {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+  background: var(--toofi-chrome-line);
+}
+
+.toofi-editor-root .toofi-pill {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.toofi-editor-root .toofi-status {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  color: var(--toofi-chrome-muted);
+  white-space: nowrap;
+}
+.toofi-editor-root .toofi-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+.toofi-editor-root .toofi-status[data-state="draft"] .toofi-dot {
+  background: #f59e0b;
+}
+.toofi-editor-root .toofi-status[data-state="unsaved"] .toofi-dot {
+  background: var(--toofi-accent);
+}
+.toofi-editor-root .toofi-status[data-state="saving"] .toofi-dot {
+  background: var(--toofi-accent);
+  animation: toofi-pulse 900ms ease-in-out infinite alternate;
+}
+@keyframes toofi-pulse {
+  to {
+    opacity: 0.3;
+  }
+}
+
+.toofi-editor-root .toofi-btn {
+  all: unset;
+  box-sizing: border-box;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  font: var(--toofi-font);
+  color: var(--toofi-chrome-fg);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms var(--toofi-ease),
+    transform 120ms var(--toofi-ease);
+}
+.toofi-editor-root .toofi-btn:hover:not(:disabled) {
+  background: var(--toofi-chrome-hover);
+}
+.toofi-editor-root .toofi-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.toofi-editor-root .toofi-btn:focus-visible {
+  outline: 2px solid var(--toofi-accent);
+  outline-offset: 2px;
+}
+.toofi-editor-root .toofi-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.toofi-editor-root .toofi-btn-primary {
+  background: var(--toofi-accent);
+  color: var(--toofi-accent-fg);
+}
+.toofi-editor-root .toofi-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--toofi-accent) 88%, black);
+}
+.toofi-editor-root .toofi-btn-ghost {
+  color: var(--toofi-chrome-muted);
+}
+.toofi-editor-root .toofi-list-empty {
+  border: 1px dashed var(--toofi-chrome-line);
+  color: inherit;
+}
+
+/* ───────── popovers & forms ───────── */
+
+.toofi-editor-root .toofi-popover {
+  position: fixed;
+  z-index: 2147483001;
+  width: min(340px, calc(100vw - 24px));
+  max-height: min(420px, calc(100vh - 24px));
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--toofi-chrome-line);
+  border-radius: 12px;
+  background: var(--toofi-chrome-bg);
+  color: var(--toofi-chrome-fg);
+  box-shadow: var(--toofi-shadow);
+  backdrop-filter: blur(12px);
+  font: var(--toofi-font);
+  text-align: left;
+  animation: toofi-fade 140ms var(--toofi-ease);
+}
+@keyframes toofi-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.toofi-editor-root .toofi-form {
+  display: grid;
+  gap: 8px;
+}
+.toofi-editor-root .toofi-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.toofi-editor-root .toofi-field {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+}
+.toofi-editor-root .toofi-popover input[type="text"],
+.toofi-editor-root .toofi-popover textarea,
+.toofi-editor-root .toofi-bubble input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--toofi-chrome-line);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: 400 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  resize: vertical;
+}
+.toofi-editor-root .toofi-popover input:focus-visible,
+.toofi-editor-root .toofi-popover textarea:focus-visible,
+.toofi-editor-root .toofi-bubble input:focus-visible {
+  outline: 2px solid var(--toofi-accent);
+  outline-offset: 0;
+  border-color: transparent;
+}
+.toofi-editor-root [aria-invalid="true"]:is(input, textarea) {
+  border-color: var(--toofi-danger);
+}
+.toofi-editor-root .toofi-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.toofi-editor-root .toofi-check input {
+  accent-color: var(--toofi-accent);
+}
+.toofi-editor-root .toofi-hint {
+  margin: 0;
+  color: var(--toofi-chrome-muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+.toofi-editor-root .toofi-error {
+  margin: 0;
+  color: var(--toofi-danger);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+/* History */
+.toofi-editor-root .toofi-history-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+.toofi-editor-root .toofi-history-title code {
+  font: 400 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--toofi-chrome-muted);
+}
+.toofi-editor-root .toofi-history-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.toofi-editor-root .toofi-history-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 8px;
+}
+.toofi-editor-root .toofi-history-list li:hover {
+  background: var(--toofi-chrome-hover);
+}
+.toofi-editor-root .toofi-history-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.toofi-editor-root .toofi-history-meta time {
+  font-size: 12px;
+  color: var(--toofi-chrome-muted);
+}
+.toofi-editor-root .toofi-history-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+/* Rich-text bubble menu */
+.toofi-editor-root .toofi-bubble {
+  z-index: 2147483001;
+  padding: 3px;
+  border: 1px solid var(--toofi-chrome-line);
+  border-radius: 10px;
+  background: var(--toofi-chrome-bg);
+  color: var(--toofi-chrome-fg);
+  box-shadow: var(--toofi-shadow);
+  font: var(--toofi-font);
+}
+.toofi-editor-root .toofi-bubble-row,
+.toofi-editor-root .toofi-bubble-link {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.toofi-editor-root .toofi-bubble-link {
+  gap: 4px;
+  min-width: 280px;
+}
+.toofi-editor-root .toofi-bubble-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 7px;
+  border-radius: 7px;
+  font: var(--toofi-font);
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.toofi-editor-root .toofi-bubble-btn:hover {
+  background: var(--toofi-chrome-hover);
+}
+.toofi-editor-root .toofi-bubble-btn[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--toofi-accent) 16%, transparent);
+  color: var(--toofi-accent);
+}
+.toofi-editor-root .toofi-bubble-btn:focus-visible {
+  outline: 2px solid var(--toofi-accent);
+}
+
+/* Spinner */
+.toofi-editor-root .toofi-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: toofi-spin 700ms linear infinite;
+}
+@keyframes toofi-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toofi-editor-root .toofi-chrome *,
+  .toofi-editor-root .toofi-item-controls,
+  .toofi-editor-root .toofi-item-controls *,
+  .toofi-editor-root .toofi-popover,
+  .toofi-editor-root .toofi-bubble * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .toofi-editor-root .toofi-spinner {
+    animation: toofi-spin 1.6s linear infinite !important;
+  }
+}

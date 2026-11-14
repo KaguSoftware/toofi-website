@@ -1,0 +1,451 @@
+[
+  {
+    "scope": "global",
+    "key": "site.name",
+    "type": "text",
+    "value": {
+      "text": "Toofi"
+    }
+  },
+  {
+    "scope": "global",
+    "key": "nav",
+    "type": "list",
+    "value": {
+      "items": [
+        "home",
+        "about",
+        "contact"
+      ]
+    }
+  },
+  {
+    "scope": "global",
+    "key": "nav.home.link",
+    "type": "link",
+    "value": {
+      "text": "Home",
+      "href": "/"
+    }
+  },
+  {
+    "scope": "global",
+    "key": "nav.about.link",
+    "type": "link",
+    "value": {
+      "text": "About",
+      "href": "/about"
+    }
+  },
+  {
+    "scope": "global",
+    "key": "nav.contact.link",
+    "type": "link",
+    "value": {
+      "text": "Contact",
+      "href": "/contact"
+    }
+  },
+  {
+    "scope": "global",
+    "key": "footer.tagline",
+    "type": "text",
+    "value": {
+      "text": "Thoughtfully made, simply put."
+    }
+  },
+  {
+    "scope": "global",
+    "key": "social",
+    "type": "list",
+    "value": {
+      "items": [
+        "x",
+        "gh"
+      ]
+    }
+  },
+  {
+    "scope": "global",
+    "key": "social.x.link",
+    "type": "link",
+    "value": {
+      "text": "X",
+      "href": "https://x.com"
+    }
+  },
+  {
+    "scope": "global",
+    "key": "social.gh.link",
+    "type": "link",
+    "value": {
+      "text": "GitHub",
+      "href": "https://github.com"
+    }
+  },
+  {
+    "scope": "global",
+    "key": "footer.note",
+    "type": "text",
+    "value": {
+      "text": "© 2026 Toofi. All rights reserved."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "hero.title",
+    "type": "text",
+    "value": {
+      "text": "Make something people love."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "hero.body",
+    "type": "richtext",
+    "value": {
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Toofi helps small teams ship clear, fast and beautifully simple products — without the noise."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "hero.cta",
+    "type": "link",
+    "value": {
+      "text": "Get in touch",
+      "href": "/contact"
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "hero.image",
+    "type": "image",
+    "value": {
+      "src": "/placeholders/hero.png",
+      "alt": "Soft blue and lilac gradient",
+      "width": 1280,
+      "height": 720
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features",
+    "type": "list",
+    "value": {
+      "items": [
+        "clarity",
+        "speed",
+        "care"
+      ]
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features.clarity.title",
+    "type": "text",
+    "value": {
+      "text": "Clarity first"
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features.clarity.body",
+    "type": "text",
+    "value": {
+      "text": "Every screen has one job. We remove everything that does not help it."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features.speed.title",
+    "type": "text",
+    "value": {
+      "text": "Fast by default"
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features.speed.body",
+    "type": "text",
+    "value": {
+      "text": "Server-rendered pages and almost no JavaScript, so it feels instant."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features.care.title",
+    "type": "text",
+    "value": {
+      "text": "Made with care"
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "features.care.body",
+    "type": "text",
+    "value": {
+      "text": "Typography, spacing and motion are decided, not left to chance."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "cta.title",
+    "type": "text",
+    "value": {
+      "text": "Ready when you are."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "cta.body",
+    "type": "text",
+    "value": {
+      "text": "Tell us what you are working on and we will take it from there."
+    }
+  },
+  {
+    "scope": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "key": "cta.link",
+    "type": "link",
+    "value": {
+      "text": "Contact us",
+      "href": "/contact"
+    }
+  },
+  {
+    "scope": "5aeb666d-2cb3-4b22-9454-9fe0e15c3dde",
+    "key": "title",
+    "type": "text",
+    "value": {
+      "text": "About Toofi"
+    }
+  },
+  {
+    "scope": "5aeb666d-2cb3-4b22-9454-9fe0e15c3dde",
+    "key": "body",
+    "type": "richtext",
+    "value": {
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Toofi is a small studio that believes good software should feel calm. We design and build websites and products with a bias for restraint."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "What we believe"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Fewer things, done properly."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Speed is a feature."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Accessibility is not optional."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "How we work"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "We start with the content, choose a simple structure, and refine the details until nothing feels accidental. "
+              },
+              {
+                "type": "text",
+                "text": "Say hello",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/contact"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " if that sounds like your kind of project."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "heading",
+    "type": "text",
+    "value": {
+      "text": "Get in touch"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "intro",
+    "type": "richtext",
+    "value": {
+      "doc": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Questions, ideas or a project in mind? Write to us — we usually reply within a day."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details",
+    "type": "list",
+    "value": {
+      "items": [
+        "email",
+        "phone",
+        "address"
+      ]
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details.email.label",
+    "type": "text",
+    "value": {
+      "text": "Email"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details.email.value",
+    "type": "text",
+    "value": {
+      "text": "hello@toofi.local"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details.phone.label",
+    "type": "text",
+    "value": {
+      "text": "Phone"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details.phone.value",
+    "type": "text",
+    "value": {
+      "text": "+1 (555) 010-0199"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details.address.label",
+    "type": "text",
+    "value": {
+      "text": "Studio"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "details.address.value",
+    "type": "text",
+    "value": {
+      "text": "12 Example Street\nSpringfield"
+    }
+  },
+  {
+    "scope": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "key": "cta",
+    "type": "link",
+    "value": {
+      "text": "Send an email",
+      "href": "mailto:hello@toofi.local"
+    }
+  }
+]

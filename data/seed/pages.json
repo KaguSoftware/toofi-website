@@ -1,0 +1,35 @@
+[
+  {
+    "id": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "slug": "/",
+    "title": "Home",
+    "template": "home",
+    "status": "published",
+    "seo": { "description": "Toofi — sample home page." },
+    "createdAt": "2026-11-14T00:00:00.000Z",
+    "updatedAt": "2026-11-14T00:00:00.000Z",
+    "publishedAt": "2026-11-14T00:00:00.000Z"
+  },
+  {
+    "id": "5aeb666d-2cb3-4b22-9454-9fe0e15c3dde",
+    "slug": "/about",
+    "title": "About",
+    "template": "generic",
+    "status": "published",
+    "seo": { "description": "About Toofi." },
+    "createdAt": "2026-11-14T00:00:00.000Z",
+    "updatedAt": "2026-11-14T00:00:00.000Z",
+    "publishedAt": "2026-11-14T00:00:00.000Z"
+  },
+  {
+    "id": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "slug": "/contact",
+    "title": "Contact",
+    "template": "contact",
+    "status": "draft",
+    "seo": {},
+    "createdAt": "2026-11-14T00:00:00.000Z",
+    "updatedAt": "2026-11-14T00:00:00.000Z",
+    "publishedAt": null
+  }
+]

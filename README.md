@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Toofi Web
 
-## Getting Started
+Public website + admin panel with **inline on-page content editing**, built on
+Next.js 16.4 and Supabase.
 
-First, run the development server:
+## Quick start (no database needed)
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. With no Supabase env vars, the app runs in **local mode**
+on sample data (`data/seed/`), storing changes in `.data/` (delete it to reset).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Sign in at http://localhost:3000/admin/login. Every demo account uses the password `password`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Email | Role | Can |
+|---|---|---|
+| `admin@toofi.local` | admin | everything, including managing users |
+| `editor@toofi.local` | editor | edit/publish content, manage pages and media |
+| `viewer@toofi.local` | viewer | read-only admin |
 
-## Learn More
+To edit content, go to **Admin → Pages → Edit content**, or click **Edit page** on any page
+while signed in.
 
-To learn more about Next.js, take a look at the following resources:
+## Connecting Supabase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See [docs/SUPABASE.md](docs/SUPABASE.md). In short: create the project, push
+`supabase/migrations`, enable the auth hook, and set the env vars from `.env.example`.
+The app switches to Supabase mode automatically.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Script | What it does |
+|---|---|
+| `npm run dev` | dev server |
+| `npm run build` / `start` | production build and server |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | unit tests (vitest) |
+| `npm run db:seed-sql` | regenerate `supabase/seed.sql` from `data/seed/*.json` |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Docs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how it all fits together (backend, auth, caching, editing)
+- [docs/FRONTEND_GUIDE.md](docs/FRONTEND_GUIDE.md): building templates, editable components, design principles
+- [docs/SUPABASE.md](docs/SUPABASE.md): database setup, RLS, migrations

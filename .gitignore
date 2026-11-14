@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# toofi local-mode data store + uploads (delete to reset sample data)
+/.data/
