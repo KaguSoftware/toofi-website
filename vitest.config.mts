@@ -8,6 +8,15 @@ export default defineConfig({
   test: {
     include: ["**/*.test.ts", "**/*.test.tsx"],
     exclude: ["node_modules/**", ".next/**", ".data/**"],
-    environment: "node",
+    environment: "node", // component tests opt in with `// @vitest-environment jsdom`
+    setupFiles: ["./vitest.setup.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "templates/**/*.{ts,tsx}", "instrumentation.ts"],
+      exclude: ["**/*.test.*", "**/*.d.ts", "**/types.ts"],
+      reporter: ["text-summary", "json-summary"],
+      // Ratchet: raise these as coverage grows; never lower them.
+      thresholds: { lines: 11, functions: 8, branches: 7, statements: 11 },
+    },
   },
 });

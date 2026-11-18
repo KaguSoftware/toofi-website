@@ -1,0 +1,8 @@
+#!/bin/sh
+# Blocks commits that fail types, lint, the test-presence gate, tests or the coverage floor.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+echo "pre-commit: running checks (typecheck, lint, test gate, tests + coverage)..."
+npm run check --silent || {
+  printf '\nCommit blocked: fix the failures above. Every new file needs a test (see CLAUDE.md).\n'
+  exit 1
+}

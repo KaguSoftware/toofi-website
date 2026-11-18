@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Editables } from "@/lib/content/editables";
+import { ErrorBoundary } from "@/components/monitoring/ErrorBoundary";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
@@ -14,9 +15,13 @@ export function SiteShell({ g, children }: { g: Editables; children: ReactNode }
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <SiteHeader g={g} />
-      {children}
-      <SiteFooter g={g} />
+      <ErrorBoundary name="SiteHeader">
+        <SiteHeader g={g} />
+      </ErrorBoundary>
+      <ErrorBoundary name="PageContent">{children}</ErrorBoundary>
+      <ErrorBoundary name="SiteFooter">
+        <SiteFooter g={g} />
+      </ErrorBoundary>
     </>
   );
 }
