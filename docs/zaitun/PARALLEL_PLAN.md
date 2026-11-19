@@ -56,53 +56,55 @@ If a listed skill is missing or fails to load, say so and continue with the othe
 
 Open one new Claude Code session per track in `toofi-website/`, pick the model (`/model`, or `claude --model <id>`), and say `masterplan phase <id>`. "Done" means you said `approve phase <id>`. A round starts when everything it waits for is done; tracks still running from earlier rounds keep going.
 
+Effort is the second value in each model cell (`low`, `medium`, `high`, `xhigh`, `max`). Set both when you open the session, e.g. `claude --model claude-fable-5-2 --effort xhigh`. `max` is used only for track 0 (short, and everything builds on it); any other session can switch to it when stuck on a hard problem, then switch back.
+
 Models: **Fable 5.2** (`claude-fable-5-2`) for the hardest judgment calls, **Opus 5.5** (`claude-opus-5-5`) for skilled build work, **Sonnet 5.5** (`claude-sonnet-5-5`) for well-defined, rule-driven work. Haiku 5.5 is not used for a track; sessions may use it for small subagent jobs.
 
 ### Round 1: start now (5 sessions)
 
-| Session | Track | Model | Why this model |
+| Session | Track | Model · effort | Why this model |
 |---|---|---|---|
-| 1 | `0` 28 ha masterplan | Fable 5.2 | Every later track builds on it; site planning and data consistency need the best judgment |
-| 2 | `7A` R3F migration at parity | Fable 5.2 | Largest and riskiest refactor; must keep every behaviour and test |
-| 3 | `1A` Amenity assets | Opus 5.5 | Architectural modelling in Blender scripts with real design sense |
-| 4 | `2` Materials | Opus 5.5 | Look quality and trim-sheet technique |
-| 5 | `3A` Vegetation and life assets | Opus 5.5 | Trees, LODs, wind shaders and people need craft |
+| 1 | `0` 28 ha masterplan | Fable 5.2 · max | Every later track builds on it; site planning and data consistency need the best judgment |
+| 2 | `7A` R3F migration at parity | Fable 5.2 · high | Largest and riskiest refactor; must keep every behaviour and test |
+| 3 | `1A` Amenity assets | Opus 5.5 · high | Architectural modelling in Blender scripts with real design sense |
+| 4 | `2` Materials | Opus 5.5 · high | Look quality and trim-sheet technique |
+| 5 | `3A` Vegetation and life assets | Opus 5.5 · high | Trees, LODs, wind shaders and people need craft |
 
 ### Round 2: when 0, 1A, 2 and 3A are done (4 sessions; 7A keeps running)
 
-| Session | Track | Model | Why |
+| Session | Track | Model · effort | Why |
 |---|---|---|---|
-| 6 | `1B` Model rebuild at 28 ha | Opus 5.5 | Large scripted rebuild, two tiers, manifest and budgets |
-| 7 | `3B` Landscape placement | Sonnet 5.5 | Rule-driven scatter with clear constraints |
-| 8 | `5A` Storyboard | Opus 5.5 | Cinematic composition and lens choices |
-| 9 | `6A` Export pipeline and budgets | Sonnet 5.5 | Well-defined pipeline work with measurable targets |
+| 6 | `1B` Model rebuild at 28 ha | Opus 5.5 · high | Large scripted rebuild, two tiers, manifest and budgets |
+| 7 | `3B` Landscape placement | Sonnet 5.5 · medium | Rule-driven scatter with clear constraints |
+| 8 | `5A` Storyboard | Opus 5.5 · high | Cinematic composition and lens choices |
+| 9 | `6A` Export pipeline and budgets | Sonnet 5.5 · medium | Well-defined pipeline work with measurable targets |
 
 ### Round 3: when 1B and 3B are done (2 sessions)
 
-| Session | Track | Model | Waits also for | Why |
+| Session | Track | Model · effort | Waits also for | Why |
 |---|---|---|---|---|
-| 10 | `4` Lighting and lightmaps | Opus 5.5 | the real north direction from you | Bake quality (no seams or leaks) and matching web to Cycles |
-| 11 | `7B` R3F scene on new layout | Opus 5.5 | 7A done | Integration on the new architecture with test updates |
+| 10 | `4` Lighting and lightmaps | Opus 5.5 · xhigh | the real north direction from you | Bake quality (no seams or leaks) and matching web to Cycles |
+| 11 | `7B` R3F scene on new layout | Opus 5.5 · high | 7A done | Integration on the new architecture with test updates |
 
 ### Round 4: when 4 and 7B are done (3 sessions)
 
-| Session | Track | Model | Waits also for | Why |
+| Session | Track | Model · effort | Waits also for | Why |
 |---|---|---|---|---|
-| 12 | `7C` Web experience features | Fable 5.2 | — | The showcase itself: motion, story, explore modes, bilingual UI, performance tiers |
-| 13 | `5B` Film, stills, posters | Opus 5.5 | 5A done, music and logo from you | Render setup, grade and edit; long renders mostly wait |
-| 14 | `6B` Final export | Sonnet 5.5 | 6A done | Runs the agreed pipeline and checks budgets |
+| 12 | `7C` Web experience features | Fable 5.2 · xhigh | — | The showcase itself: motion, story, explore modes, bilingual UI, performance tiers |
+| 13 | `5B` Film, stills, posters | Opus 5.5 · medium | 5A done, music and logo from you | Render setup, grade and edit; long renders mostly wait |
+| 14 | `6B` Final export | Sonnet 5.5 · medium | 6A done | Runs the agreed pipeline and checks budgets |
 
 ### Round 5: when 5B, 6B and 7C are done (1 session)
 
-| Session | Track | Model | Why |
+| Session | Track | Model · effort | Why |
 |---|---|---|---|
-| 15 | `7D` Final wiring and performance | Opus 5.5 | Poster handover, profiling and tuning across device tiers |
+| 15 | `7D` Final wiring and performance | Opus 5.5 · high | Poster handover, profiling and tuning across device tiers |
 
 ### Round 6: when 7D is done (1 session)
 
-| Session | Track | Model | Why |
+| Session | Track | Model · effort | Why |
 |---|---|---|---|
-| 16 | `QA` Acceptance | Sonnet 5.5 | Runs the checklist and measurements; escalate failures to an Opus session |
+| 16 | `QA` Acceptance | Sonnet 5.5 · medium | Runs the checklist and measurements; escalate failures to an Opus session |
 
 ### Shortcuts (optional, for speed)
 

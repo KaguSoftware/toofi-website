@@ -59,7 +59,7 @@ describe("filtering", () => {
   it("filters by compound, kind, bedrooms, status and budget", () => {
     const s = { ...defaultFinderState(), compound: "zaitun-hills" as const, kind: "villa" as const, beds: 4, statuses: ["available" as const, "reserved" as const, "sold" as const] };
     const out = filterResidences(RESIDENCES, s);
-    expect(out.length).toBe(10);
+    expect(out.length).toBe(30); // Zaitun Hills has two rows of 15 four-bed garden villas
     expect(out.every((r) => r.compound === "zaitun-hills" && r.kind === "villa" && r.bedrooms === 4)).toBe(true);
     const cheap = filterResidences(RESIDENCES, { ...s, kind: "all", beds: null, budget: "under-300" });
     expect(cheap.every((r) => r.priceUsd < 300000)).toBe(true);

@@ -17,6 +17,11 @@ describe("CompoundFacts", () => {
   it("uses Arabic counting and the و conjunction", () => {
     render(<CompoundFacts compound={COMPOUNDS[1]} locale="ar" />);
     expect(screen.getByText("٢٨ هكتارًا")).toBeDefined();
+    expect(screen.getByText("٦٠ فيلا و٢٤ شقة")).toBeDefined();
+  });
+
+  it("uses the Arabic plural for three to ten", () => {
+    render(<CompoundFacts compound={{ ...COMPOUNDS[1], phaseOne: { villas: 24, apartments: 8 } }} locale="ar" />);
     expect(screen.getByText("٢٤ فيلا و٨ شقق")).toBeDefined();
   });
 });

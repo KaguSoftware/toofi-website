@@ -1,5 +1,5 @@
 /**
- * Sawad Holding sample content: compounds, residence types and the 96 phase-one homes.
+ * Sawad Holding sample content: compounds, residence types and the 148 phase-one homes.
  * Everything here is demo data for a fictional developer (see docs/SAWAD.md).
  * Generation is deterministic (seeded), so server and client always agree.
  */
@@ -53,7 +53,12 @@ export type Residence = {
   compound: CompoundId;
   type: ResidenceTypeId;
   kind: ResidenceKind;
-  /** Index into the compound masterplan: villa 0..23, apartment 0..11. */
+  /**
+   * Index into the compound's masterplan (components/sawad/scene/layout.ts).
+   * Zaitun Hills is on the 28 ha plan: villa 0..59 (`planVillas()`), apartment 0..23
+   * (block = floor(slot / 4), floor = slot % 4). Bustan Dijla and Shatt Gardens are still on the
+   * 7 ha layout: villa 0..23, apartment 0..11.
+   */
   slot: number;
   /** Apartments only: 0 = ground floor. */
   floor: number | null;
@@ -110,7 +115,7 @@ export const COMPOUNDS: Compound[] = [
     location: { en: "Northern foothills, Erbil", ar: "السفوح الشمالية، أربيل" },
     siteHa: 28,
     landscapePct: 58,
-    phaseOne: { villas: 24, apartments: 8 },
+    phaseOne: { villas: 60, apartments: 24 },
     status: "selling",
     handover: { en: "Mid 2028", ar: "منتصف ٢٠٢٨" },
     summary: {
@@ -177,20 +182,35 @@ const COMPOUND_PRICE_FACTOR: Record<CompoundId, number> = {
   "shatt-gardens": 0.8,
 };
 
-/** Villa type mix per compound, in slot order. */
+/**
+ * Villa type mix per compound, in slot order. Zaitun Hills follows its masterplan plot for plot:
+ * the 15 waterfront plots are courtyard villas, the two rows of 15 behind them 4-bed garden
+ * villas, and the row on the hill side of the upper boulevard 3-bed garden villas.
+ */
 const VILLA_MIX: Record<CompoundId, ResidenceTypeId[]> = {
   "bustan-dijla": [...rep("cv5", 6), ...rep("gv4", 8), ...rep("gv3", 6)],
-  "zaitun-hills": [...rep("cv5", 6), ...rep("gv4", 10), ...rep("gv3", 8)],
+  "zaitun-hills": [...rep("cv5", 15), ...rep("gv4", 30), ...rep("gv3", 15)],
   "shatt-gardens": [...rep("cv5", 6), ...rep("gv4", 8), ...rep("gv3", 6)],
 };
 
-/** Apartment type by floor (index 0 = ground). Top floors are the river apartments. */
-const APARTMENT_FLOOR_TYPES: ResidenceTypeId[][] = [
-  ["ra4", "ta3", "ta2"], // ground: one garden duplex per building, by building index
-  ["ta2", "ta2", "ta2"],
-  ["ta3", "ta3", "ta3"],
-  ["ra4", "ra4", "ra4"],
+/** What each Zaitun Hills villa looks onto, by masterplan row (15 villas per row, in slot order). */
+const ZAITUN_ROW_OUTLOOK: Outlook[] = [
+  "river", // waterfront
+  "boulevard", // inland side of the lower boulevard
+  "garden", // on the terrace, gardens over the olive bank
+  "boulevard", // hill side of the upper boulevard
 ];
+const ZAITUN_ROW_LENGTH = 15;
+
+/** Ground floors are one garden duplex per building, by building index (Zaitun has six blocks, the others three). */
+const GROUND_FLOOR_TYPES: ResidenceTypeId[] = ["ra4", "ta3", "ta2", "ta2", "ta3", "ra4"];
+/** Floors one to three, the same in every building. Top floors are the river apartments. */
+const UPPER_FLOOR_TYPES: ResidenceTypeId[] = ["ta2", "ta3", "ra4"];
+const APARTMENT_FLOORS = 1 + UPPER_FLOOR_TYPES.length;
+
+function apartmentType(floor: number, building: number): ResidenceTypeId {
+  return floor === 0 ? GROUND_FLOOR_TYPES[building] : UPPER_FLOOR_TYPES[floor - 1];
+}
 
 function rep(v: ResidenceTypeId, n: number): ResidenceTypeId[] {
   return Array.from({ length: n }, () => v);
@@ -251,16 +271,16 @@ function buildResidences(): Residence[] {
       });
     };
     VILLA_MIX[compound.id].slice(0, compound.phaseOne.villas).forEach((typeId, slot) => {
-      // Courtyard villas take the river-side plots; the rest alternate garden / boulevard.
-      const outlook: Outlook = typeId === "cv5" ? "river" : slot % 2 ? "garden" : "boulevard";
+      // Courtyard villas take the river-side plots. Zaitun's other rows follow its masterplan;
+      // elsewhere the rest alternate garden / boulevard.
+      const byParity: Outlook = typeId === "cv5" ? "river" : slot % 2 ? "garden" : "boulevard";
+      const outlook = compound.id === "zaitun-hills" ? ZAITUN_ROW_OUTLOOK[Math.floor(slot / ZAITUN_ROW_LENGTH)] : byParity;
       make("villa", slot, typeId, null, outlook);
     });
-    const buildings = compound.phaseOne.apartments / 4;
     for (let slot = 0; slot < compound.phaseOne.apartments; slot++) {
-      const building = Math.floor(slot / 4);
-      const floor = slot % 4;
-      if (building >= buildings) break;
-      const typeId = APARTMENT_FLOOR_TYPES[floor][building];
+      const building = Math.floor(slot / APARTMENT_FLOORS);
+      const floor = slot % APARTMENT_FLOORS;
+      const typeId = apartmentType(floor, building);
       make("apartment", slot, typeId, floor, floor >= 2 || typeId === "ra4" ? "river" : "garden");
     }
   }

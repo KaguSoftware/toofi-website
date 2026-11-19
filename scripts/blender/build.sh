@@ -5,8 +5,10 @@
 #   scripts/blender/build.sh            # needs Blender 4.2+ and KTX-Software's `ktx` CLI on PATH
 #   BLENDER=/path/to/blender scripts/blender/build.sh
 #
-# Budgets: compound-high.glb <= 5 MB, compound-low.glb <= 2 MB (checked here and by
-# components/sawad/scene/compoundModel.manifest.test.ts).
+# Budgets (28 ha site; see docs/zaitun/EXPORT_BUDGETS.md): compound-high.glb <= 7 MB,
+# compound-low.glb <= 2.8 MB, checked by finalize-manifest.mjs and compoundModel.manifest.test.ts.
+# Geometry stays meshopt (measured against Draco: 8-11% bigger over the wire, but no extra
+# decoder, faster decode, and it compresses the instancing and UV2 attributes too).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -49,8 +51,16 @@ encode() { # tier atlasSize normalSize simplifyArgs...
 encode high 2048 1024 --simplify false
 encode low 1024 512 --simplify true --simplify-error 0.0005
 
+# Structural gate: the official glTF validator must report no errors (UNUSED_OBJECT is info).
+for tier in high low; do
+  "${GT[@]}" validate "$MODELS/compound-$tier.glb" --ignore UNUSED_OBJECT >"$OUT/validate-$tier.txt" || { cat "$OUT/validate-$tier.txt" >&2; exit 1; }
+done
+
 # Basis Universal transcoder for KTX2Loader.
 mkdir -p public/sawad/basis
 cp node_modules/three/examples/jsm/libs/basis/basis_transcoder.{js,wasm} public/sawad/basis/
 
 node scripts/blender/finalize-manifest.mjs
+
+# Optional: typed JSX for the React Three Fiber scene.  JSX=1 scripts/blender/build.sh
+[ "${JSX:-0}" = 1 ] && scripts/blender/gltfjsx.sh

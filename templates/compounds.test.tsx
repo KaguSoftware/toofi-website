@@ -17,7 +17,7 @@ describe("compounds template", () => {
     const portfolio = tables[0];
     expect(within(portfolio).getAllByRole("row")).toHaveLength(1 + 5 + 1);
     expect(within(portfolio).getByRole("rowheader", { name: "Al-Nakhla Court" })).toBeDefined();
-    expect(within(portfolio).getByText("96")).toBeDefined();
+    expect(within(portfolio).getByText("148")).toBeDefined();
   });
 
   it("gives each compound a profile with its residence types and guide prices", () => {
@@ -39,6 +39,6 @@ describe("compounds template", () => {
   it("renders Arabic digits on Arabic pages", () => {
     renderPage("/ar/compounds");
     expect(screen.getByRole("heading", { level: 1, name: "المجمّعات" })).toBeDefined();
-    expect(screen.getAllByText("٩٦").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("١٤٨").length).toBeGreaterThan(0);
   });
 });

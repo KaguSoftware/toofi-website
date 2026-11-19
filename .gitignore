@@ -46,3 +46,6 @@ next-env.d.ts
 # sawad compound build (scripts/blender/build.sh): downloaded CC0 sources and intermediates
 /scripts/blender/textures/
 /scripts/blender/out/
+
+# git worktrees used by parallel agent sessions (each is a full checkout, never committed)
+/.claude/worktrees/
