@@ -1,0 +1,259 @@
+{
+  "note": "Written by scripts/blender/film/storyboard.py",
+  "width": 1600,
+  "samples": 32,
+  "boards": [
+    {
+      "shot": "01",
+      "at": 0,
+      "frame": 1,
+      "file": "S01-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "01",
+      "at": 0.5,
+      "frame": 145,
+      "file": "S01-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "01",
+      "at": 1,
+      "frame": 288,
+      "file": "S01-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "02",
+      "at": 0,
+      "frame": 289,
+      "file": "S02-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "02",
+      "at": 0.5,
+      "frame": 397,
+      "file": "S02-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "02",
+      "at": 1,
+      "frame": 504,
+      "file": "S02-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "03",
+      "at": 0,
+      "frame": 505,
+      "file": "S03-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "03",
+      "at": 0.5,
+      "frame": 625,
+      "file": "S03-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "03",
+      "at": 1,
+      "frame": 744,
+      "file": "S03-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "04",
+      "at": 0,
+      "frame": 745,
+      "file": "S04-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "04",
+      "at": 0.5,
+      "frame": 865,
+      "file": "S04-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "04",
+      "at": 1,
+      "frame": 984,
+      "file": "S04-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05a",
+      "at": 0,
+      "frame": 985,
+      "file": "S05a-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05a",
+      "at": 0.5,
+      "frame": 1021,
+      "file": "S05a-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05a",
+      "at": 1,
+      "frame": 1056,
+      "file": "S05a-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05b",
+      "at": 0,
+      "frame": 1057,
+      "file": "S05b-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05b",
+      "at": 0.5,
+      "frame": 1093,
+      "file": "S05b-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05b",
+      "at": 1,
+      "frame": 1128,
+      "file": "S05b-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05c",
+      "at": 0,
+      "frame": 1129,
+      "file": "S05c-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05c",
+      "at": 0.5,
+      "frame": 1165,
+      "file": "S05c-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05c",
+      "at": 1,
+      "frame": 1200,
+      "file": "S05c-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05d",
+      "at": 0,
+      "frame": 1201,
+      "file": "S05d-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05d",
+      "at": 0.5,
+      "frame": 1237,
+      "file": "S05d-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "05d",
+      "at": 1,
+      "frame": 1272,
+      "file": "S05d-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "06a",
+      "at": 0,
+      "frame": 1273,
+      "file": "S06a-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "06a",
+      "at": 0.5,
+      "frame": 1333,
+      "file": "S06a-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "06a",
+      "at": 1,
+      "frame": 1392,
+      "file": "S06a-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "06b",
+      "at": 0,
+      "frame": 1393,
+      "file": "S06b-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "06b",
+      "at": 0.5,
+      "frame": 1453,
+      "file": "S06b-b.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "06b",
+      "at": 1,
+      "frame": 1512,
+      "file": "S06b-c.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "07",
+      "at": 0,
+      "frame": 1513,
+      "file": "S07-a.jpg",
+      "light": 0.0
+    },
+    {
+      "shot": "07",
+      "at": 0.5,
+      "frame": 1633,
+      "file": "S07-b.jpg",
+      "light": 0.502
+    },
+    {
+      "shot": "07",
+      "at": 1,
+      "frame": 1752,
+      "file": "S07-c.jpg",
+      "light": 1.0
+    },
+    {
+      "shot": "08",
+      "at": 0,
+      "frame": 1753,
+      "file": "S08-a.jpg",
+      "light": 1.0
+    },
+    {
+      "shot": "08",
+      "at": 0.5,
+      "frame": 1921,
+      "file": "S08-b.jpg",
+      "light": 1.0
+    },
+    {
+      "shot": "08",
+      "at": 1,
+      "frame": 2088,
+      "file": "S08-c.jpg",
+      "light": 1.0
+    }
+  ]
+}

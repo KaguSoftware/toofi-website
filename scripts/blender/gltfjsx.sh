@@ -8,12 +8,12 @@
 #   * Never pass --transform or --instance: both re-encode the GLB (a bigger file, no meshopt,
 #     no KTX2). We ship the GLB from build.sh untouched and only take the TSX.
 #   * `npx gltfjsx` fails ("Cannot find package 'jsdom-global'"), so it is installed with
-#     jsdom-global and jsdom into a throwaway folder, outside the project's package.json.
+#     jsdom-global and jsdom into ~/.cache/sawad-gltfjsx, outside the repo and its package.json.
 #   * The URL in the TSX is the bare file name; it is rewritten to /sawad/models/.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
-ENV=scripts/blender/out/gltfjsx-env
+ENV="${GLTFJSX_ENV:-$HOME/.cache/sawad-gltfjsx}" # outside the repo: eslint and tsc would pick it up
 OUT=scripts/blender/out/jsx
 MODELS=public/sawad/models
 
