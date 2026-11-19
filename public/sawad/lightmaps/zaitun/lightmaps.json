@@ -1,0 +1,4707 @@
+{
+ "version": 1,
+ "plan": "zaitun",
+ "uv": {
+  "attribute": "uv2",
+  "gltf": "TEXCOORD_2",
+  "flipY": false
+ },
+ "encoding": {
+  "colorSpace": "srgb",
+  "meaning": "irradiance, without albedo: set texture.colorSpace = SRGBColorSpace, material.lightMap = texture, material.lightMapIntensity = intensity"
+ },
+ "states": {
+  "day": {
+   "intensity": 3.859999895095825
+  },
+  "dusk": {
+   "intensity": 7.489999771118164
+  }
+ },
+ "sun": {
+  "direction": [
+   0.98402,
+   0.07324,
+   0.16231
+  ],
+  "lightDirection": [
+   0.97531,
+   0.15126,
+   0.16088
+  ],
+  "bearingDeg": 279.37,
+  "elevationDeg": 4.2,
+  "lightElevationDeg": 8.7,
+  "angleDeg": 1.0,
+  "color": "#ffa65c",
+  "intensity": 4.2
+ },
+ "tiers": {
+  "high": {
+   "pages": {
+    "buildings": {
+     "size": [
+      2048,
+      2048
+     ],
+     "files": {
+      "day": "day-buildings-high.png",
+      "dusk": "dusk-buildings-high.png"
+     },
+     "texelMetres": 0.3161,
+     "bytes": {
+      "day": 3335035,
+      "dusk": 3606150
+     }
+    },
+    "site": {
+     "size": [
+      1024,
+      1024
+     ],
+     "files": {
+      "day": "day-site-high.png",
+      "dusk": "dusk-site-high.png"
+     },
+     "texelMetres": 0.8986,
+     "bytes": {
+      "day": 272817,
+      "dusk": 302770
+     }
+    },
+    "ground": {
+     "size": [
+      2048,
+      1024
+     ],
+     "files": {
+      "day": "day-ground-high.png",
+      "dusk": "dusk-ground-high.png"
+     },
+     "texelMetres": 0.4785,
+     "bytes": {
+      "day": 654602,
+      "dusk": 765500
+     },
+     "projection": {
+      "axes": "xz",
+      "bounds": {
+       "minX": -490.0,
+       "maxX": 490.0,
+       "minZ": -320.0,
+       "maxZ": 128.0
+      },
+      "lift": 0.35
+     }
+    }
+   },
+   "instances": {
+    "apartment-0": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.165527,
+      0.165527,
+      0.0,
+      0.834473
+     ],
+     "position": [
+      -156.0,
+      1.2,
+      24.7779
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-1": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.165527,
+      0.165527,
+      0.166504,
+      0.834473
+     ],
+     "position": [
+      -104.0,
+      1.2,
+      22.3211
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-2": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.165527,
+      0.165527,
+      0.333008,
+      0.834473
+     ],
+     "position": [
+      -52.0,
+      1.2,
+      19.9627
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.165527,
+      0.165527,
+      0.499512,
+      0.834473
+     ],
+     "position": [
+      52.0,
+      1.2,
+      19.9627
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.165527,
+      0.165527,
+      0.666016,
+      0.834473
+     ],
+     "position": [
+      104.0,
+      1.2,
+      22.3211
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-5": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.165527,
+      0.165527,
+      0.83252,
+      0.834473
+     ],
+     "position": [
+      156.0,
+      1.2,
+      24.7779
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-00": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.92334,
+      0.167969
+     ],
+     "position": [
+      -353.0,
+      1.2,
+      17.8402
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-01": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.956055,
+      0.167969
+     ],
+     "position": [
+      -325.0,
+      1.2,
+      19.1646
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-02": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.0,
+      0.096191
+     ],
+     "position": [
+      -297.0,
+      1.2,
+      20.5857
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-03": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.032715,
+      0.096191
+     ],
+     "position": [
+      -269.0,
+      1.2,
+      21.8688
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-04": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.06543,
+      0.096191
+     ],
+     "position": [
+      -241.0,
+      1.2,
+      22.8022
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-05": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.098145,
+      0.096191
+     ],
+     "position": [
+      -213.0,
+      1.2,
+      23.2317
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-06": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.130859,
+      0.096191
+     ],
+     "position": [
+      -185.0,
+      1.2,
+      23.0865
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-07": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.163574,
+      0.096191
+     ],
+     "position": [
+      203.0,
+      1.2,
+      23.0865
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-08": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.196289,
+      0.096191
+     ],
+     "position": [
+      231.0,
+      1.2,
+      23.2317
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-09": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.229004,
+      0.096191
+     ],
+     "position": [
+      259.0,
+      1.2,
+      22.8022
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-10": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.261719,
+      0.096191
+     ],
+     "position": [
+      287.0,
+      1.2,
+      21.8688
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-11": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.294434,
+      0.096191
+     ],
+     "position": [
+      315.0,
+      1.2,
+      20.5857
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-12": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.327148,
+      0.096191
+     ],
+     "position": [
+      343.0,
+      1.2,
+      19.1646
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-13": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.359863,
+      0.096191
+     ],
+     "position": [
+      371.0,
+      1.2,
+      17.8402
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-14": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.392578,
+      0.096191
+     ],
+     "position": [
+      399.0,
+      1.2,
+      16.831
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-15": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.425293,
+      0.096191
+     ],
+     "position": [
+      -334.2,
+      1.2,
+      -9.6353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-16": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.458008,
+      0.096191
+     ],
+     "position": [
+      -296.2,
+      1.2,
+      -7.7172
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-17": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.490723,
+      0.096191
+     ],
+     "position": [
+      -258.2,
+      1.2,
+      -6.1094
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-18": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.523438,
+      0.096191
+     ],
+     "position": [
+      -220.2,
+      1.2,
+      -5.2951
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-19": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.556152,
+      0.096191
+     ],
+     "position": [
+      -182.2,
+      1.2,
+      -5.5189
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-20": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.588867,
+      0.096191
+     ],
+     "position": [
+      -144.2,
+      1.2,
+      -6.7135
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-21": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.621582,
+      0.096191
+     ],
+     "position": [
+      -106.2,
+      1.2,
+      -8.52
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-22": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.654297,
+      0.096191
+     ],
+     "position": [
+      117.8,
+      1.2,
+      -8.52
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-23": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.687012,
+      0.096191
+     ],
+     "position": [
+      155.8,
+      1.2,
+      -6.7135
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-24": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.719727,
+      0.096191
+     ],
+     "position": [
+      193.8,
+      1.2,
+      -5.5189
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-25": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.752441,
+      0.096191
+     ],
+     "position": [
+      231.8,
+      1.2,
+      -5.2951
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-26": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.785156,
+      0.096191
+     ],
+     "position": [
+      269.8,
+      1.2,
+      -6.1094
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-27": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.817871,
+      0.096191
+     ],
+     "position": [
+      307.8,
+      1.2,
+      -7.7172
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-28": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.850586,
+      0.096191
+     ],
+     "position": [
+      345.8,
+      1.2,
+      -9.6353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-29": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.883301,
+      0.096191
+     ],
+     "position": [
+      383.8,
+      1.2,
+      -11.2873
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-30": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.916016,
+      0.096191
+     ],
+     "position": [
+      -326.8,
+      7.2,
+      -148.8596
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-31": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.94873,
+      0.096191
+     ],
+     "position": [
+      -288.8,
+      7.2,
+      -151.4783
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-32": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.0,
+      0.063477
+     ],
+     "position": [
+      -250.8,
+      7.2,
+      -153.2772
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-33": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.032715,
+      0.063477
+     ],
+     "position": [
+      -212.8,
+      7.2,
+      -153.7159
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-34": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.06543,
+      0.063477
+     ],
+     "position": [
+      -174.8,
+      7.2,
+      -152.6624
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-35": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.098145,
+      0.063477
+     ],
+     "position": [
+      -136.8,
+      7.2,
+      -150.4334
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-36": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.130859,
+      0.063477
+     ],
+     "position": [
+      -98.8,
+      7.2,
+      -147.6985
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-37": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.163574,
+      0.063477
+     ],
+     "position": [
+      87.2,
+      7.2,
+      -147.6985
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-38": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.196289,
+      0.063477
+     ],
+     "position": [
+      125.2,
+      7.2,
+      -150.4334
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-39": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.229004,
+      0.063477
+     ],
+     "position": [
+      163.2,
+      7.2,
+      -152.6624
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-40": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.261719,
+      0.063477
+     ],
+     "position": [
+      201.2,
+      7.2,
+      -153.7159
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-41": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.294434,
+      0.063477
+     ],
+     "position": [
+      239.2,
+      7.2,
+      -153.2772
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-42": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.327148,
+      0.063477
+     ],
+     "position": [
+      277.2,
+      7.2,
+      -151.4783
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-43": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.359863,
+      0.063477
+     ],
+     "position": [
+      315.2,
+      7.2,
+      -148.8596
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-44": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.392578,
+      0.063477
+     ],
+     "position": [
+      353.2,
+      7.2,
+      -146.2079
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-45": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.425293,
+      0.063477
+     ],
+     "position": [
+      -335.07,
+      7.2,
+      -175.9853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-46": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.458008,
+      0.063477
+     ],
+     "position": [
+      -297.07,
+      7.2,
+      -178.7254
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-47": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.490723,
+      0.063477
+     ],
+     "position": [
+      -259.07,
+      7.2,
+      -181.0222
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-48": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.523438,
+      0.063477
+     ],
+     "position": [
+      -221.07,
+      7.2,
+      -182.1856
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-49": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.556152,
+      0.063477
+     ],
+     "position": [
+      -183.07,
+      7.2,
+      -181.8659
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-50": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.588867,
+      0.063477
+     ],
+     "position": [
+      -145.07,
+      7.2,
+      -180.1593
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-51": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.621582,
+      0.063477
+     ],
+     "position": [
+      -107.07,
+      7.2,
+      -177.5785
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-52": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.654297,
+      0.063477
+     ],
+     "position": [
+      116.93,
+      7.2,
+      -177.5785
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-53": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.687012,
+      0.063477
+     ],
+     "position": [
+      154.93,
+      7.2,
+      -180.1593
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-54": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.719727,
+      0.063477
+     ],
+     "position": [
+      192.93,
+      7.2,
+      -181.8659
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-55": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.752441,
+      0.063477
+     ],
+     "position": [
+      230.93,
+      7.2,
+      -182.1856
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-56": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.785156,
+      0.063477
+     ],
+     "position": [
+      268.93,
+      7.2,
+      -181.0222
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-57": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.817871,
+      0.063477
+     ],
+     "position": [
+      306.93,
+      7.2,
+      -178.7254
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-58": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.850586,
+      0.063477
+     ],
+     "position": [
+      344.93,
+      7.2,
+      -175.9853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-59": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.031738,
+      0.031738,
+      0.883301,
+      0.063477
+     ],
+     "position": [
+      382.93,
+      7.2,
+      -173.6252
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "gallery-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.121582,
+      0.722656
+     ],
+     "position": [
+      -411.0,
+      1.2,
+      30.634
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "gym": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.107422,
+      0.107422,
+      0.111816,
+      0.492676
+     ],
+     "position": [
+      -50.5,
+      1.2,
+      -55.0
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "mosque": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.120605,
+      0.120605,
+      0.0,
+      0.712891
+     ],
+     "position": [
+      -404.0,
+      1.2,
+      -26.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "padel-1": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.054688,
+      0.054688,
+      0.760254,
+      0.14502
+     ],
+     "position": [
+      -22.5,
+      1.2,
+      -42.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "padel-2": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.054688,
+      0.054688,
+      0.815918,
+      0.14502
+     ],
+     "position": [
+      -22.5,
+      1.2,
+      -68.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "parking-apartments-1": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.058594,
+      0.058594,
+      0.287109,
+      0.141113
+     ],
+     "position": [
+      -130.0,
+      1.2,
+      29.6301
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-apartments-2": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.058594,
+      0.058594,
+      0.34668,
+      0.141113
+     ],
+     "position": [
+      -78.0,
+      1.2,
+      27.0376
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-apartments-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.058594,
+      0.058594,
+      0.40625,
+      0.141113
+     ],
+     "position": [
+      78.0,
+      1.2,
+      27.0376
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-apartments-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.058594,
+      0.058594,
+      0.46582,
+      0.141113
+     ],
+     "position": [
+      130.0,
+      1.2,
+      29.6301
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-gym": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.058594,
+      0.058594,
+      0.525391,
+      0.141113
+     ],
+     "position": [
+      -82.0,
+      1.2,
+      -18.7742
+     ],
+     "rotationY": -1.5708,
+     "windowsLit": true
+    },
+    "parking-service": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.050781,
+      0.050781,
+      0.871582,
+      0.148926
+     ],
+     "position": [
+      415.0,
+      1.2,
+      22.5837
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-visitors": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.058105,
+      0.058105,
+      0.584961,
+      0.141602
+     ],
+     "position": [
+      -387.3,
+      1.2,
+      28.1594
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "playground": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.057129,
+      0.057129,
+      0.644043,
+      0.142578
+     ],
+     "position": [
+      26.0,
+      1.2,
+      -44.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "tennis": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.057129,
+      0.057129,
+      0.702148,
+      0.142578
+     ],
+     "position": [
+      -22.5,
+      1.2,
+      -100.5
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-00-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.233398,
+      0.722656
+     ],
+     "position": [
+      -362.0,
+      1.2,
+      32.0902
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-01-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.345215,
+      0.722656
+     ],
+     "position": [
+      -334.0,
+      1.2,
+      33.4146
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-02-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.457031,
+      0.722656
+     ],
+     "position": [
+      -306.0,
+      1.2,
+      34.8357
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-03-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.568848,
+      0.722656
+     ],
+     "position": [
+      -278.0,
+      1.2,
+      36.1188
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-04-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.680664,
+      0.722656
+     ],
+     "position": [
+      -250.0,
+      1.2,
+      37.0522
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-05-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.79248,
+      0.722656
+     ],
+     "position": [
+      -222.0,
+      1.2,
+      37.4817
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-06-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.0,
+      0.601074
+     ],
+     "position": [
+      -194.0,
+      1.2,
+      37.3365
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-07-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.111816,
+      0.601074
+     ],
+     "position": [
+      194.0,
+      1.2,
+      37.3365
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-08-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.223633,
+      0.601074
+     ],
+     "position": [
+      222.0,
+      1.2,
+      37.4817
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-09-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.335449,
+      0.601074
+     ],
+     "position": [
+      250.0,
+      1.2,
+      37.0522
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-10-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.447266,
+      0.601074
+     ],
+     "position": [
+      278.0,
+      1.2,
+      36.1188
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-11-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.559082,
+      0.601074
+     ],
+     "position": [
+      306.0,
+      1.2,
+      34.8357
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-12-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.670898,
+      0.601074
+     ],
+     "position": [
+      334.0,
+      1.2,
+      33.4146
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-13-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.782715,
+      0.601074
+     ],
+     "position": [
+      362.0,
+      1.2,
+      32.0902
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-14-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.11084,
+      0.11084,
+      0.0,
+      0.489258
+     ],
+     "position": [
+      390.0,
+      1.2,
+      31.081
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-15-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.220215,
+      0.504883
+     ],
+     "position": [
+      -340.0,
+      1.2,
+      -17.8853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-16-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.316406,
+      0.504883
+     ],
+     "position": [
+      -302.0,
+      1.2,
+      -15.9672
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-17-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.412598,
+      0.504883
+     ],
+     "position": [
+      -264.0,
+      1.2,
+      -14.3594
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-18-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.508789,
+      0.504883
+     ],
+     "position": [
+      -226.0,
+      1.2,
+      -13.5451
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-19-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.60498,
+      0.504883
+     ],
+     "position": [
+      -188.0,
+      1.2,
+      -13.7689
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-20-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.701172,
+      0.504883
+     ],
+     "position": [
+      -150.0,
+      1.2,
+      -14.9635
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-21-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.797363,
+      0.504883
+     ],
+     "position": [
+      -112.0,
+      1.2,
+      -16.77
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-22-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.893555,
+      0.504883
+     ],
+     "position": [
+      112.0,
+      1.2,
+      -16.77
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-23-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.0,
+      0.393066
+     ],
+     "position": [
+      150.0,
+      1.2,
+      -14.9635
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-24-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.096191,
+      0.393066
+     ],
+     "position": [
+      188.0,
+      1.2,
+      -13.7689
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-25-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.192383,
+      0.393066
+     ],
+     "position": [
+      226.0,
+      1.2,
+      -13.5451
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-26-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.288574,
+      0.393066
+     ],
+     "position": [
+      264.0,
+      1.2,
+      -14.3594
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-27-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.384766,
+      0.393066
+     ],
+     "position": [
+      302.0,
+      1.2,
+      -15.9672
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-28-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.480957,
+      0.393066
+     ],
+     "position": [
+      340.0,
+      1.2,
+      -17.8853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-29-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.577148,
+      0.393066
+     ],
+     "position": [
+      378.0,
+      1.2,
+      -19.5373
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-30-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.67334,
+      0.393066
+     ],
+     "position": [
+      -321.0,
+      7.2,
+      -140.6096
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-31-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.769531,
+      0.393066
+     ],
+     "position": [
+      -283.0,
+      7.2,
+      -143.2283
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-32-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.865723,
+      0.393066
+     ],
+     "position": [
+      -245.0,
+      7.2,
+      -145.0272
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-33-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.0,
+      0.296875
+     ],
+     "position": [
+      -207.0,
+      7.2,
+      -145.4659
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-34-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.096191,
+      0.296875
+     ],
+     "position": [
+      -169.0,
+      7.2,
+      -144.4124
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-35-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.192383,
+      0.296875
+     ],
+     "position": [
+      -131.0,
+      7.2,
+      -142.1834
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-36-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.288574,
+      0.296875
+     ],
+     "position": [
+      -93.0,
+      7.2,
+      -139.4485
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-37-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.384766,
+      0.296875
+     ],
+     "position": [
+      93.0,
+      7.2,
+      -139.4485
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-38-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.480957,
+      0.296875
+     ],
+     "position": [
+      131.0,
+      7.2,
+      -142.1834
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-39-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.577148,
+      0.296875
+     ],
+     "position": [
+      169.0,
+      7.2,
+      -144.4124
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-40-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.67334,
+      0.296875
+     ],
+     "position": [
+      207.0,
+      7.2,
+      -145.4659
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-41-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.769531,
+      0.296875
+     ],
+     "position": [
+      245.0,
+      7.2,
+      -145.0272
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-42-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.865723,
+      0.296875
+     ],
+     "position": [
+      283.0,
+      7.2,
+      -143.2283
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-43-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.0,
+      0.200684
+     ],
+     "position": [
+      321.0,
+      7.2,
+      -140.6096
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-44-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.095215,
+      0.095215,
+      0.096191,
+      0.200684
+     ],
+     "position": [
+      359.0,
+      7.2,
+      -137.9579
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-45-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.192383,
+      0.225098
+     ],
+     "position": [
+      -340.0,
+      7.2,
+      -183.4353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-46-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.26416,
+      0.225098
+     ],
+     "position": [
+      -302.0,
+      7.2,
+      -186.1754
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-47-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.335938,
+      0.225098
+     ],
+     "position": [
+      -264.0,
+      7.2,
+      -188.4722
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-48-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.407715,
+      0.225098
+     ],
+     "position": [
+      -226.0,
+      7.2,
+      -189.6356
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-49-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.479492,
+      0.225098
+     ],
+     "position": [
+      -188.0,
+      7.2,
+      -189.3159
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-50-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.55127,
+      0.225098
+     ],
+     "position": [
+      -150.0,
+      7.2,
+      -187.6093
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-51-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.623047,
+      0.225098
+     ],
+     "position": [
+      -112.0,
+      7.2,
+      -185.0285
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-52-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.694824,
+      0.225098
+     ],
+     "position": [
+      112.0,
+      7.2,
+      -185.0285
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-53-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.766602,
+      0.225098
+     ],
+     "position": [
+      150.0,
+      7.2,
+      -187.6093
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-54-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.838379,
+      0.225098
+     ],
+     "position": [
+      188.0,
+      7.2,
+      -189.3159
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-55-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.910156,
+      0.225098
+     ],
+     "position": [
+      226.0,
+      7.2,
+      -189.6356
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-56-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.0,
+      0.128906
+     ],
+     "position": [
+      264.0,
+      7.2,
+      -188.4722
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-57-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.071777,
+      0.128906
+     ],
+     "position": [
+      302.0,
+      7.2,
+      -186.1754
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-58-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.143555,
+      0.128906
+     ],
+     "position": [
+      340.0,
+      7.2,
+      -183.4353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-59-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.070801,
+      0.070801,
+      0.215332,
+      0.128906
+     ],
+     "position": [
+      378.0,
+      7.2,
+      -181.0752
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "garden": {
+     "page": "site",
+     "scaleOffset": [
+      1.0,
+      1.0,
+      0.0,
+      0.0
+     ],
+     "position": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "site": {
+     "page": "site",
+     "scaleOffset": [
+      1.0,
+      1.0,
+      0.0,
+      0.0
+     ],
+     "position": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    }
+   }
+  },
+  "low": {
+   "pages": {
+    "buildings": {
+     "size": [
+      1024,
+      1024
+     ],
+     "files": {
+      "day": "day-buildings-low.png",
+      "dusk": "dusk-buildings-low.png"
+     },
+     "texelMetres": 0.5793,
+     "bytes": {
+      "day": 993864,
+      "dusk": 1031871
+     }
+    },
+    "site": {
+     "size": [
+      512,
+      512
+     ],
+     "files": {
+      "day": "day-site-low.png",
+      "dusk": "dusk-site-low.png"
+     },
+     "texelMetres": 1.7971,
+     "bytes": {
+      "day": 86886,
+      "dusk": 95836
+     }
+    },
+    "ground": {
+     "size": [
+      1024,
+      512
+     ],
+     "files": {
+      "day": "day-ground-low.png",
+      "dusk": "dusk-ground-low.png"
+     },
+     "texelMetres": 0.957,
+     "bytes": {
+      "day": 228668,
+      "dusk": 235508
+     },
+     "projection": {
+      "axes": "xz",
+      "bounds": {
+       "minX": -490.0,
+       "maxX": 490.0,
+       "minZ": -320.0,
+       "maxZ": 128.0
+      },
+      "lift": 0.35
+     }
+    }
+   },
+   "instances": {
+    "apartment-0": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.171875,
+      0.171875,
+      0.0,
+      0.828125
+     ],
+     "position": [
+      -156.0,
+      1.2,
+      24.7779
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-1": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.171875,
+      0.171875,
+      0.173828,
+      0.828125
+     ],
+     "position": [
+      -104.0,
+      1.2,
+      22.3211
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-2": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.171875,
+      0.171875,
+      0.347656,
+      0.828125
+     ],
+     "position": [
+      -52.0,
+      1.2,
+      19.9627
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.171875,
+      0.171875,
+      0.521484,
+      0.828125
+     ],
+     "position": [
+      52.0,
+      1.2,
+      19.9627
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.171875,
+      0.171875,
+      0.695312,
+      0.828125
+     ],
+     "position": [
+      104.0,
+      1.2,
+      22.3211
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "apartment-5": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.171875,
+      0.171875,
+      0.0,
+      0.654297
+     ],
+     "position": [
+      156.0,
+      1.2,
+      24.7779
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-00": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.823242,
+      0.151367
+     ],
+     "position": [
+      -353.0,
+      1.2,
+      17.8402
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-01": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.860352,
+      0.151367
+     ],
+     "position": [
+      -325.0,
+      1.2,
+      19.1646
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-02": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.897461,
+      0.151367
+     ],
+     "position": [
+      -297.0,
+      1.2,
+      20.5857
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-03": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.93457,
+      0.151367
+     ],
+     "position": [
+      -269.0,
+      1.2,
+      21.8688
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-04": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.0,
+      0.074219
+     ],
+     "position": [
+      -241.0,
+      1.2,
+      22.8022
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-05": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.037109,
+      0.074219
+     ],
+     "position": [
+      -213.0,
+      1.2,
+      23.2317
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-06": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.074219,
+      0.074219
+     ],
+     "position": [
+      -185.0,
+      1.2,
+      23.0865
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-07": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.111328,
+      0.074219
+     ],
+     "position": [
+      203.0,
+      1.2,
+      23.0865
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-08": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.148438,
+      0.074219
+     ],
+     "position": [
+      231.0,
+      1.2,
+      23.2317
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-09": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.185547,
+      0.074219
+     ],
+     "position": [
+      259.0,
+      1.2,
+      22.8022
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-10": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.222656,
+      0.074219
+     ],
+     "position": [
+      287.0,
+      1.2,
+      21.8688
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-11": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.259766,
+      0.074219
+     ],
+     "position": [
+      315.0,
+      1.2,
+      20.5857
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-12": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.296875,
+      0.074219
+     ],
+     "position": [
+      343.0,
+      1.2,
+      19.1646
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-13": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.333984,
+      0.074219
+     ],
+     "position": [
+      371.0,
+      1.2,
+      17.8402
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-14": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.371094,
+      0.074219
+     ],
+     "position": [
+      399.0,
+      1.2,
+      16.831
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-15": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.408203,
+      0.074219
+     ],
+     "position": [
+      -334.2,
+      1.2,
+      -9.6353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-16": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.445312,
+      0.074219
+     ],
+     "position": [
+      -296.2,
+      1.2,
+      -7.7172
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-17": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.482422,
+      0.074219
+     ],
+     "position": [
+      -258.2,
+      1.2,
+      -6.1094
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-18": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.519531,
+      0.074219
+     ],
+     "position": [
+      -220.2,
+      1.2,
+      -5.2951
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-19": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.556641,
+      0.074219
+     ],
+     "position": [
+      -182.2,
+      1.2,
+      -5.5189
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-20": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.59375,
+      0.074219
+     ],
+     "position": [
+      -144.2,
+      1.2,
+      -6.7135
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-21": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.630859,
+      0.074219
+     ],
+     "position": [
+      -106.2,
+      1.2,
+      -8.52
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-22": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.667969,
+      0.074219
+     ],
+     "position": [
+      117.8,
+      1.2,
+      -8.52
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-23": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.705078,
+      0.074219
+     ],
+     "position": [
+      155.8,
+      1.2,
+      -6.7135
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-24": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.742188,
+      0.074219
+     ],
+     "position": [
+      193.8,
+      1.2,
+      -5.5189
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-25": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.779297,
+      0.074219
+     ],
+     "position": [
+      231.8,
+      1.2,
+      -5.2951
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-26": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.816406,
+      0.074219
+     ],
+     "position": [
+      269.8,
+      1.2,
+      -6.1094
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-27": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.853516,
+      0.074219
+     ],
+     "position": [
+      307.8,
+      1.2,
+      -7.7172
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-28": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.890625,
+      0.074219
+     ],
+     "position": [
+      345.8,
+      1.2,
+      -9.6353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-29": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.927734,
+      0.074219
+     ],
+     "position": [
+      383.8,
+      1.2,
+      -11.2873
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-30": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.964844,
+      0.074219
+     ],
+     "position": [
+      -326.8,
+      7.2,
+      -148.8596
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-31": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.0,
+      0.037109
+     ],
+     "position": [
+      -288.8,
+      7.2,
+      -151.4783
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-32": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.037109,
+      0.037109
+     ],
+     "position": [
+      -250.8,
+      7.2,
+      -153.2772
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-33": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.074219,
+      0.037109
+     ],
+     "position": [
+      -212.8,
+      7.2,
+      -153.7159
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-34": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.111328,
+      0.037109
+     ],
+     "position": [
+      -174.8,
+      7.2,
+      -152.6624
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-35": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.148438,
+      0.037109
+     ],
+     "position": [
+      -136.8,
+      7.2,
+      -150.4334
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-36": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.185547,
+      0.037109
+     ],
+     "position": [
+      -98.8,
+      7.2,
+      -147.6985
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-37": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.222656,
+      0.037109
+     ],
+     "position": [
+      87.2,
+      7.2,
+      -147.6985
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-38": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.259766,
+      0.037109
+     ],
+     "position": [
+      125.2,
+      7.2,
+      -150.4334
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-39": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.296875,
+      0.037109
+     ],
+     "position": [
+      163.2,
+      7.2,
+      -152.6624
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-40": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.333984,
+      0.037109
+     ],
+     "position": [
+      201.2,
+      7.2,
+      -153.7159
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-41": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.371094,
+      0.037109
+     ],
+     "position": [
+      239.2,
+      7.2,
+      -153.2772
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-42": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.408203,
+      0.037109
+     ],
+     "position": [
+      277.2,
+      7.2,
+      -151.4783
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-43": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.445312,
+      0.037109
+     ],
+     "position": [
+      315.2,
+      7.2,
+      -148.8596
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-44": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.482422,
+      0.037109
+     ],
+     "position": [
+      353.2,
+      7.2,
+      -146.2079
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "carport-45": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.519531,
+      0.037109
+     ],
+     "position": [
+      -335.07,
+      7.2,
+      -175.9853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-46": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.556641,
+      0.037109
+     ],
+     "position": [
+      -297.07,
+      7.2,
+      -178.7254
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-47": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.59375,
+      0.037109
+     ],
+     "position": [
+      -259.07,
+      7.2,
+      -181.0222
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-48": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.630859,
+      0.037109
+     ],
+     "position": [
+      -221.07,
+      7.2,
+      -182.1856
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-49": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.667969,
+      0.037109
+     ],
+     "position": [
+      -183.07,
+      7.2,
+      -181.8659
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-50": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.705078,
+      0.037109
+     ],
+     "position": [
+      -145.07,
+      7.2,
+      -180.1593
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-51": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.742188,
+      0.037109
+     ],
+     "position": [
+      -107.07,
+      7.2,
+      -177.5785
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-52": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.779297,
+      0.037109
+     ],
+     "position": [
+      116.93,
+      7.2,
+      -177.5785
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-53": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.816406,
+      0.037109
+     ],
+     "position": [
+      154.93,
+      7.2,
+      -180.1593
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-54": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.853516,
+      0.037109
+     ],
+     "position": [
+      192.93,
+      7.2,
+      -181.8659
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-55": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.890625,
+      0.037109
+     ],
+     "position": [
+      230.93,
+      7.2,
+      -182.1856
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-56": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.927734,
+      0.037109
+     ],
+     "position": [
+      268.93,
+      7.2,
+      -181.0222
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-57": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.964844,
+      0.037109
+     ],
+     "position": [
+      306.93,
+      7.2,
+      -178.7254
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-58": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.0,
+      0.0
+     ],
+     "position": [
+      344.93,
+      7.2,
+      -175.9853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "carport-59": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.035156,
+      0.035156,
+      0.037109,
+      0.0
+     ],
+     "position": [
+      382.93,
+      7.2,
+      -173.6252
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "gallery-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.303711,
+      0.720703
+     ],
+     "position": [
+      -411.0,
+      1.2,
+      30.634
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "gym": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.099609,
+      0.099609,
+      0.107422,
+      0.445312
+     ],
+     "position": [
+      -50.5,
+      1.2,
+      -55.0
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "mosque": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.12793,
+      0.12793,
+      0.173828,
+      0.698242
+     ],
+     "position": [
+      -404.0,
+      1.2,
+      -26.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "padel-1": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.061523,
+      0.061523,
+      0.289062,
+      0.125
+     ],
+     "position": [
+      -22.5,
+      1.2,
+      -42.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "padel-2": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.061523,
+      0.061523,
+      0.352539,
+      0.125
+     ],
+     "position": [
+      -22.5,
+      1.2,
+      -68.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "parking-apartments-1": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.056641,
+      0.056641,
+      0.475586,
+      0.129883
+     ],
+     "position": [
+      -130.0,
+      1.2,
+      29.6301
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-apartments-2": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.056641,
+      0.056641,
+      0.53418,
+      0.129883
+     ],
+     "position": [
+      -78.0,
+      1.2,
+      27.0376
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-apartments-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.056641,
+      0.056641,
+      0.592773,
+      0.129883
+     ],
+     "position": [
+      78.0,
+      1.2,
+      27.0376
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-apartments-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.056641,
+      0.056641,
+      0.651367,
+      0.129883
+     ],
+     "position": [
+      130.0,
+      1.2,
+      29.6301
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-gym": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.056641,
+      0.056641,
+      0.709961,
+      0.129883
+     ],
+     "position": [
+      -82.0,
+      1.2,
+      -18.7742
+     ],
+     "rotationY": -1.5708,
+     "windowsLit": true
+    },
+    "parking-service": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.052734,
+      0.052734,
+      0.768555,
+      0.133789
+     ],
+     "position": [
+      415.0,
+      1.2,
+      22.5837
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "parking-visitors": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.057617,
+      0.057617,
+      0.416016,
+      0.128906
+     ],
+     "position": [
+      -387.3,
+      1.2,
+      28.1594
+     ],
+     "rotationY": 1.5708,
+     "windowsLit": true
+    },
+    "playground": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.064453,
+      0.064453,
+      0.222656,
+      0.12207
+     ],
+     "position": [
+      26.0,
+      1.2,
+      -44.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "tennis": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.066406,
+      0.066406,
+      0.154297,
+      0.120117
+     ],
+     "position": [
+      -22.5,
+      1.2,
+      -100.5
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-00-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.411133,
+      0.720703
+     ],
+     "position": [
+      -362.0,
+      1.2,
+      32.0902
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-01-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.518555,
+      0.720703
+     ],
+     "position": [
+      -334.0,
+      1.2,
+      33.4146
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-02-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.625977,
+      0.720703
+     ],
+     "position": [
+      -306.0,
+      1.2,
+      34.8357
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-03-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.733398,
+      0.720703
+     ],
+     "position": [
+      -278.0,
+      1.2,
+      36.1188
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-04-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.84082,
+      0.720703
+     ],
+     "position": [
+      -250.0,
+      1.2,
+      37.0522
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-05-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.0,
+      0.546875
+     ],
+     "position": [
+      -222.0,
+      1.2,
+      37.4817
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-06-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.107422,
+      0.546875
+     ],
+     "position": [
+      -194.0,
+      1.2,
+      37.3365
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-07-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.214844,
+      0.546875
+     ],
+     "position": [
+      194.0,
+      1.2,
+      37.3365
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-08-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.322266,
+      0.546875
+     ],
+     "position": [
+      222.0,
+      1.2,
+      37.4817
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-09-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.429688,
+      0.546875
+     ],
+     "position": [
+      250.0,
+      1.2,
+      37.0522
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-10-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.537109,
+      0.546875
+     ],
+     "position": [
+      278.0,
+      1.2,
+      36.1188
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-11-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.644531,
+      0.546875
+     ],
+     "position": [
+      306.0,
+      1.2,
+      34.8357
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-12-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.751953,
+      0.546875
+     ],
+     "position": [
+      334.0,
+      1.2,
+      33.4146
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-13-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.859375,
+      0.546875
+     ],
+     "position": [
+      362.0,
+      1.2,
+      32.0902
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-14-courtyard": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.105469,
+      0.105469,
+      0.0,
+      0.439453
+     ],
+     "position": [
+      390.0,
+      1.2,
+      31.081
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-15-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.208984,
+      0.459961
+     ],
+     "position": [
+      -340.0,
+      1.2,
+      -17.8853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-16-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.295898,
+      0.459961
+     ],
+     "position": [
+      -302.0,
+      1.2,
+      -15.9672
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-17-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.382812,
+      0.459961
+     ],
+     "position": [
+      -264.0,
+      1.2,
+      -14.3594
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-18-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.469727,
+      0.459961
+     ],
+     "position": [
+      -226.0,
+      1.2,
+      -13.5451
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-19-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.556641,
+      0.459961
+     ],
+     "position": [
+      -188.0,
+      1.2,
+      -13.7689
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-20-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.643555,
+      0.459961
+     ],
+     "position": [
+      -150.0,
+      1.2,
+      -14.9635
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-21-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.730469,
+      0.459961
+     ],
+     "position": [
+      -112.0,
+      1.2,
+      -16.77
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-22-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.817383,
+      0.459961
+     ],
+     "position": [
+      112.0,
+      1.2,
+      -16.77
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-23-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.904297,
+      0.459961
+     ],
+     "position": [
+      150.0,
+      1.2,
+      -14.9635
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-24-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.0,
+      0.352539
+     ],
+     "position": [
+      188.0,
+      1.2,
+      -13.7689
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-25-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.086914,
+      0.352539
+     ],
+     "position": [
+      226.0,
+      1.2,
+      -13.5451
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-26-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.173828,
+      0.352539
+     ],
+     "position": [
+      264.0,
+      1.2,
+      -14.3594
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-27-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.260742,
+      0.352539
+     ],
+     "position": [
+      302.0,
+      1.2,
+      -15.9672
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-28-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.347656,
+      0.352539
+     ],
+     "position": [
+      340.0,
+      1.2,
+      -17.8853
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-29-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.43457,
+      0.352539
+     ],
+     "position": [
+      378.0,
+      1.2,
+      -19.5373
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-30-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.521484,
+      0.352539
+     ],
+     "position": [
+      -321.0,
+      7.2,
+      -140.6096
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-31-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.608398,
+      0.352539
+     ],
+     "position": [
+      -283.0,
+      7.2,
+      -143.2283
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-32-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.695312,
+      0.352539
+     ],
+     "position": [
+      -245.0,
+      7.2,
+      -145.0272
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-33-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.782227,
+      0.352539
+     ],
+     "position": [
+      -207.0,
+      7.2,
+      -145.4659
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-34-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.869141,
+      0.352539
+     ],
+     "position": [
+      -169.0,
+      7.2,
+      -144.4124
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-35-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.0,
+      0.265625
+     ],
+     "position": [
+      -131.0,
+      7.2,
+      -142.1834
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-36-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.086914,
+      0.265625
+     ],
+     "position": [
+      -93.0,
+      7.2,
+      -139.4485
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-37-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.173828,
+      0.265625
+     ],
+     "position": [
+      93.0,
+      7.2,
+      -139.4485
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-38-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.260742,
+      0.265625
+     ],
+     "position": [
+      131.0,
+      7.2,
+      -142.1834
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": false
+    },
+    "villa-39-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.347656,
+      0.265625
+     ],
+     "position": [
+      169.0,
+      7.2,
+      -144.4124
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-40-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.43457,
+      0.265625
+     ],
+     "position": [
+      207.0,
+      7.2,
+      -145.4659
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-41-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.521484,
+      0.265625
+     ],
+     "position": [
+      245.0,
+      7.2,
+      -145.0272
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-42-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.608398,
+      0.265625
+     ],
+     "position": [
+      283.0,
+      7.2,
+      -143.2283
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-43-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.695312,
+      0.265625
+     ],
+     "position": [
+      321.0,
+      7.2,
+      -140.6096
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-44-garden-4": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.084961,
+      0.084961,
+      0.782227,
+      0.265625
+     ],
+     "position": [
+      359.0,
+      7.2,
+      -137.9579
+     ],
+     "rotationY": -3.14159,
+     "windowsLit": true
+    },
+    "villa-45-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.869141,
+      0.275391
+     ],
+     "position": [
+      -340.0,
+      7.2,
+      -183.4353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-46-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.0,
+      0.188477
+     ],
+     "position": [
+      -302.0,
+      7.2,
+      -186.1754
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-47-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.077148,
+      0.188477
+     ],
+     "position": [
+      -264.0,
+      7.2,
+      -188.4722
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-48-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.154297,
+      0.188477
+     ],
+     "position": [
+      -226.0,
+      7.2,
+      -189.6356
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-49-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.231445,
+      0.188477
+     ],
+     "position": [
+      -188.0,
+      7.2,
+      -189.3159
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-50-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.308594,
+      0.188477
+     ],
+     "position": [
+      -150.0,
+      7.2,
+      -187.6093
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-51-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.385742,
+      0.188477
+     ],
+     "position": [
+      -112.0,
+      7.2,
+      -185.0285
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-52-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.462891,
+      0.188477
+     ],
+     "position": [
+      112.0,
+      7.2,
+      -185.0285
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-53-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.540039,
+      0.188477
+     ],
+     "position": [
+      150.0,
+      7.2,
+      -187.6093
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-54-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.617188,
+      0.188477
+     ],
+     "position": [
+      188.0,
+      7.2,
+      -189.3159
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-55-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.694336,
+      0.188477
+     ],
+     "position": [
+      226.0,
+      7.2,
+      -189.6356
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-56-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.771484,
+      0.188477
+     ],
+     "position": [
+      264.0,
+      7.2,
+      -188.4722
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-57-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.848633,
+      0.188477
+     ],
+     "position": [
+      302.0,
+      7.2,
+      -186.1754
+     ],
+     "rotationY": 0.0,
+     "windowsLit": false
+    },
+    "villa-58-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.0,
+      0.111328
+     ],
+     "position": [
+      340.0,
+      7.2,
+      -183.4353
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "villa-59-garden-3": {
+     "page": "buildings",
+     "scaleOffset": [
+      0.075195,
+      0.075195,
+      0.077148,
+      0.111328
+     ],
+     "position": [
+      378.0,
+      7.2,
+      -181.0752
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "garden": {
+     "page": "site",
+     "scaleOffset": [
+      1.0,
+      1.0,
+      0.0,
+      0.0
+     ],
+     "position": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    },
+    "site": {
+     "page": "site",
+     "scaleOffset": [
+      1.0,
+      1.0,
+      0.0,
+      0.0
+     ],
+     "position": [
+      0.0,
+      0.0,
+      -0.0
+     ],
+     "rotationY": 0.0,
+     "windowsLit": true
+    }
+   }
+  }
+ }
+}
