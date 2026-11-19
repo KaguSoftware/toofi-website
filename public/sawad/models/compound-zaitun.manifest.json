@@ -1,0 +1,793 @@
+{
+  "plan": "zaitun",
+  "generatedBy": "scripts/blender/build.sh",
+  "blender": "5.3.0",
+  "villas": [
+    {
+      "name": "villa-00",
+      "type": "courtyard",
+      "position": [
+        -362,
+        1.2,
+        32.0902
+      ]
+    },
+    {
+      "name": "villa-01",
+      "type": "courtyard",
+      "position": [
+        -334,
+        1.2,
+        33.4146
+      ]
+    },
+    {
+      "name": "villa-02",
+      "type": "courtyard",
+      "position": [
+        -306,
+        1.2,
+        34.8357
+      ]
+    },
+    {
+      "name": "villa-03",
+      "type": "courtyard",
+      "position": [
+        -278,
+        1.2,
+        36.1188
+      ]
+    },
+    {
+      "name": "villa-04",
+      "type": "courtyard",
+      "position": [
+        -250,
+        1.2,
+        37.0522
+      ]
+    },
+    {
+      "name": "villa-05",
+      "type": "courtyard",
+      "position": [
+        -222,
+        1.2,
+        37.4817
+      ]
+    },
+    {
+      "name": "villa-06",
+      "type": "courtyard",
+      "position": [
+        -194,
+        1.2,
+        37.3365
+      ]
+    },
+    {
+      "name": "villa-07",
+      "type": "courtyard",
+      "position": [
+        194,
+        1.2,
+        37.3365
+      ]
+    },
+    {
+      "name": "villa-08",
+      "type": "courtyard",
+      "position": [
+        222,
+        1.2,
+        37.4817
+      ]
+    },
+    {
+      "name": "villa-09",
+      "type": "courtyard",
+      "position": [
+        250,
+        1.2,
+        37.0522
+      ]
+    },
+    {
+      "name": "villa-10",
+      "type": "courtyard",
+      "position": [
+        278,
+        1.2,
+        36.1188
+      ]
+    },
+    {
+      "name": "villa-11",
+      "type": "courtyard",
+      "position": [
+        306,
+        1.2,
+        34.8357
+      ]
+    },
+    {
+      "name": "villa-12",
+      "type": "courtyard",
+      "position": [
+        334,
+        1.2,
+        33.4146
+      ]
+    },
+    {
+      "name": "villa-13",
+      "type": "courtyard",
+      "position": [
+        362,
+        1.2,
+        32.0902
+      ]
+    },
+    {
+      "name": "villa-14",
+      "type": "courtyard",
+      "position": [
+        390,
+        1.2,
+        31.081
+      ]
+    },
+    {
+      "name": "villa-15",
+      "type": "garden-4",
+      "position": [
+        -340,
+        1.2,
+        -17.8853
+      ]
+    },
+    {
+      "name": "villa-16",
+      "type": "garden-4",
+      "position": [
+        -302,
+        1.2,
+        -15.9672
+      ]
+    },
+    {
+      "name": "villa-17",
+      "type": "garden-4",
+      "position": [
+        -264,
+        1.2,
+        -14.3594
+      ]
+    },
+    {
+      "name": "villa-18",
+      "type": "garden-4",
+      "position": [
+        -226,
+        1.2,
+        -13.5451
+      ]
+    },
+    {
+      "name": "villa-19",
+      "type": "garden-4",
+      "position": [
+        -188,
+        1.2,
+        -13.7689
+      ]
+    },
+    {
+      "name": "villa-20",
+      "type": "garden-4",
+      "position": [
+        -150,
+        1.2,
+        -14.9635
+      ]
+    },
+    {
+      "name": "villa-21",
+      "type": "garden-4",
+      "position": [
+        -112,
+        1.2,
+        -16.77
+      ]
+    },
+    {
+      "name": "villa-22",
+      "type": "garden-4",
+      "position": [
+        112,
+        1.2,
+        -16.77
+      ]
+    },
+    {
+      "name": "villa-23",
+      "type": "garden-4",
+      "position": [
+        150,
+        1.2,
+        -14.9635
+      ]
+    },
+    {
+      "name": "villa-24",
+      "type": "garden-4",
+      "position": [
+        188,
+        1.2,
+        -13.7689
+      ]
+    },
+    {
+      "name": "villa-25",
+      "type": "garden-4",
+      "position": [
+        226,
+        1.2,
+        -13.5451
+      ]
+    },
+    {
+      "name": "villa-26",
+      "type": "garden-4",
+      "position": [
+        264,
+        1.2,
+        -14.3594
+      ]
+    },
+    {
+      "name": "villa-27",
+      "type": "garden-4",
+      "position": [
+        302,
+        1.2,
+        -15.9672
+      ]
+    },
+    {
+      "name": "villa-28",
+      "type": "garden-4",
+      "position": [
+        340,
+        1.2,
+        -17.8853
+      ]
+    },
+    {
+      "name": "villa-29",
+      "type": "garden-4",
+      "position": [
+        378,
+        1.2,
+        -19.5373
+      ]
+    },
+    {
+      "name": "villa-30",
+      "type": "garden-4",
+      "position": [
+        -321,
+        7.2,
+        -140.6096
+      ]
+    },
+    {
+      "name": "villa-31",
+      "type": "garden-4",
+      "position": [
+        -283,
+        7.2,
+        -143.2283
+      ]
+    },
+    {
+      "name": "villa-32",
+      "type": "garden-4",
+      "position": [
+        -245,
+        7.2,
+        -145.0272
+      ]
+    },
+    {
+      "name": "villa-33",
+      "type": "garden-4",
+      "position": [
+        -207,
+        7.2,
+        -145.4659
+      ]
+    },
+    {
+      "name": "villa-34",
+      "type": "garden-4",
+      "position": [
+        -169,
+        7.2,
+        -144.4124
+      ]
+    },
+    {
+      "name": "villa-35",
+      "type": "garden-4",
+      "position": [
+        -131,
+        7.2,
+        -142.1834
+      ]
+    },
+    {
+      "name": "villa-36",
+      "type": "garden-4",
+      "position": [
+        -93,
+        7.2,
+        -139.4485
+      ]
+    },
+    {
+      "name": "villa-37",
+      "type": "garden-4",
+      "position": [
+        93,
+        7.2,
+        -139.4485
+      ]
+    },
+    {
+      "name": "villa-38",
+      "type": "garden-4",
+      "position": [
+        131,
+        7.2,
+        -142.1834
+      ]
+    },
+    {
+      "name": "villa-39",
+      "type": "garden-4",
+      "position": [
+        169,
+        7.2,
+        -144.4124
+      ]
+    },
+    {
+      "name": "villa-40",
+      "type": "garden-4",
+      "position": [
+        207,
+        7.2,
+        -145.4659
+      ]
+    },
+    {
+      "name": "villa-41",
+      "type": "garden-4",
+      "position": [
+        245,
+        7.2,
+        -145.0272
+      ]
+    },
+    {
+      "name": "villa-42",
+      "type": "garden-4",
+      "position": [
+        283,
+        7.2,
+        -143.2283
+      ]
+    },
+    {
+      "name": "villa-43",
+      "type": "garden-4",
+      "position": [
+        321,
+        7.2,
+        -140.6096
+      ]
+    },
+    {
+      "name": "villa-44",
+      "type": "garden-4",
+      "position": [
+        359,
+        7.2,
+        -137.9579
+      ]
+    },
+    {
+      "name": "villa-45",
+      "type": "garden-3",
+      "position": [
+        -340,
+        7.2,
+        -183.4353
+      ]
+    },
+    {
+      "name": "villa-46",
+      "type": "garden-3",
+      "position": [
+        -302,
+        7.2,
+        -186.1754
+      ]
+    },
+    {
+      "name": "villa-47",
+      "type": "garden-3",
+      "position": [
+        -264,
+        7.2,
+        -188.4722
+      ]
+    },
+    {
+      "name": "villa-48",
+      "type": "garden-3",
+      "position": [
+        -226,
+        7.2,
+        -189.6356
+      ]
+    },
+    {
+      "name": "villa-49",
+      "type": "garden-3",
+      "position": [
+        -188,
+        7.2,
+        -189.3159
+      ]
+    },
+    {
+      "name": "villa-50",
+      "type": "garden-3",
+      "position": [
+        -150,
+        7.2,
+        -187.6093
+      ]
+    },
+    {
+      "name": "villa-51",
+      "type": "garden-3",
+      "position": [
+        -112,
+        7.2,
+        -185.0285
+      ]
+    },
+    {
+      "name": "villa-52",
+      "type": "garden-3",
+      "position": [
+        112,
+        7.2,
+        -185.0285
+      ]
+    },
+    {
+      "name": "villa-53",
+      "type": "garden-3",
+      "position": [
+        150,
+        7.2,
+        -187.6093
+      ]
+    },
+    {
+      "name": "villa-54",
+      "type": "garden-3",
+      "position": [
+        188,
+        7.2,
+        -189.3159
+      ]
+    },
+    {
+      "name": "villa-55",
+      "type": "garden-3",
+      "position": [
+        226,
+        7.2,
+        -189.6356
+      ]
+    },
+    {
+      "name": "villa-56",
+      "type": "garden-3",
+      "position": [
+        264,
+        7.2,
+        -188.4722
+      ]
+    },
+    {
+      "name": "villa-57",
+      "type": "garden-3",
+      "position": [
+        302,
+        7.2,
+        -186.1754
+      ]
+    },
+    {
+      "name": "villa-58",
+      "type": "garden-3",
+      "position": [
+        340,
+        7.2,
+        -183.4353
+      ]
+    },
+    {
+      "name": "villa-59",
+      "type": "garden-3",
+      "position": [
+        378,
+        7.2,
+        -181.0752
+      ]
+    }
+  ],
+  "files": {
+    "compound-zaitun-high.glb": 9009732,
+    "compound-zaitun-low.glb": 4255984
+  },
+  "budgets": {
+    "compound-zaitun-high.glb": 10000000,
+    "compound-zaitun-low.glb": 5000000
+  },
+  "palette": {
+    "plaster_cream": {
+      "key": "cream",
+      "palette": "#ecdfc7",
+      "mean": "#ecdfc7",
+      "region": "plaster"
+    },
+    "plaster_shade": {
+      "key": "creamShade",
+      "palette": "#dccaa8",
+      "mean": "#dccaa8",
+      "region": "plaster",
+      "tint": [
+        0.8532,
+        0.8004,
+        0.6856
+      ]
+    },
+    "paving": {
+      "key": "stone",
+      "palette": "#d2c3a2",
+      "mean": "#d2c3a2",
+      "region": "paving"
+    },
+    "limestone": {
+      "key": "parapet",
+      "palette": "#f3e9d6",
+      "mean": "#f3e9d6",
+      "region": "travertine"
+    },
+    "hedge": {
+      "key": "hedge",
+      "palette": "#56692f",
+      "mean": "#56692f",
+      "region": "hedge"
+    },
+    "wall": {
+      "key": "wall",
+      "palette": "#d6c29c",
+      "mean": "#d6c29c",
+      "region": "plaster",
+      "tint": [
+        0.8017,
+        0.7311,
+        0.5821
+      ]
+    },
+    "courtyard": {
+      "key": "courtyard",
+      "palette": "#9b8466",
+      "mean": "#9b8466",
+      "region": "courtyard"
+    },
+    "lattice": {
+      "key": "wood",
+      "palette": "#6b5038",
+      "mean": "#6b5038",
+      "region": "lattice"
+    },
+    "stone": {
+      "key": "stone",
+      "palette": "#d2c3a2",
+      "mean": "#d2c3a2",
+      "region": "travertine",
+      "tint": [
+        0.719,
+        0.6696,
+        0.5372
+      ]
+    },
+    "slab": {
+      "key": "slab",
+      "palette": "#efe6d5",
+      "mean": "#efe6d5",
+      "region": "travertine",
+      "tint": [
+        0.9629,
+        0.971,
+        0.9894
+      ]
+    },
+    "timber": {
+      "key": "wood",
+      "palette": "#6b5038",
+      "mean": "#6b5038",
+      "region": "timber"
+    },
+    "mosaic": {
+      "key": "pool",
+      "palette": "#4f9a9a",
+      "mean": "#4f9a9a",
+      "region": "mosaic"
+    },
+    "zellige": {
+      "key": "pool",
+      "palette": "#4f9a9a",
+      "mean": "#4f9a9a",
+      "region": "zellige"
+    },
+    "mosque_floor": {
+      "key": "slab",
+      "palette": "#efe6d5",
+      "mean": "#efe6d5",
+      "region": "mosque_floor"
+    },
+    "jali": {
+      "key": "parapet",
+      "palette": "#f3e9d6",
+      "mean": "#f3e9d6",
+      "region": "jali"
+    }
+  },
+  "triangles": {
+    "high": {
+      "villa-courtyard": 16366,
+      "villa-garden-4": 10674,
+      "villa-garden-3": 9140,
+      "apartment": 22534,
+      "site": 69468,
+      "garden": 18754,
+      "lamp": 92,
+      "bench": 448,
+      "amenity-gym": 14052,
+      "amenity-padel": 3352,
+      "amenity-tennis": 7308,
+      "amenity-playground": 6506,
+      "amenity-mosque": 19839,
+      "amenity-carport": 1820,
+      "amenity-parking": 8940,
+      "amenity-parking-8": 7484,
+      "amenity-parking-6": 5980
+    },
+    "low": {
+      "villa-courtyard": 4418,
+      "villa-garden-4": 3812,
+      "villa-garden-3": 3144,
+      "apartment": 8084,
+      "site": 68060,
+      "garden": 10542,
+      "lamp": 92,
+      "bench": 80,
+      "amenity-gym": 4668,
+      "amenity-padel": 3352,
+      "amenity-tennis": 7308,
+      "amenity-playground": 3754,
+      "amenity-mosque": 9149,
+      "amenity-carport": 260,
+      "amenity-parking": 5832,
+      "amenity-parking-8": 4876,
+      "amenity-parking-6": 3804
+    }
+  },
+  "aoSize": {
+    "high": 1024,
+    "low": 512
+  },
+  "lamps": 164,
+  "apartments": [
+    {
+      "name": "apartment-0",
+      "position": [
+        -156,
+        1.2,
+        24.7779
+      ]
+    },
+    {
+      "name": "apartment-1",
+      "position": [
+        -104,
+        1.2,
+        22.3211
+      ]
+    },
+    {
+      "name": "apartment-2",
+      "position": [
+        -52,
+        1.2,
+        19.9627
+      ]
+    },
+    {
+      "name": "apartment-3",
+      "position": [
+        52,
+        1.2,
+        19.9627
+      ]
+    },
+    {
+      "name": "apartment-4",
+      "position": [
+        104,
+        1.2,
+        22.3211
+      ]
+    },
+    {
+      "name": "apartment-5",
+      "position": [
+        156,
+        1.2,
+        24.7779
+      ]
+    }
+  ],
+  "amenities": [
+    "gym",
+    "padel-1",
+    "padel-2",
+    "tennis",
+    "playground",
+    "mosque",
+    "gallery"
+  ],
+  "counts": {
+    "high": {
+      "villas": 60,
+      "apartmentBlocks": 6,
+      "carports": 60,
+      "parkingCourts": 7,
+      "lamps": 164,
+      "benches": 16
+    },
+    "low": {
+      "villas": 60,
+      "apartmentBlocks": 6,
+      "carports": 60,
+      "parkingCourts": 7,
+      "lamps": 164,
+      "benches": 0
+    }
+  },
+  "placedTriangles": {
+    "high": 1184159,
+    "low": 455601
+  }
+}

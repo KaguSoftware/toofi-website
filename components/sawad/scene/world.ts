@@ -4,10 +4,7 @@ import {
   BufferGeometry,
   Color,
   CylinderGeometry,
-  DirectionalLight,
   DoubleSide,
-  FogExp2,
-  HemisphereLight,
   IcosahedronGeometry,
   InstancedMesh,
   Material,
@@ -40,29 +37,34 @@ import {
   boulevardCurve,
   boulevardPath,
   palmPositions,
+  planAmenities,
+  planApartmentBlocks,
+  planGates,
+  planRoads,
+  planTerrainHeight,
+  planVillas,
+  planWalls,
+  PLAN_GATE,
+  PLAN_LEVELS,
+  PLAN_WALL,
   riverGeometryParams,
   terrainHeight,
   treePositions,
   villaPlots,
+  type PlanApartmentBlock,
   type TreeInstance,
   type VillaPlot,
 } from "./layout";
-import { disposeObject } from "./compoundModel";
+import { planLandscape } from "./landscape";
+import { buildPlanPool, buildPlanStream, buildPlanTerrain } from "./planWorld";
+import { usesPlan } from "./site";
 import type { QualityTier, SceneVariant } from "./types";
 
-export type World = {
-  scene: Scene;
-  sun: DirectionalLight;
-  water: Mesh;
-  /** Unit vector toward the sun. */
-  sunDirection: Vector3;
-  update: (timeSec: number) => void;
-  /** Swaps the procedural architecture for the baked model. dispose() then frees the model. */
-  setArchitecture: (object: Object3D) => void;
-  /** Reflections of the golden-hour sky (glass, brass, pools), prefiltered once with PMREM. */
-  setEnvironment: (renderer: WebGLRenderer) => void;
-  dispose: () => void;
-};
+/*
+ * The procedural world, as plain three.js factories: sky, terrain, water, palms, trees and the
+ * fallback architecture. SceneWorld.tsx mounts them in the React Three Fiber scene and owns their
+ * lifetime; nothing here needs a renderer except buildSkyEnvironment.
+ */
 
 /**
  * Sky light on every PBR surface. Tuned against the posters (mean frame luminance within ~1%
@@ -73,7 +75,7 @@ export const ENVIRONMENT_INTENSITY = 0.08;
 export const REFLECTIVE_ENV_INTENSITY = 1;
 
 /** Metals and polished glass in the baked model get the sky reflection at full strength. */
-function applyReflections(root: Object3D, env: WebGLRenderTarget["texture"] | null): void {
+export function applyReflections(root: Object3D, env: WebGLRenderTarget["texture"] | null): void {
   root.traverse((o) => {
     const mesh = o as Mesh;
     if (!mesh.isMesh) return;
@@ -101,12 +103,27 @@ const SUN: Record<SceneVariant, SunSetup> = {
 /** Light rides a few degrees above the visible sun so the ground still reads at golden hour. */
 const LIGHT_LIFT_DEG = 4.5;
 
+/** The golden-hour sun: a warm directional light, with one large shadow map on the high tier. */
+export const SUN_LIGHT = {
+  color: "#ffa65c",
+  intensity: 4.2,
+  distance: 700,
+  shadow: { mapSize: 4096, extent: 330, near: 10, far: 1600, bias: -0.0004, normalBias: 0.25, radius: 3 },
+} as const;
+/** Soft fill from the sky above and the warm ground below. */
+export const HEMISPHERE_LIGHT = { sky: "#ffe0bf", ground: "#6f6446", intensity: 1.8 } as const;
+
 export function sunDirection(variant: SceneVariant, liftDeg = 0): Vector3 {
   const s = SUN[variant];
   const el = ((s.elevationDeg + liftDeg) * Math.PI) / 180;
   const h = Math.cos(el);
   const len = Math.hypot(s.azimuthX, s.azimuthZ);
   return new Vector3((s.azimuthX / len) * h, Math.sin(el), (s.azimuthZ / len) * h).normalize();
+}
+
+/** Where the sun light sits: along the lifted sun direction, aimed at the origin. */
+export function sunLightPosition(variant: SceneVariant): Vector3 {
+  return sunDirection(variant, LIGHT_LIFT_DEG).multiplyScalar(SUN_LIGHT.distance);
 }
 
 // Palette (sRGB hex, converted to linear by Color).
@@ -139,7 +156,11 @@ export function paletteHex(): Record<keyof typeof C, string> {
   return Object.fromEntries(Object.entries(C).map(([k, c]) => [k, `#${c.getHexString()}`])) as Record<keyof typeof C, string>;
 }
 
-const HAZE = new Color("#e6ae86");
+/** Dusty golden-hour haze: the fog colour and the clear colour behind the sky dome. */
+export const HAZE_COLOR = "#e6ae86";
+const HAZE = new Color(HAZE_COLOR);
+/** Exponential fog density (Shatt sits lower and hazier). */
+export const fogDensity = (variant: SceneVariant): number => (variant === "shatt" ? 0.00085 : 0.00072);
 
 /** Art-directed golden-hour sky (a physical model turns teal opposite a low sun). */
 const SKY = {
@@ -238,7 +259,9 @@ void main() {
 }
 `;
 
-function buildSky(sunDir: Vector3): { mesh: Mesh; material: ShaderMaterial } {
+export type Sky = { mesh: Mesh; material: ShaderMaterial };
+
+export function buildSky(sunDir: Vector3): Sky {
   const material = new ShaderMaterial({
     uniforms: {
       uSunDir: { value: sunDir.clone() },
@@ -265,7 +288,8 @@ function buildSky(sunDir: Vector3): { mesh: Mesh; material: ShaderMaterial } {
 
 // ---------------------------------------------------------------- terrain
 
-function buildTerrain(variant: SceneVariant, tier: QualityTier): Mesh {
+export function buildTerrain(variant: SceneVariant, tier: QualityTier): Mesh {
+  if (usesPlan(variant)) return buildPlanTerrain(tier);
   const size = 3600;
   const seg = tier === "high" ? 300 : 170;
   const geo = new PlaneGeometry(size, size, seg, seg);
@@ -386,7 +410,7 @@ export function createWaterMaterial(sunDir: Vector3, variant: SceneVariant): Sha
       uZenith: { value: SKY.zenith.clone().multiplyScalar(1.4) },
       uDeep: { value: new Color(variant === "zaitun" ? "#24352c" : "#203029") },
       uFogColor: { value: HAZE.clone() },
-      uFogDensity: { value: 0 },
+      uFogDensity: { value: fogDensity(variant) },
       uChop: { value: variant === "zaitun" ? 1.3 : 1.0 },
     },
     vertexShader: WATER_VERT,
@@ -394,7 +418,9 @@ export function createWaterMaterial(sunDir: Vector3, variant: SceneVariant): Sha
   });
 }
 
-function buildWater(variant: SceneVariant, material: ShaderMaterial): Mesh {
+/** The river surface: one wide quad along the channel. */
+export function buildWater(variant: SceneVariant, material: ShaderMaterial): Mesh {
+  if (usesPlan(variant)) return buildPlanStream(material);
   const r = riverGeometryParams(variant);
   const depth = r.width + 220;
   const geo = new PlaneGeometry(3600, depth, 1, 1);
@@ -402,6 +428,17 @@ function buildWater(variant: SceneVariant, material: ShaderMaterial): Mesh {
   geo.translate(0, 0, r.near + r.width / 2);
   const mesh = new Mesh(geo, material);
   mesh.name = "river";
+  return mesh;
+}
+
+/** The reflecting pool in the central garden. It shares the river's water material. */
+export function buildGardenPool(material: ShaderMaterial, variant: SceneVariant = "dijla"): Mesh {
+  if (usesPlan(variant)) return buildPlanPool(material);
+  const geo = new PlaneGeometry(8, 60);
+  geo.rotateX(-Math.PI / 2);
+  geo.translate(0, PAD_Y + 0.3, -46);
+  const mesh = new Mesh(geo, material);
+  mesh.name = "garden-pool";
   return mesh;
 }
 
@@ -532,14 +569,44 @@ function instanceTrees(
   return mesh;
 }
 
-function buildPalms(variant: SceneVariant, tier: QualityTier, disposables: Array<{ dispose: () => void }>): Object3D[] {
-  const palms = palmPositions(variant, tier === "high" ? 1800 : 700);
+/** Instanced planting: the meshes to mount, and one call that frees everything they use. */
+export type Planting = { objects: InstancedMesh[]; dispose: () => void };
+
+function planting(objects: InstancedMesh[]): Planting {
+  return {
+    objects,
+    dispose() {
+      for (const mesh of objects) {
+        mesh.geometry.dispose();
+        (mesh.material as Material).dispose();
+        mesh.dispose(); // the instance buffers
+      }
+    },
+  };
+}
+
+/** Fallback planting caps on the 28 ha plan: the procedural trees are heavier than the library's distance cards. */
+const PLAN_FALLBACK_TREES: Record<QualityTier, { palms: number; olives: number }> = { high: { palms: 1400, olives: 2600 }, low: { palms: 700, olives: 900 } };
+
+/** Every k-th item, so a thinned list still covers the whole site. */
+function spread<T>(list: T[], max: number): T[] {
+  if (list.length <= max) return list;
+  const step = list.length / max;
+  return Array.from({ length: max }, (_, i) => list[Math.floor(i * step)]);
+}
+
+export function buildPalms(variant: SceneVariant, tier: QualityTier): Planting {
+  const palms = usesPlan(variant) ? spread(planLandscape(tier).palms, PLAN_FALLBACK_TREES[tier].palms) : palmPositions(variant, tier === "high" ? 1800 : 700);
+  return buildPalmsAt(palms);
+}
+
+/** Procedural date palms at the given spots: instanced trunks and crowns. */
+export function buildPalmsAt(palms: TreeInstance[]): Planting {
   const trunkGeo = palmTrunkGeometry();
   const crownGeo = palmCrownGeometry();
   const trunkMat = new MeshStandardMaterial({ vertexColors: true, roughness: 1 });
   // A touch of emission reads as light passing through backlit fronds.
   const crownMat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.72, side: DoubleSide, emissive: new Color("#3d4416"), emissiveIntensity: 0.55 });
-  disposables.push(trunkGeo, crownGeo, trunkMat, crownMat);
   const q = new Quaternion();
   const up = new Vector3(0, 1, 0);
   const s = new Vector3();
@@ -580,16 +647,24 @@ function buildPalms(variant: SceneVariant, tier: QualityTier, disposables: Array
     crowns.setColorAt(i, tint.setRGB(v, v * (0.96 + t.scale * 0.04), v * 0.9));
   });
   if (crowns.instanceColor) crowns.instanceColor.needsUpdate = true;
-  return [trunks, crowns];
+  return planting([trunks, crowns]);
 }
 
-function buildRoundTrees(variant: SceneVariant, tier: QualityTier, disposables: Array<{ dispose: () => void }>): Object3D[] {
+/** Round-crowned trees: olives across Zaitun's foothills, a few shade trees elsewhere. */
+export function buildRoundTrees(variant: SceneVariant, tier: QualityTier): Planting {
+  if (usesPlan(variant)) {
+    const land = planLandscape(tier);
+    return buildRoundTreesAt(spread([...land.olives, ...land.citrus], PLAN_FALLBACK_TREES[tier].olives), variant);
+  }
   const count = variant === "zaitun" ? (tier === "high" ? 2600 : 900) : 72;
-  const trees = treePositions(variant, count);
+  return buildRoundTreesAt(treePositions(variant, count), variant);
+}
+
+/** Procedural round-crowned trees at the given spots (olives on Zaitun, shade trees elsewhere). */
+export function buildRoundTreesAt(trees: TreeInstance[], variant: SceneVariant): Planting {
   const { trunk, crown } = roundTreeGeometry();
   const trunkMat = new MeshStandardMaterial({ vertexColors: true, roughness: 1 });
   const crownMat = new MeshStandardMaterial({ color: variant === "zaitun" ? "#7f8b62" : "#4a6230", roughness: 0.9 });
-  disposables.push(trunk, crown, trunkMat, crownMat);
   const q = new Quaternion();
   const up = new Vector3(0, 1, 0);
   const s = new Vector3();
@@ -598,7 +673,7 @@ function buildRoundTrees(variant: SceneVariant, tier: QualityTier, disposables: 
     q.setFromAxisAngle(up, t.rotation);
     m.compose(p.set(t.x, t.y - 0.1, t.z), q, s.setScalar(t.scale * (variant === "zaitun" ? 1.15 : 1)));
   };
-  return [instanceTrees(trees, trunk, trunkMat, place, "tree-trunks"), instanceTrees(trees, crown, crownMat, place, "tree-crowns")];
+  return planting([instanceTrees(trees, trunk, trunkMat, place, "tree-trunks"), instanceTrees(trees, crown, crownMat, place, "tree-crowns")]);
 }
 
 // ---------------------------------------------------------------- architecture
@@ -619,10 +694,9 @@ function parapet(parts: Part[], w: number, d: number, y: number, cx = 0, cz = 0)
 }
 
 /** A villa in local space: entrance faces +z, origin at plot centre, y from the pad. */
-function villaParts(plot: VillaPlot): Part[] {
+function villaParts(plot: VillaPlot, y0 = PAD_Y): Part[] {
   const parts: Part[] = [];
   const { width: w, depth: d, height: h } = plot;
-  const y0 = PAD_Y;
   if (plot.type === "courtyard") {
     const wing = 6;
     parts.push(box(w, h, wing, 0, y0, d / 2 - wing / 2, C.cream));
@@ -661,13 +735,12 @@ function villaParts(plot: VillaPlot): Part[] {
   return parts;
 }
 
-function apartmentParts(cx: number): Part[] {
+function apartmentParts(cx: number, y0 = PAD_Y, back = APARTMENT_BACK_Z): Part[] {
   const parts: Part[] = [];
   const w = APARTMENT_WIDTH;
   for (let f = 0; f < 4; f++) {
     const depth = apartmentFloorDepth(f);
-    const y = PAD_Y + f * FLOOR_HEIGHT;
-    const back = APARTMENT_BACK_Z;
+    const y = y0 + f * FLOOR_HEIGHT;
     const front = back + depth;
     const wallDepth = depth - 2.6;
     // Floor slab (with a crisp lighter edge) and the enclosed volume set back behind the terrace.
@@ -681,19 +754,26 @@ function apartmentParts(cx: number): Part[] {
     // Planter along each terrace edge.
     parts.push(box(w - 4, 0.6, 0.7, cx, y + 0.38, front - 0.7, C.hedge));
   }
-  const roofY = PAD_Y + 4 * FLOOR_HEIGHT;
-  parts.push(box(w + 0.8, 0.38, apartmentFloorDepth(3) + 0.4, cx, roofY, APARTMENT_BACK_Z + apartmentFloorDepth(3) / 2, C.slab));
-  parapet(parts, w + 0.8, apartmentFloorDepth(3) + 0.4, roofY + 0.38, cx, APARTMENT_BACK_Z + apartmentFloorDepth(3) / 2);
+  const roofY = y0 + 4 * FLOOR_HEIGHT;
+  parts.push(box(w + 0.8, 0.38, apartmentFloorDepth(3) + 0.4, cx, roofY, back + apartmentFloorDepth(3) / 2, C.slab));
+  parapet(parts, w + 0.8, apartmentFloorDepth(3) + 0.4, roofY + 0.38, cx, back + apartmentFloorDepth(3) / 2);
   // Brass-lined entrance canopy on the garden side.
-  parts.push(box(6, 0.22, 2.4, cx, PAD_Y + 3.0, APARTMENT_BACK_Z - 1.2, C.brass));
+  parts.push(box(6, 0.22, 2.4, cx, y0 + 3.0, back - 1.2, C.brass));
   return parts;
 }
 
 function ribbon(points: Array<[number, number]>, width: number, y: number, color: Color): Part {
+  return ribbonPath(points.map(([x, z]) => [x, y, z]), width, 0, color);
+}
+
+/** A flat strip along a centre line that follows the ground ([x, y, z] points), `lift` above it. */
+function ribbonPath(path: Array<[number, number, number]>, width: number, lift: number, color: Color): Part {
+  const points = path.map(([x, , z]): [number, number] => [x, z]);
   const verts: number[] = [];
   const idx: number[] = [];
   for (let i = 0; i < points.length; i++) {
     const [x, z] = points[i];
+    const y = path[i][1] + lift;
     const [nx, nz] = points[Math.min(points.length - 1, i + 1)];
     const [px, pz] = points[Math.max(0, i - 1)];
     const dx = nx - px;
@@ -752,18 +832,78 @@ function siteParts(): Part[] {
   return parts;
 }
 
+/** Walls along a run, as boxes about 8 m long that step with the ground. */
+function wallRun(parts: Part[], from: [number, number], to: [number, number]) {
+  const { height: h, thickness: t } = PLAN_WALL;
+  const len = Math.hypot(to[0] - from[0], to[1] - from[1]);
+  const n = Math.max(1, Math.round(len / 8));
+  const alongX = Math.abs(to[0] - from[0]) > Math.abs(to[1] - from[1]);
+  for (let i = 0; i < n; i++) {
+    const x = from[0] + ((to[0] - from[0]) * (i + 0.5)) / n;
+    const z = from[1] + ((to[1] - from[1]) * (i + 0.5)) / n;
+    const piece = len / n + 0.05;
+    const y = planTerrainHeight(x, z) - 0.3;
+    parts.push(alongX ? box(piece, h + 0.3, t, x, y, z, C.wall) : box(t, h + 0.3, piece, x, y, z, C.wall));
+  }
+}
+
+const AMENITY_COLORS: Partial<Record<string, Color>> = { padel: C.pool, tennis: C.fallow, playground: C.wood, terrace: C.slab, belvedere: C.slab, plaza: C.slab, steps: C.stone };
+
+/** Streets, walls, gates and the garden of the 28 ha plan, as flat-coloured parts. */
+function planSiteParts(): Part[] {
+  const parts: Part[] = [];
+  for (const road of planRoads()) parts.push(ribbonPath(road.path, road.width, road.kind === "walk" ? 0.07 : 0.06, C.stone));
+  for (const w of planWalls()) wallRun(parts, w.from, w.to);
+  for (const gate of planGates()) {
+    for (const p of gate.pavilions) parts.push(box(PLAN_GATE.pavilion, PLAN_GATE.pavilionHeight, PLAN_GATE.pavilion, p.x, gate.y, p.z, C.cream));
+    parts.push(box(1.2, 0.5, PLAN_GATE.lintelLength, gate.x, gate.y + PLAN_GATE.pavilionHeight, gate.z, C.brass));
+  }
+  for (const a of planAmenities()) {
+    const f = a.footprint;
+    const w = f.maxX - f.minX;
+    const d = f.maxZ - f.minZ;
+    const cx = (f.minX + f.maxX) / 2;
+    const cz = (f.minZ + f.maxZ) / 2;
+    if (a.kind === "pool") parts.push(box(w, a.size?.height ?? 0.35, d, cx, a.y, cz, C.parapet));
+    else if (a.kind === "gym") parts.push(box(w * 0.9, 7.2, d * 0.7, cx, a.y, cz, C.cream));
+    else if (a.kind === "mosque") {
+      parts.push(box(16, 7.5, 16, a.x, a.y, a.z, C.cream));
+      parts.push(box(3, 17, 3, a.x + 9.5, a.y, a.z + 9.5, C.creamShade));
+    } else if (a.kind === "gallery") {
+      const local = villaParts({ index: -1, x: 0, z: 0, facing: 1, type: "courtyard", width: 24, depth: 22, height: 7.6 }, a.y);
+      parts.push(...transformParts(local, new Matrix4().makeRotationY(a.rotation).setPosition(a.x, 0, a.z)));
+    } else if (a.kind === "steps") {
+      // A ramp up the bank, under the steps the model draws.
+      const rise = a.size?.rise ?? PLAN_LEVELS.terrace - PLAN_LEVELS.valley;
+      parts.push(ribbonPath([[cx, a.y, f.maxZ], [cx, a.y + rise, f.minZ]], w, 0.05, C.stone));
+    } else if (a.kind !== "lawn") parts.push(box(w, a.kind === "terrace" || a.kind === "plaza" ? 0.09 : 0.12, d, cx, a.y, cz, AMENITY_COLORS[a.kind] ?? C.slab));
+  }
+  return parts;
+}
+
+function planBlockParts(b: PlanApartmentBlock): Part[] {
+  return apartmentParts(b.x, b.y, b.backZ);
+}
+
 /** The procedural compound: every building merged from flat-coloured boxes (the fallback). */
-export function buildArchitecture(): Mesh {
+export function buildArchitecture(variant: SceneVariant = "dijla"): Mesh {
   const parts: Part[] = [];
   const m = new Matrix4();
-  for (const plot of villaPlots()) {
-    const local = villaParts(plot);
+  const plan = usesPlan(variant);
+  const plots = plan ? planVillas() : villaPlots();
+  for (const plot of plots) {
+    const local = villaParts(plot, "y" in plot ? (plot as { y: number }).y : PAD_Y);
     m.makeRotationY(plot.facing === 1 ? 0 : Math.PI);
     m.setPosition(plot.x, 0, plot.z);
     parts.push(...transformParts(local, m));
   }
-  for (const cx of APARTMENT_BUILDINGS_X) parts.push(...apartmentParts(cx));
-  parts.push(...siteParts());
+  if (plan) {
+    for (const b of planApartmentBlocks()) parts.push(...planBlockParts(b));
+    parts.push(...planSiteParts());
+  } else {
+    for (const cx of APARTMENT_BUILDINGS_X) parts.push(...apartmentParts(cx));
+    parts.push(...siteParts());
+  }
   for (const p of parts) if (!p.getAttribute("uv")) p.setAttribute("uv", new BufferAttribute(new Float32Array(p.getAttribute("position").count * 2), 2));
   const nonIndexed = parts.map((p) => (p.index ? p.toNonIndexed() : p));
   const geo = merge(nonIndexed);
@@ -776,117 +916,41 @@ export function buildArchitecture(): Mesh {
   return mesh;
 }
 
-// ---------------------------------------------------------------- world
+// ---------------------------------------------------------------- environment
 
-export function buildWorld({ variant, tier }: { variant: SceneVariant; tier: QualityTier }): World {
-  const scene = new Scene();
-  const disposables: Array<{ dispose: () => void }> = [];
-  const sunDir = sunDirection(variant);
-
-  scene.fog = new FogExp2(HAZE.clone(), variant === "shatt" ? 0.00085 : 0.00072);
-  scene.background = HAZE.clone();
-
-  const sky = buildSky(sunDir);
-  scene.add(sky.mesh);
-  disposables.push(sky.mesh.geometry, sky.material);
-
-  const hemi = new HemisphereLight(new Color("#ffe0bf"), new Color("#6f6446"), 1.8);
-  scene.add(hemi);
-
-  const sun = new DirectionalLight(new Color("#ffa65c"), 4.2);
-  sun.position.copy(sunDirection(variant, LIGHT_LIFT_DEG)).multiplyScalar(700);
-  sun.target.position.set(0, 0, 0);
-  scene.add(sun, sun.target);
-  if (tier === "high") {
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(4096, 4096);
-    const cam = sun.shadow.camera;
-    cam.left = -330;
-    cam.right = 330;
-    cam.top = 330;
-    cam.bottom = -330;
-    cam.near = 10;
-    cam.far = 1600;
-    sun.shadow.bias = -0.0004;
-    sun.shadow.normalBias = 0.25;
-    sun.shadow.radius = 3;
+/**
+ * Reflections of the golden-hour sky (glass, brass, pools), prefiltered once with PMREM. Only
+ * the sky is rendered, so the environment never depends on the camera or the compound, and the
+ * sun disc is left out: its highlight comes from the directional light. The caller disposes
+ * the returned target.
+ */
+export function buildSkyEnvironment(renderer: WebGLRenderer, sky: Sky): WebGLRenderTarget {
+  const envScene = new Scene();
+  const envSky = sky.material.clone();
+  envSky.uniforms.uSunDisc.value = 0;
+  const skyCopy = new Mesh(sky.mesh.geometry, envSky);
+  skyCopy.scale.copy(sky.mesh.scale);
+  skyCopy.frustumCulled = false;
+  envScene.add(skyCopy);
+  const pmrem = new PMREMGenerator(renderer);
+  try {
+    return pmrem.fromScene(envScene, 0.02, 0.1, 100, { size: 256 });
+  } finally {
+    pmrem.dispose();
+    envSky.dispose();
   }
-
-  const terrain = buildTerrain(variant, tier);
-  disposables.push(terrain.geometry, terrain.material as Material);
-  scene.add(terrain);
-
-  const waterMat = createWaterMaterial(sunDir, variant);
-  const water = buildWater(variant, waterMat);
-  disposables.push(water.geometry, waterMat);
-  scene.add(water);
-
-  // Reflecting pool in the central garden shares the water shader.
-  const poolGeo = new PlaneGeometry(8, 60);
-  poolGeo.rotateX(-Math.PI / 2);
-  poolGeo.translate(0, PAD_Y + 0.3, -46);
-  const pool = new Mesh(poolGeo, waterMat);
-  pool.name = "garden-pool";
-  disposables.push(poolGeo);
-  scene.add(pool);
-
-  for (const o of buildPalms(variant, tier, disposables)) scene.add(o);
-  for (const o of buildRoundTrees(variant, tier, disposables)) scene.add(o);
-  // Procedural fallback, shown until (or unless) the baked model arrives.
-  const procedural = buildArchitecture();
-  scene.add(procedural);
-  let architecture: Object3D = procedural;
-  let envTarget: WebGLRenderTarget | null = null;
-
-  const fog = scene.fog as FogExp2;
-  waterMat.uniforms.uFogDensity.value = fog.density;
-  waterMat.uniforms.uFogColor.value = fog.color;
-
-  return {
-    scene,
-    sun,
-    water,
-    sunDirection: sunDir,
-    update(timeSec: number) {
-      waterMat.uniforms.uTime.value = timeSec;
-      sky.material.uniforms.uTime.value = timeSec;
-    },
-    setArchitecture(object: Object3D) {
-      if (object === architecture) return;
-      scene.remove(architecture);
-      disposeObject(architecture);
-      architecture = object;
-      scene.add(object);
-      if (envTarget) applyReflections(object, envTarget.texture);
-    },
-    setEnvironment(renderer: WebGLRenderer) {
-      // Only the sky, so the environment never depends on the camera or the compound.
-      const envScene = new Scene();
-      const envSky = sky.material.clone();
-      envSky.uniforms.uSunDisc.value = 0; // the sun's highlight comes from the directional light
-      const skyCopy = new Mesh(sky.mesh.geometry, envSky);
-      skyCopy.scale.copy(sky.mesh.scale);
-      skyCopy.frustumCulled = false;
-      envScene.add(skyCopy);
-      const pmrem = new PMREMGenerator(renderer);
-      envTarget?.dispose();
-      envTarget = pmrem.fromScene(envScene, 0.02, 0.1, 100, { size: 256 });
-      pmrem.dispose();
-      envSky.dispose();
-      scene.environment = envTarget.texture;
-      scene.environmentIntensity = ENVIRONMENT_INTENSITY;
-      applyReflections(architecture, envTarget.texture);
-    },
-    dispose() {
-      for (const d of disposables) d.dispose();
-      disposeObject(architecture); // (never the shared env map: disposeObject skips envMap)
-
-      envTarget?.dispose();
-      envTarget = null;
-      scene.environment = null;
-      sun.shadow.map?.dispose();
-      scene.clear();
-    },
-  };
 }
 
+/** Lights a scene with the prefiltered sky (null removes it again). */
+export function setSceneEnvironment(scene: Scene, texture: WebGLRenderTarget["texture"] | null): void {
+  scene.environment = texture;
+  if (texture) scene.environmentIntensity = ENVIRONMENT_INTENSITY;
+}
+
+/** The longest step the sky and water advance in one frame, so a stalled tab resumes smoothly. */
+const MAX_STEP_SECONDS = 0.1;
+
+/** Moves an animated material (the sky's clouds, the water) forward by one frame. */
+export function advanceTime(material: ShaderMaterial, deltaSeconds: number): void {
+  material.uniforms.uTime.value += Math.min(deltaSeconds, MAX_STEP_SECONDS);
+}
