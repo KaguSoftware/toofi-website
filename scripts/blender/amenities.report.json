@@ -1,0 +1,409 @@
+{
+  "tiers": {
+    "high": {
+      "gym": {
+        "triangles": 12510,
+        "min": [
+          -15.07,
+          -0.0,
+          -9.5
+        ],
+        "max": [
+          15.07,
+          7.9,
+          14.55
+        ],
+        "size": [
+          30.14,
+          7.9,
+          24.05
+        ],
+        "materials": [
+          "atlas",
+          "brass",
+          "bronze",
+          "glass",
+          "lamp-glow",
+          "lattice"
+        ],
+        "smoothFaces": 0
+      },
+      "padel": {
+        "triangles": 2568,
+        "min": [
+          -6.0,
+          -0.0,
+          -11.0
+        ],
+        "max": [
+          6.0,
+          6.0,
+          11.0
+        ],
+        "size": [
+          12.0,
+          6.0,
+          22.0
+        ],
+        "materials": [
+          "atlas",
+          "bronze",
+          "glass-clear",
+          "lamp-glow",
+          "lattice"
+        ],
+        "smoothFaces": 112
+      },
+      "tennis": {
+        "triangles": 5020,
+        "min": [
+          -9.72,
+          -0.0,
+          -18.5
+        ],
+        "max": [
+          9.72,
+          8.0,
+          18.5
+        ],
+        "size": [
+          19.44,
+          8.0,
+          37.0
+        ],
+        "materials": [
+          "atlas",
+          "bronze",
+          "lamp-glow",
+          "lattice"
+        ],
+        "smoothFaces": 112
+      },
+      "playground": {
+        "triangles": 6208,
+        "min": [
+          -12.0,
+          -0.0,
+          -9.0
+        ],
+        "max": [
+          12.0,
+          5.15,
+          9.0
+        ],
+        "size": [
+          24.0,
+          5.15,
+          18.0
+        ],
+        "materials": [
+          "atlas",
+          "brass",
+          "bronze"
+        ],
+        "smoothFaces": 240
+      },
+      "mosque": {
+        "triangles": 19107,
+        "min": [
+          -13.6,
+          -0.0,
+          -10.6
+        ],
+        "max": [
+          13.0,
+          17.0,
+          14.22
+        ],
+        "size": [
+          26.6,
+          17.0,
+          24.82
+        ],
+        "materials": [
+          "atlas",
+          "brass",
+          "bronze",
+          "glass",
+          "lamp-glow",
+          "lattice"
+        ],
+        "smoothFaces": 1390
+      },
+      "carport": {
+        "triangles": 1640,
+        "min": [
+          -3.5,
+          -0.0,
+          -3.25
+        ],
+        "max": [
+          3.5,
+          3.12,
+          4.0
+        ],
+        "size": [
+          7.0,
+          3.12,
+          7.25
+        ],
+        "materials": [
+          "atlas",
+          "bronze",
+          "lamp-glow"
+        ],
+        "smoothFaces": 0
+      },
+      "parking": {
+        "triangles": 6864,
+        "min": [
+          -14.1,
+          -0.0,
+          -9.3
+        ],
+        "max": [
+          13.5,
+          3.13,
+          9.3
+        ],
+        "size": [
+          27.6,
+          3.13,
+          18.6
+        ],
+        "materials": [
+          "atlas",
+          "bronze"
+        ],
+        "smoothFaces": 0
+      }
+    },
+    "low": {
+      "gym": {
+        "triangles": 4112,
+        "min": [
+          -15.07,
+          -0.0,
+          -9.5
+        ],
+        "max": [
+          15.07,
+          7.9,
+          14.55
+        ],
+        "size": [
+          30.14,
+          7.9,
+          24.05
+        ],
+        "materials": [
+          "atlas",
+          "brass",
+          "bronze",
+          "glass",
+          "lamp-glow"
+        ],
+        "smoothFaces": 0
+      },
+      "padel": {
+        "triangles": 2568,
+        "min": [
+          -6.0,
+          -0.0,
+          -11.0
+        ],
+        "max": [
+          6.0,
+          6.0,
+          11.0
+        ],
+        "size": [
+          12.0,
+          6.0,
+          22.0
+        ],
+        "materials": [
+          "atlas",
+          "bronze",
+          "glass-clear",
+          "lamp-glow",
+          "lattice"
+        ],
+        "smoothFaces": 112
+      },
+      "tennis": {
+        "triangles": 5020,
+        "min": [
+          -9.72,
+          -0.0,
+          -18.5
+        ],
+        "max": [
+          9.72,
+          8.0,
+          18.5
+        ],
+        "size": [
+          19.44,
+          8.0,
+          37.0
+        ],
+        "materials": [
+          "atlas",
+          "bronze",
+          "lamp-glow",
+          "lattice"
+        ],
+        "smoothFaces": 112
+      },
+      "playground": {
+        "triangles": 3728,
+        "min": [
+          -12.0,
+          -0.0,
+          -9.0
+        ],
+        "max": [
+          12.0,
+          5.15,
+          9.0
+        ],
+        "size": [
+          24.0,
+          5.15,
+          18.0
+        ],
+        "materials": [
+          "atlas",
+          "brass",
+          "bronze"
+        ],
+        "smoothFaces": 240
+      },
+      "mosque": {
+        "triangles": 8921,
+        "min": [
+          -13.6,
+          -0.0,
+          -10.6
+        ],
+        "max": [
+          13.0,
+          17.0,
+          14.22
+        ],
+        "size": [
+          26.6,
+          17.0,
+          24.82
+        ],
+        "materials": [
+          "atlas",
+          "brass",
+          "bronze",
+          "glass",
+          "lamp-glow"
+        ],
+        "smoothFaces": 1390
+      },
+      "carport": {
+        "triangles": 240,
+        "min": [
+          -3.5,
+          -0.0,
+          -3.25
+        ],
+        "max": [
+          3.5,
+          3.12,
+          4.0
+        ],
+        "size": [
+          7.0,
+          3.12,
+          7.25
+        ],
+        "materials": [
+          "atlas",
+          "bronze",
+          "lamp-glow"
+        ],
+        "smoothFaces": 0
+      },
+      "parking": {
+        "triangles": 3856,
+        "min": [
+          -14.1,
+          -0.0,
+          -9.3
+        ],
+        "max": [
+          13.5,
+          3.13,
+          9.3
+        ],
+        "size": [
+          27.6,
+          3.13,
+          18.6
+        ],
+        "materials": [
+          "atlas",
+          "bronze"
+        ],
+        "smoothFaces": 0
+      }
+    }
+  },
+  "generatedBy": "scripts/blender/amenities.py --report",
+  "source": "b6b83933d399c251bf5b18fba5420f87df90c5b12742eefe86604123d8be59e8",
+  "blender": "5.3.0",
+  "surfaces": {
+    "court": "courtyard",
+    "line": "slab",
+    "soft": "stone",
+    "sand": "stone",
+    "sail": "slab",
+    "mesh": "lattice"
+  },
+  "params": {
+    "gym": {
+      "width": 30.0,
+      "depth": 18.0,
+      "height": 7.2
+    },
+    "padel": {
+      "length": 20.0,
+      "width": 10.0
+    },
+    "tennis": {
+      "length": 36.6,
+      "width": 18.3
+    },
+    "playground": {
+      "width": 24.0,
+      "depth": 18.0
+    },
+    "mosque": {
+      "width": 16.0,
+      "depth": 16.0,
+      "height": 7.5,
+      "dome_radius": 4.2,
+      "minaret_height": 17.0,
+      "dome_finish": "limestone"
+    },
+    "carport": {
+      "bays": 2,
+      "bay_width": 3.0,
+      "depth": 6.0,
+      "height": 2.8
+    },
+    "parking": {
+      "bays": 10,
+      "bay_width": 2.5,
+      "bay_depth": 5.0,
+      "aisle": 6.0,
+      "shade": true
+    }
+  }
+}
