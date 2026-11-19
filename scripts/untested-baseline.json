@@ -1,5 +1,4 @@
 [
-  "app/(site)/[[...slug]]/page.tsx",
   "app/(site)/layout.tsx",
   "app/admin/(panel)/layout.tsx",
   "app/admin/(panel)/loading.tsx",
@@ -14,7 +13,6 @@
   "app/api/edit/enable/route.ts",
   "app/api/media/[...path]/route.ts",
   "app/forbidden.tsx",
-  "app/layout.tsx",
   "app/not-found.tsx",
   "app/unauthorized.tsx",
   "components/admin/AdminNav.tsx",
@@ -43,9 +41,6 @@
   "components/editable/usePlainText.ts",
   "components/site/NavDisclosure.tsx",
   "components/site/PageSkeleton.tsx",
-  "components/site/SiteFooter.tsx",
-  "components/site/SiteHeader.tsx",
-  "components/site/SiteShell.tsx",
   "components/ui/Button.tsx",
   "components/ui/Container.tsx",
   "components/ui/Section.tsx",
@@ -74,8 +69,5 @@
   "lib/supabase/database.types.ts",
   "lib/supabase/proxy.ts",
   "lib/supabase/server.ts",
-  "templates/contact.tsx",
-  "templates/generic.tsx",
-  "templates/home.tsx",
-  "templates/registry.ts"
+  "templates/generic.tsx"
 ]

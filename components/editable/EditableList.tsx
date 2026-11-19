@@ -110,7 +110,7 @@ export function EditableListClient({
   return (
     <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={order} strategy={rectSortingStrategy} disabled={busy}>
-        <Tag className={className} data-toofi-list={blockKey} aria-busy={busy || undefined}>
+        <Tag className={className} data-sawad-list={blockKey} aria-busy={busy || undefined}>
           {order.map((id, index) => (
             <SortableItem
               key={id}
@@ -131,7 +131,7 @@ export function EditableListClient({
           ))}
           {order.length === 0 && (
             <ItemTag className={itemClassName}>
-              <button type="button" className="toofi-btn toofi-list-empty" disabled={!canAdd} onClick={() => addAfter(-1)}>
+              <button type="button" className="sawad-btn sawad-list-empty" disabled={!canAdd} onClick={() => addAfter(-1)}>
                 + {label}
               </button>
             </ItemTag>
@@ -188,14 +188,14 @@ function SortableItem({
       }}
       className={className}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      data-toofi-list-item=""
+      data-sawad-list-item=""
       data-dragging={isDragging || undefined}
     >
-      <div className="toofi-item-controls" contentEditable={false} role="group" aria-label={`Item ${n} of ${count}`}>
+      <div className="sawad-item-controls" contentEditable={false} role="group" aria-label={`Item ${n} of ${count}`}>
         <button
           type="button"
           ref={setActivatorNodeRef}
-          className="toofi-icon-btn toofi-drag"
+          className="sawad-icon-btn sawad-drag"
           disabled={busy}
           {...attributes}
           {...listeners}
@@ -208,7 +208,7 @@ function SortableItem({
         </button>
         <button
           type="button"
-          className="toofi-icon-btn"
+          className="sawad-icon-btn"
           disabled={busy || index === 0}
           onClick={() => onMove(index, index - 1)}
           aria-label={`Move item ${n} up`}
@@ -218,7 +218,7 @@ function SortableItem({
         </button>
         <button
           type="button"
-          className="toofi-icon-btn"
+          className="sawad-icon-btn"
           disabled={busy || index === count - 1}
           onClick={() => onMove(index, index + 1)}
           aria-label={`Move item ${n} down`}
@@ -228,7 +228,7 @@ function SortableItem({
         </button>
         <button
           type="button"
-          className="toofi-icon-btn"
+          className="sawad-icon-btn"
           disabled={!canAdd}
           onClick={() => onAdd(index)}
           aria-label={`${addLabel} after item ${n}`}
@@ -238,7 +238,7 @@ function SortableItem({
         </button>
         <button
           type="button"
-          className="toofi-icon-btn toofi-danger"
+          className="sawad-icon-btn sawad-danger"
           disabled={busy}
           onClick={() => onRemove(index)}
           aria-label={`Delete item ${n}`}
@@ -248,8 +248,8 @@ function SortableItem({
         </button>
       </div>
       {children ?? (
-        <div className="toofi-item-loading" role="status">
-          <span className="toofi-spinner" aria-hidden="true" /> Adding…
+        <div className="sawad-item-loading" role="status">
+          <span className="sawad-spinner" aria-hidden="true" /> Adding…
         </div>
       )}
     </ItemTag>

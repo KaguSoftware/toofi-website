@@ -1,44 +1,54 @@
-import { Container, Section, buttonClass } from "@/components/ui";
+import { Suspense } from "react";
+import { Container, Section } from "@/components/ui";
+import { ContactForm } from "@/components/sawad/ContactForm";
+import { PageHead } from "@/components/sawad/PageHead";
+import { GALLERIES } from "@/lib/sawad/data";
+import { localeFromPath, t } from "@/lib/sawad/i18n";
 import type { TemplateDefinition } from "./types";
 
 /**
- * Contact — content keys:
- *   heading (text) · intro (richtext)
- *   details (list) → label (text), value (text)
- *   cta (link)
+ * Contact. Editable keys: head.title, head.lead. The enquiry form (client, reads
+ * ?residence= from the finder) and the three sales galleries.
  */
 export const contactTemplate: TemplateDefinition = {
   id: "contact",
   name: "Contact",
-  description: "Heading, intro, a list of contact details and a call to action.",
-  component: ({ c }) => (
-    <main id="main">
-      <Section>
-        <Container size="narrow">
-          <c.Text k="heading" as="h1" className="t-display" fallback="Get in touch" />
-          <div style={{ marginTop: "var(--space-6)" }}>
-            <c.RichText k="intro" className="t-lead prose" fallback="We’d love to hear from you." />
-          </div>
-          <c.List
-            k="details"
-            as="ul"
-            itemAs="li"
-            className="details"
-            fallbackItems={["email", "phone", "address"]}
-            addLabel="Add detail"
-            max={12}
-            render={(item) => (
-              <div className="detail">
-                <item.Text k="label" as="span" className="detail__label" fallback="Label" />
-                <item.Text k="value" as="span" className="t-body" fallback="Value" multiline />
-              </div>
-            )}
-          />
-          <div style={{ marginTop: "var(--space-8)" }}>
-            <c.Link k="cta" className={buttonClass({ variant: "primary" })} fallback={{ text: "Send an email", href: "mailto:hello@example.com" }} />
-          </div>
-        </Container>
-      </Section>
-    </main>
-  ),
+  description: "Enquiry form and the sales galleries.",
+  component: ({ c, page }) => {
+    const locale = localeFromPath(page.slug);
+    const d = t(locale).contact;
+    return (
+      <main id="main">
+        <PageHead c={c} title={d.title} lead={d.lead} />
+        <Section>
+          <Container className="contact-grid">
+            <Suspense fallback={<div className="skeleton" style={{ minHeight: "40rem" }} />}>
+              <ContactForm locale={locale} />
+            </Suspense>
+            <section id="galleries" aria-labelledby="galleries-title">
+              <h2 id="galleries-title" className="t-headline" style={{ marginBottom: "var(--space-4)" }}>
+                {d.galleriesTitle}
+              </h2>
+              <ul className="galleries">
+                {GALLERIES.map((gal) => (
+                  <li key={gal.id}>
+                    <h3 className="t-body" style={{ fontWeight: 600, color: "var(--fg)" }}>
+                      {gal.name[locale]}
+                    </h3>
+                    <p>{gal.address[locale]}</p>
+                    <dl>
+                      <dt>{d.hoursLabel}</dt>
+                      <dd>{gal.hours[locale]}</dd>
+                      <dt>{d.phoneLabel}</dt>
+                      <dd>{d.phonePending}</dd>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </Container>
+        </Section>
+      </main>
+    );
+  },
 };

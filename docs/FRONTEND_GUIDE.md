@@ -1,5 +1,10 @@
 # Frontend guide
 
+> The public site is now the Sawad Holding design (see [SAWAD.md](SAWAD.md)): cream, ink and one brass accent in OKLCH,
+> Young Serif + Manrope (Amiri + IBM Plex Sans Arabic on Arabic pages), square corners, a solid header, and logical
+> CSS properties throughout so Arabic pages mirror. The token names below are unchanged; their values and the
+> type scale live in `app/globals.css`. The principles about restraint, motion and accessibility still apply.
+
 A minimal, principled shell to build on. Restraint over decoration: neutral palette, one accent, strong type, generous space. Everything visual lives in a few tokens and a few classes, so restyling is cheap.
 
 ## 1. Run it locally
@@ -15,9 +20,9 @@ Demo logins at `/admin/login` (password `password` for all):
 
 | user | role |
 | --- | --- |
-| admin@toofi.local | admin |
-| editor@toofi.local | editor |
-| viewer@toofi.local | viewer |
+| admin@sawad.local | admin |
+| editor@sawad.local | editor |
+| viewer@sawad.local | viewer |
 
 **Edit mode:** sign in as admin or editor, then open the page you want to edit and enter edit mode (the launcher calls `/api/edit/enable?path=<page path>`, which sets the edit cookie and redirects back). In edit mode every `c.*` / `g.*` editable renders as a client island over the *draft* content; visitors always get plain server HTML of the *published* content. `/contact` is seeded as a draft, so visitors get a 404 until it is published.
 

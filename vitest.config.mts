@@ -16,7 +16,7 @@ export default defineConfig({
       exclude: ["**/*.test.*", "**/*.d.ts", "**/types.ts"],
       reporter: ["text-summary", "json-summary"],
       // Ratchet: raise these as coverage grows; never lower them.
-      thresholds: { lines: 11, functions: 8, branches: 7, statements: 11 },
+      thresholds: { lines: 50, functions: 45, branches: 38, statements: 50 },
     },
   },
 });

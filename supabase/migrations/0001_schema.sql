@@ -1,4 +1,4 @@
--- 0001_schema.sql — core tables for the Toofi CMS.
+-- 0001_schema.sql — core tables for the Sawad CMS.
 -- RLS, grants and policies live in 0003; RPCs in 0004; storage in 0005.
 -- Safe to re-run: uses IF NOT EXISTS / OR REPLACE / guarded DO blocks.
 

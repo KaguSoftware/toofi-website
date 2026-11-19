@@ -76,7 +76,7 @@ export function EditableLinkClient({ scope, blockKey, initial, className }: Edit
         aria-label={`Link text${mountText ? "" : " (empty)"}`}
         aria-haspopup="dialog"
         aria-expanded={open}
-        data-toofi-editable="link"
+        data-sawad-editable="link"
         data-placeholder="Link text"
         {...((newTab || external) && { target: "_blank", rel: "noopener noreferrer" })}
         onClick={(e) => {
@@ -103,8 +103,8 @@ export function EditableLinkClient({ scope, blockKey, initial, className }: Edit
         {mountText}
       </a>
       <Popover anchorRef={ref} open={open} onClose={() => setOpen(false)} label="Link settings" autoFocus={false}>
-        <div data-popover-for={ids} className="toofi-form">
-          <label className="toofi-field">
+        <div data-popover-for={ids} className="sawad-form">
+          <label className="sawad-field">
             <span>Link URL</span>
             <input
               type="text"
@@ -126,11 +126,11 @@ export function EditableLinkClient({ scope, blockKey, initial, className }: Edit
             />
           </label>
           {hrefError && (
-            <p id={`${ids}-err`} className="toofi-error" role="alert">
+            <p id={`${ids}-err`} className="sawad-error" role="alert">
               {hrefError}
             </p>
           )}
-          <label className="toofi-check">
+          <label className="sawad-check">
             <input
               type="checkbox"
               checked={newTab}

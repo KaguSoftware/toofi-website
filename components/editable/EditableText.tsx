@@ -41,7 +41,7 @@ export function EditableTextClient({
       role="textbox"
       aria-multiline={multiline || undefined}
       aria-label={placeholder || "Text"}
-      data-toofi-editable="text"
+      data-sawad-editable="text"
       data-placeholder={placeholder || "Type here…"}
       onFocus={() => api.focusBlock({ scope, key: blockKey, type: "text" })}
       {...handlers}

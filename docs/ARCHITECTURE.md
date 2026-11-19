@@ -1,4 +1,4 @@
-# Toofi Web — Architecture
+# Sawad Web — Architecture
 
 Next.js 16.4 (App Router, Cache Components, Partial Prefetching) + Supabase.
 Public website + admin panel + **inline on-page content editing**.
@@ -27,9 +27,9 @@ Public website + admin panel + **inline on-page content editing**.
 |---|---|---|
 | Trigger | no Supabase env vars | `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` |
 | Data | `.data/store.json` seeded from `data/seed/*.json` | Postgres (`supabase/migrations`) |
-| Auth | seeded users, bcrypt, signed JWT cookie (`toofi_session`) | Supabase Auth (`@supabase/ssr`) |
+| Auth | seeded users, bcrypt, signed JWT cookie (`sawad_session`) | Supabase Auth (`@supabase/ssr`) |
 | Media | `.data/uploads` served by `/api/media/*` | Storage bucket `content-media` |
-| Production | refused unless `TOOFI_ALLOW_LOCAL_MODE=1` | ✔ |
+| Production | refused unless `SAWAD_ALLOW_LOCAL_MODE=1` | ✔ |
 
 Reset local data: delete `.data/`.
 
@@ -55,7 +55,7 @@ content exists; the first save creates the rows. See `docs/FRONTEND_GUIDE.md`.
 
 ## Editing flow
 
-1. Editor signs in (`/admin/login`). A non-httpOnly hint cookie `toofi_can_edit=1` lets the
+1. Editor signs in (`/admin/login`). A non-httpOnly hint cookie `sawad_can_edit=1` lets the
    public pages show a small "Edit page" launcher without making those pages dynamic.
 2. "Edit page" → `GET /api/edit/enable?path=/about` → re-checks `content:edit`, looks the page
    up in the DB, enables Next.js **Draft Mode**, redirects to the DB slug (no open redirect).

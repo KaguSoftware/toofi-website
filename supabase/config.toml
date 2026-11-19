@@ -1,6 +1,6 @@
 # Minimal config for `npx supabase start` (local dev). Hosted projects ignore most of this;
 # enable the access token hook in the dashboard there (see docs/SUPABASE.md).
-project_id = "toofi-web"
+project_id = "sawad-web"
 
 [api]
 enabled = true

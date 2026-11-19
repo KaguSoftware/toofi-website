@@ -97,7 +97,7 @@ export function Popover({ anchorRef, open, onClose, label, children, autoFocus =
 
   if (!open || typeof document === "undefined") return null;
   return createPortal(
-    <div ref={ref} role="dialog" aria-label={label} className="toofi-popover" style={{ visibility: "hidden" }}>
+    <div ref={ref} role="dialog" aria-label={label} className="sawad-popover" style={{ visibility: "hidden" }}>
       {children}
     </div>,
     portal ?? document.body,

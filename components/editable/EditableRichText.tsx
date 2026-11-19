@@ -60,8 +60,8 @@ export function EditableRichTextClient({ scope, blockKey, initial, className, pl
     shouldRerenderOnTransaction: false,
     editorProps: {
       attributes: {
-        class: ["toofi-rich", className].filter(Boolean).join(" "),
-        "data-toofi-editable": "richtext",
+        class: ["sawad-rich", className].filter(Boolean).join(" "),
+        "data-sawad-editable": "richtext",
         "data-placeholder": placeholder || "Write something…",
         role: "textbox",
         "aria-multiline": "true",
@@ -100,7 +100,7 @@ export function EditableRichTextClient({ scope, blockKey, initial, className, pl
 
   return (
     <>
-      <EditorContent editor={editor} className="toofi-rich-host" data-invalid={invalid || undefined} />
+      <EditorContent editor={editor} className="sawad-rich-host" data-invalid={invalid || undefined} />
       <RichBubbleMenu editor={editor} portal={api.portal} />
     </>
   );
@@ -164,7 +164,7 @@ function RichBubbleMenu({ editor, portal }: { editor: Editor; portal: HTMLElemen
     <BubbleMenu
       editor={editor}
       appendTo={() => portal ?? document.body}
-      className="toofi-bubble"
+      className="sawad-bubble"
       options={{ placement: "top", offset: 8 }}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -174,7 +174,7 @@ function RichBubbleMenu({ editor, portal }: { editor: Editor; portal: HTMLElemen
       }}
     >
       {linkMode ? (
-        <div className="toofi-bubble-link">
+        <div className="sawad-bubble-link">
           <input
             autoFocus
             type="text"
@@ -196,13 +196,13 @@ function RichBubbleMenu({ editor, portal }: { editor: Editor; portal: HTMLElemen
             }}
             spellCheck={false}
           />
-          <button type="button" className="toofi-bubble-btn" onClick={applyLink}>
+          <button type="button" className="sawad-bubble-btn" onClick={applyLink}>
             Apply
           </button>
           {state.link && (
             <button
               type="button"
-              className="toofi-bubble-btn"
+              className="sawad-bubble-btn"
               onClick={() => {
                 editor.chain().focus().extendMarkRange("link").unsetLink().run();
                 setLinkMode(false);
@@ -213,12 +213,12 @@ function RichBubbleMenu({ editor, portal }: { editor: Editor; portal: HTMLElemen
           )}
         </div>
       ) : (
-        <div role="toolbar" aria-label="Text formatting" className="toofi-bubble-row">
+        <div role="toolbar" aria-label="Text formatting" className="sawad-bubble-row">
           {buttons.map((b) => (
             <button
               key={b.label}
               type="button"
-              className="toofi-bubble-btn"
+              className="sawad-bubble-btn"
               aria-label={b.label}
               title={b.label}
               aria-pressed={b.active}

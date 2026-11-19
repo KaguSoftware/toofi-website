@@ -13,7 +13,7 @@ const isSupabase = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 );
 
-const DEV_AUTH_SECRET = "toofi-dev-only-secret-do-not-use-in-production-0000";
+const DEV_AUTH_SECRET = "sawad-dev-only-secret-do-not-use-in-production-0000";
 
 async function localUserId(request: NextRequest): Promise<string | null> {
   const token = request.cookies.get(LOCAL_SESSION_COOKIE)?.value;

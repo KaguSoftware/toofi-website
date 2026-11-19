@@ -16,7 +16,7 @@ import { safeNext } from "./safe-next";
 import { beginLoginAttempt, loginSucceeded } from "./rate-limit";
 import { MAX_UPLOAD_BYTES, validateImageUpload } from "@/lib/media/validate";
 
-const CAN_EDIT_COOKIE = "toofi_can_edit";
+const CAN_EDIT_COOKIE = "sawad_can_edit";
 const CAN_EDIT_MAX_AGE = 60 * 60 * 24 * 7;
 const HOME_SLUG = "/";
 

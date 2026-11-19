@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored Basis Universal transcoder (copied from three/examples/jsm/libs/basis).
+    "public/sawad/basis/**",
   ]),
 ]);
 

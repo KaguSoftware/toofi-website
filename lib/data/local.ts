@@ -83,8 +83,8 @@ function seedStore(): Store {
 
 // Next may instantiate this module more than once per process (page vs route
 // bundles), so the write queue lives on globalThis and we always read from disk.
-const g = globalThis as typeof globalThis & { __toofiLocalQueue?: Promise<unknown> };
-g.__toofiLocalQueue ??= Promise.resolve();
+const g = globalThis as typeof globalThis & { __sawadLocalQueue?: Promise<unknown> };
+g.__sawadLocalQueue ??= Promise.resolve();
 
 async function load(): Promise<Store> {
   try {
@@ -106,18 +106,18 @@ async function persist(store: Store) {
 
 /** Serialize mutations so concurrent Server Actions can't interleave. */
 function mutate<T>(fn: (store: Store) => T | Promise<T>): Promise<T> {
-  const run = g.__toofiLocalQueue!.then(async () => {
+  const run = g.__sawadLocalQueue!.then(async () => {
     const store = await load();
     const result = await fn(store);
     await persist(store);
     return result;
   });
-  g.__toofiLocalQueue = run.catch(() => undefined);
+  g.__sawadLocalQueue = run.catch(() => undefined);
   return run;
 }
 
 async function read<T>(fn: (store: Store) => T): Promise<T> {
-  await g.__toofiLocalQueue; // read-your-writes
+  await g.__sawadLocalQueue; // read-your-writes
   return fn(await load());
 }
 

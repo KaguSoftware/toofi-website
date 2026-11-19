@@ -113,7 +113,7 @@ export function EditableImageClient({ scope, blockKey, initial, className, sizes
         className={className}
         role="button"
         tabIndex={0}
-        data-toofi-editable="image"
+        data-sawad-editable="image"
         data-busy={uploading || undefined}
         aria-label={`Edit image${value.alt ? `: ${value.alt}` : ""}`}
         aria-haspopup="dialog"
@@ -128,18 +128,18 @@ export function EditableImageClient({ scope, blockKey, initial, className, sizes
         }}
       />
       <Popover anchorRef={anchorRef} open={open} onClose={() => setOpen(false)} label="Image settings">
-        <div className="toofi-form">
-          <div className="toofi-row">
+        <div className="sawad-form">
+          <div className="sawad-row">
             <button
               type="button"
-              className="toofi-btn toofi-btn-primary"
+              className="sawad-btn sawad-btn-primary"
               disabled={uploading}
               aria-busy={uploading}
               onClick={() => fileRef.current?.click()}
             >
               {uploading ? "Uploading…" : "Replace image"}
             </button>
-            <span className="toofi-hint">JPEG, PNG, WebP, GIF or AVIF · max 8 MB</span>
+            <span className="sawad-hint">JPEG, PNG, WebP, GIF or AVIF · max 8 MB</span>
           </div>
           <input
             ref={fileRef}
@@ -151,7 +151,7 @@ export function EditableImageClient({ scope, blockKey, initial, className, sizes
               e.target.value = "";
             }}
           />
-          <label className="toofi-field" htmlFor={`${ids}-alt`}>
+          <label className="sawad-field" htmlFor={`${ids}-alt`}>
             <span>Alt text</span>
           </label>
           <textarea

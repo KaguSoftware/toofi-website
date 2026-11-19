@@ -1,7 +1,8 @@
-# Toofi Web
+# Sawad Web
 
-Public website + admin panel with **inline on-page content editing**, built on
-Next.js 16.4 and Supabase.
+The Sawad Holding website: a bilingual (English/Arabic) site for gated garden compounds,
+with a 3D residence finder, an admin panel and **inline on-page content editing**, built on
+Next.js 16.4, three.js and Supabase. See [docs/SAWAD.md](docs/SAWAD.md) for the site itself.
 
 ## Quick start (no database needed)
 
@@ -17,9 +18,9 @@ Sign in at http://localhost:3000/admin/login. Every demo account uses the passwo
 
 | Email | Role | Can |
 |---|---|---|
-| `admin@toofi.local` | admin | everything, including managing users |
-| `editor@toofi.local` | editor | edit/publish content, manage pages and media |
-| `viewer@toofi.local` | viewer | read-only admin |
+| `admin@sawad.local` | admin | everything, including managing users |
+| `editor@sawad.local` | editor | edit/publish content, manage pages and media |
+| `viewer@sawad.local` | viewer | read-only admin |
 
 To edit content, go to **Admin → Pages → Edit content**, or click **Edit page** on any page
 while signed in.
@@ -43,6 +44,7 @@ The app switches to Supabase mode automatically.
 
 ## Docs
 
+- [docs/SAWAD.md](docs/SAWAD.md): the Sawad site: pages, content, owner settings, 3D scene, launch checklist
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): how it all fits together (backend, auth, caching, editing)
 - [docs/FRONTEND_GUIDE.md](docs/FRONTEND_GUIDE.md): building templates, editable components, design principles
 - [docs/SUPABASE.md](docs/SUPABASE.md): database setup, RLS, migrations

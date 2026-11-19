@@ -13,7 +13,7 @@ export function safeRelativePath(input: unknown): string | null {
   if (!input.startsWith("/") || input.startsWith("//")) return null;
   if (/[\\\u0000-\u001f\u007f]/.test(input)) return null;
   try {
-    const base = "http://toofi.invalid";
+    const base = "http://sawad.invalid";
     const url = new URL(input, base);
     if (url.origin !== base) return null;
     return url.pathname;
@@ -28,7 +28,7 @@ export function editEnableUrl(pathname: string): string {
 }
 
 /** Cookie set (non-httpOnly, UX hint only) for users who may edit content. */
-export const CAN_EDIT_HINT_COOKIE = "toofi_can_edit";
+export const CAN_EDIT_HINT_COOKIE = "sawad_can_edit";
 
 /** `<html>` attribute set while the inline editor is mounted. */
-export const EDITING_HTML_ATTR = "data-toofi-editing";
+export const EDITING_HTML_ATTR = "data-sawad-editing";

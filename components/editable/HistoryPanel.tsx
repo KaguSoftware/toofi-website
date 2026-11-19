@@ -69,34 +69,34 @@ export function HistoryPanel({
   };
 
   return (
-    <div className="toofi-history">
-      <p className="toofi-history-title">
+    <div className="sawad-history">
+      <p className="sawad-history-title">
         History · <code>{block.key}</code>
       </p>
       {state.status === "loading" && (
-        <p className="toofi-hint" role="status">
+        <p className="sawad-hint" role="status">
           Loading…
         </p>
       )}
       {state.status === "error" && (
-        <p className="toofi-error" role="alert">
+        <p className="sawad-error" role="alert">
           {state.error}
         </p>
       )}
       {state.status === "ready" && state.revisions.length === 0 && (
-        <p className="toofi-hint">No published versions yet.</p>
+        <p className="sawad-hint">No published versions yet.</p>
       )}
       {state.status === "ready" && state.revisions.length > 0 && (
-        <ol className="toofi-history-list">
+        <ol className="sawad-history-list">
           {state.revisions.map((r) => (
             <li key={r.id}>
-              <div className="toofi-history-meta">
+              <div className="sawad-history-meta">
                 <time dateTime={r.createdAt}>{dateFmt.format(new Date(r.createdAt))}</time>
-                <span className="toofi-history-preview">{preview(r.content) || "(empty)"}</span>
+                <span className="sawad-history-preview">{preview(r.content) || "(empty)"}</span>
               </div>
               <button
                 type="button"
-                className="toofi-btn"
+                className="sawad-btn"
                 disabled={restoring !== null}
                 aria-busy={restoring === r.id || undefined}
                 onClick={() => restore(r.id)}

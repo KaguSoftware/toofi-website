@@ -12,6 +12,7 @@ import { EditorRoot } from "@/components/editable/client";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageSkeleton } from "@/components/site/PageSkeleton";
 import { getTemplate } from "@/templates/registry";
+import { basePath, localeFromPath, localizedPath } from "@/lib/sawad/i18n";
 
 /**
  * One route renders every CMS page. slug → page record → template (templates/registry.ts).
@@ -33,9 +34,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getPublishedPageBySlug(toPath((await params).slug));
   if (!page) return {};
+  const base = basePath(page.slug);
   return {
     title: page.title,
     description: page.seo.description,
+    alternates: {
+      canonical: page.slug,
+      languages: { en: localizedPath(base, "en"), ar: localizedPath(base, "ar"), "x-default": localizedPath(base, "en") },
+    },
     openGraph: page.seo.ogImage ? { images: [page.seo.ogImage] } : undefined,
     robots: page.seo.noindex ? { index: false, follow: false } : undefined,
   };
@@ -110,8 +116,8 @@ function RenderedPage({
   const c = createEditables({ scope: page.id, content, editing });
   const g = createEditables({ scope: GLOBAL_SCOPE, content: global, editing });
   return (
-    <SiteShell g={g}>
-      <Template page={page} c={c} />
+    <SiteShell g={g} locale={localeFromPath(page.slug)} path={page.slug}>
+      <Template page={page} c={c} g={g} />
     </SiteShell>
   );
 }

@@ -40,5 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# toofi local-mode data store + uploads (delete to reset sample data)
+# sawad local-mode data store + uploads (delete to reset sample data)
 /.data/
+
+# sawad compound build (scripts/blender/build.sh): downloaded CC0 sources and intermediates
+/scripts/blender/textures/
+/scripts/blender/out/

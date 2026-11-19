@@ -1,0 +1,293 @@
+{
+  "generatedBy": "scripts/blender/build.sh",
+  "blender": "5.3.0",
+  "villas": [
+    {
+      "name": "villa-00",
+      "position": [
+        -152,
+        1.2,
+        11.1549
+      ]
+    },
+    {
+      "name": "villa-01",
+      "position": [
+        -122,
+        1.2,
+        9.0117
+      ]
+    },
+    {
+      "name": "villa-02",
+      "position": [
+        -92,
+        1.2,
+        8.026
+      ]
+    },
+    {
+      "name": "villa-03",
+      "position": [
+        92,
+        1.2,
+        17.974
+      ]
+    },
+    {
+      "name": "villa-04",
+      "position": [
+        122,
+        1.2,
+        16.9883
+      ]
+    },
+    {
+      "name": "villa-05",
+      "position": [
+        152,
+        1.2,
+        14.8451
+      ]
+    },
+    {
+      "name": "villa-06",
+      "position": [
+        -152,
+        1.2,
+        -30.8451
+      ]
+    },
+    {
+      "name": "villa-07",
+      "position": [
+        -122,
+        1.2,
+        -32.9883
+      ]
+    },
+    {
+      "name": "villa-08",
+      "position": [
+        -92,
+        1.2,
+        -33.974
+      ]
+    },
+    {
+      "name": "villa-09",
+      "position": [
+        92,
+        1.2,
+        -24.026
+      ]
+    },
+    {
+      "name": "villa-10",
+      "position": [
+        122,
+        1.2,
+        -25.0117
+      ]
+    },
+    {
+      "name": "villa-11",
+      "position": [
+        152,
+        1.2,
+        -27.1549
+      ]
+    },
+    {
+      "name": "villa-12",
+      "position": [
+        -152,
+        1.2,
+        -66.8451
+      ]
+    },
+    {
+      "name": "villa-13",
+      "position": [
+        -122,
+        1.2,
+        -68.9883
+      ]
+    },
+    {
+      "name": "villa-14",
+      "position": [
+        -92,
+        1.2,
+        -69.974
+      ]
+    },
+    {
+      "name": "villa-15",
+      "position": [
+        92,
+        1.2,
+        -60.026
+      ]
+    },
+    {
+      "name": "villa-16",
+      "position": [
+        122,
+        1.2,
+        -61.0117
+      ]
+    },
+    {
+      "name": "villa-17",
+      "position": [
+        152,
+        1.2,
+        -63.1549
+      ]
+    },
+    {
+      "name": "villa-18",
+      "position": [
+        -152,
+        1.2,
+        -108.8451
+      ]
+    },
+    {
+      "name": "villa-19",
+      "position": [
+        -122,
+        1.2,
+        -110.9883
+      ]
+    },
+    {
+      "name": "villa-20",
+      "position": [
+        -92,
+        1.2,
+        -111.974
+      ]
+    },
+    {
+      "name": "villa-21",
+      "position": [
+        92,
+        1.2,
+        -102.026
+      ]
+    },
+    {
+      "name": "villa-22",
+      "position": [
+        122,
+        1.2,
+        -103.0117
+      ]
+    },
+    {
+      "name": "villa-23",
+      "position": [
+        152,
+        1.2,
+        -105.1549
+      ]
+    }
+  ],
+  "files": {
+    "compound-high.glb": 4079224,
+    "compound-low.glb": 1476076
+  },
+  "budgets": {
+    "compound-high.glb": 5000000,
+    "compound-low.glb": 2000000
+  },
+  "palette": {
+    "plaster_cream": {
+      "key": "cream",
+      "palette": "#ecdfc7",
+      "mean": "#ecdfc7"
+    },
+    "plaster_shade": {
+      "key": "creamShade",
+      "palette": "#dccaa8",
+      "mean": "#dccaa8"
+    },
+    "paving": {
+      "key": "stone",
+      "palette": "#d2c3a2",
+      "mean": "#d2c3a2"
+    },
+    "limestone": {
+      "key": "parapet",
+      "palette": "#f3e9d6",
+      "mean": "#f3e9d6"
+    },
+    "hedge": {
+      "key": "hedge",
+      "palette": "#56692f",
+      "mean": "#56692f"
+    },
+    "wall": {
+      "key": "wall",
+      "palette": "#d6c29c",
+      "mean": "#d6c29c"
+    },
+    "courtyard": {
+      "key": "courtyard",
+      "palette": "#9b8466",
+      "mean": "#9b8466"
+    },
+    "lattice": {
+      "key": "wood",
+      "palette": "#6b5038",
+      "mean": "#6b5038"
+    },
+    "stone": {
+      "key": "stone",
+      "palette": "#d2c3a2",
+      "mean": "#d2c3a2"
+    },
+    "slab": {
+      "key": "slab",
+      "palette": "#efe6d5",
+      "mean": "#efe6d5"
+    },
+    "timber": {
+      "key": "wood",
+      "palette": "#6b5038",
+      "mean": "#6b5038"
+    },
+    "mosaic": {
+      "key": "pool",
+      "palette": "#4f9a9a",
+      "mean": "#4f9a9a"
+    }
+  },
+  "triangles": {
+    "high": {
+      "villa-courtyard": 15738,
+      "villa-garden-4": 9772,
+      "villa-garden-3": 8614,
+      "apartment": 22530,
+      "site": 21072,
+      "lamp": 92,
+      "bench": 416
+    },
+    "low": {
+      "villa-courtyard": 4142,
+      "villa-garden-4": 3128,
+      "villa-garden-3": 2702,
+      "apartment": 8294,
+      "site": 17028,
+      "lamp": 92,
+      "bench": 64
+    }
+  },
+  "aoSize": {
+    "high": 1024,
+    "low": 512
+  },
+  "lamps": 52
+}

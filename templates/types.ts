@@ -6,6 +6,8 @@ export type TemplateProps = {
   page: PageRecord;
   /** Editable content helpers bound to this page's scope. */
   c: Editables;
+  /** Editables bound to the global scope (site settings such as the Tweaks). */
+  g?: Editables;
 };
 
 export type TemplateDefinition = {

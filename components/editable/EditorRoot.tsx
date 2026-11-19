@@ -205,7 +205,7 @@ export function EditorRoot({
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       const t = e.target as Element | null;
-      if (t?.closest?.("[data-toofi-editable], .toofi-item-controls") && t.closest("a[href]")) e.preventDefault();
+      if (t?.closest?.("[data-sawad-editable], .sawad-item-controls") && t.closest("a[href]")) e.preventDefault();
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
@@ -225,23 +225,23 @@ export function EditorRoot({
 
   return (
     <EditorContext.Provider value={api}>
-      <div className="toofi-editor-root">
+      <div className="sawad-editor-root">
         {children}
-        <div ref={setPortal} className="toofi-chrome">
-          <div role="toolbar" aria-label="Page editor" className="toofi-toolbar">
+        <div ref={setPortal} className="sawad-chrome">
+          <div role="toolbar" aria-label="Page editor" className="sawad-toolbar">
             {pageStatus === "draft" && (
-              <span className="toofi-pill" title="This page is not published yet. Only editors can see it.">
+              <span className="sawad-pill" title="This page is not published yet. Only editors can see it.">
                 Draft page
               </span>
             )}
-            <span className="toofi-status" data-state={statusState} role="status" aria-live="polite">
-              <span className="toofi-dot" aria-hidden="true" />
+            <span className="sawad-status" data-state={statusState} role="status" aria-live="polite">
+              <span className="sawad-dot" aria-hidden="true" />
               {statusText}
             </span>
-            <span className="toofi-sep" aria-hidden="true" />
+            <span className="sawad-sep" aria-hidden="true" />
             <button
               type="button"
-              className="toofi-btn"
+              className="sawad-btn"
               onClick={() => void save()}
               disabled={working || dirtyCount === 0}
               aria-keyshortcuts="Control+S Meta+S"
@@ -252,7 +252,7 @@ export function EditorRoot({
             {user.canPublish && (
               <button
                 type="button"
-                className="toofi-btn toofi-btn-primary"
+                className="sawad-btn sawad-btn-primary"
                 onClick={() => void publish()}
                 disabled={working || nothingToPublish}
                 aria-busy={busy === "publish" || undefined}
@@ -262,7 +262,7 @@ export function EditorRoot({
             )}
             <button
               type="button"
-              className="toofi-btn"
+              className="sawad-btn"
               onClick={() => void discard()}
               disabled={working || (dirtyCount === 0 && !hasDrafts)}
             >
@@ -271,7 +271,7 @@ export function EditorRoot({
             <button
               ref={historyBtn}
               type="button"
-              className="toofi-btn"
+              className="sawad-btn"
               onClick={() => setHistoryOpen((o) => !o)}
               disabled={!focused}
               aria-haspopup="dialog"
@@ -280,10 +280,10 @@ export function EditorRoot({
             >
               History
             </button>
-            <span className="toofi-sep" aria-hidden="true" />
+            <span className="sawad-sep" aria-hidden="true" />
             <button
               type="button"
-              className="toofi-btn toofi-btn-ghost"
+              className="sawad-btn sawad-btn-ghost"
               onClick={() => void exit()}
               disabled={busy !== null}
               title={`Signed in as ${user.name} (${user.role})`}

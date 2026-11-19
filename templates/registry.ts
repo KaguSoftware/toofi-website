@@ -1,6 +1,10 @@
+import { compoundsTemplate } from "./compounds";
 import { contactTemplate } from "./contact";
 import { genericTemplate } from "./generic";
 import { homeTemplate } from "./home";
+import { residencesTemplate } from "./residences";
+import { storyTemplate } from "./story";
+import { whatWeDoTemplate } from "./what-we-do";
 import type { TemplateDefinition } from "./types";
 
 /**
@@ -10,7 +14,7 @@ import type { TemplateDefinition } from "./types";
  * Admins can then create pages from it in /admin/pages.
  */
 export const templates: Record<string, TemplateDefinition> = Object.fromEntries(
-  [homeTemplate, genericTemplate, contactTemplate].map((t) => [t.id, t]),
+  [homeTemplate, residencesTemplate, compoundsTemplate, whatWeDoTemplate, storyTemplate, contactTemplate, genericTemplate].map((t) => [t.id, t]),
 );
 
 export const FALLBACK_TEMPLATE_ID = "generic";

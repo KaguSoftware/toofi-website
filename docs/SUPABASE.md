@@ -33,15 +33,15 @@ users get the `member` role, which has no permissions at all.
 ## 4. Seed data
 
 - `supabase/seed.sql` = pages + blocks only, no credentials. `supabase db reset` (local) runs it automatically.
-- `supabase/seed-users.local.sql` = demo users (`admin@toofi.local`, `editor@toofi.local`, `viewer@toofi.local`,
+- `supabase/seed-users.local.sql` = demo users (`admin@sawad.local`, `editor@sawad.local`, `viewer@sawad.local`,
   password `password`). It is **not** in `config.toml`, so `db reset --linked` / `db push --include-seed` never
   create them. For **local** Supabase only, apply it deliberately:
 
   ```
-  PGOPTIONS="-c toofi.allow_demo_users=on" psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/seed-users.local.sql
+  PGOPTIONS="-c sawad.allow_demo_users=on" psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f supabase/seed-users.local.sql
   ```
 
-  The file aborts unless `toofi.allow_demo_users=on`, and also aborts if `auth.users` already holds non-demo accounts.
+  The file aborts unless `sawad.allow_demo_users=on`, and also aborts if `auth.users` already holds non-demo accounts.
 - Regenerate both after editing `data/seed/*.json`: `npm run db:seed-sql` (deterministic).
 
 ## 5. Create the first admin

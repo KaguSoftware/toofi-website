@@ -1,7 +1,7 @@
 [
   {
     "id": "c0344c91-601f-4606-8729-6826e8199f01",
-    "email": "admin@toofi.local",
+    "email": "admin@sawad.local",
     "name": "Ada Admin",
     "role": "admin",
     "passwordHash": "$2b$10$TZKNaT4OgKAV6y.mskp8..eqasMfBhyJWn42kKJKBObt0wRsEgdPi",
@@ -9,7 +9,7 @@
   },
   {
     "id": "26d2c143-0cca-4d57-99ea-7d21d61631dd",
-    "email": "editor@toofi.local",
+    "email": "editor@sawad.local",
     "name": "Eddie Editor",
     "role": "editor",
     "passwordHash": "$2b$10$TZKNaT4OgKAV6y.mskp8..eqasMfBhyJWn42kKJKBObt0wRsEgdPi",
@@ -17,7 +17,7 @@
   },
   {
     "id": "3435a3b1-d557-4918-b83b-904c26ca62dd",
-    "email": "viewer@toofi.local",
+    "email": "viewer@sawad.local",
     "name": "Vic Viewer",
     "role": "viewer",
     "passwordHash": "$2b$10$TZKNaT4OgKAV6y.mskp8..eqasMfBhyJWn42kKJKBObt0wRsEgdPi",

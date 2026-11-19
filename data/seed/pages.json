@@ -1,35 +1,158 @@
 [
   {
-    "id": "6ab793c3-2491-4693-bcea-081c2150c674",
+    "id": "f1de9f85-3da6-5aa1-a07b-8b6750a4bfe1",
     "slug": "/",
     "title": "Home",
     "template": "home",
     "status": "published",
-    "seo": { "description": "Toofi — sample home page." },
-    "createdAt": "2026-11-14T00:00:00.000Z",
-    "updatedAt": "2026-11-14T00:00:00.000Z",
-    "publishedAt": "2026-11-14T00:00:00.000Z"
+    "seo": {
+      "description": "Sawad Holding: gated garden compounds in Baghdad, Erbil and Basra."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
   },
   {
-    "id": "5aeb666d-2cb3-4b22-9454-9fe0e15c3dde",
-    "slug": "/about",
-    "title": "About",
-    "template": "generic",
+    "id": "4af99d28-ca95-5422-a952-5c1d79c355b1",
+    "slug": "/ar",
+    "title": "الرئيسية",
+    "template": "home",
     "status": "published",
-    "seo": { "description": "About Toofi." },
-    "createdAt": "2026-11-14T00:00:00.000Z",
-    "updatedAt": "2026-11-14T00:00:00.000Z",
-    "publishedAt": "2026-11-14T00:00:00.000Z"
+    "seo": {
+      "description": "السواد القابضة: مجمّعات سكنية مسوّرة بين الحدائق في بغداد وأربيل والبصرة."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
   },
   {
-    "id": "c9b90c3d-e57d-4a0f-b54c-44c76477f9c2",
+    "id": "702f7ced-df3c-5f35-b34b-26b99887afa2",
+    "slug": "/residences",
+    "title": "Find a residence",
+    "template": "residences",
+    "status": "published",
+    "seo": {
+      "description": "Explore 96 villas and apartments across three compounds, with guide prices and availability."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "c36f9835-83b3-5a11-9bb2-52cd94406b05",
+    "slug": "/ar/residences",
+    "title": "ابحث عن منزل",
+    "template": "residences",
+    "status": "published",
+    "seo": {
+      "description": "تصفّح ٩٦ فيلا وشقة في ثلاثة مجمّعات، مع الأسعار الاسترشادية وحالة التوفر."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "2f05fe3e-bc13-5385-9592-5856c4d88a78",
+    "slug": "/compounds",
+    "title": "Compounds",
+    "template": "compounds",
+    "status": "published",
+    "seo": {
+      "description": "Bustan Dijla, Zaitun Hills and Shatt Gardens: sites, landscape and residence types."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "f3624ad5-8392-5dae-bc9d-c097891a76c9",
+    "slug": "/ar/compounds",
+    "title": "المجمّعات",
+    "template": "compounds",
+    "status": "published",
+    "seo": {
+      "description": "بستان دجلة وتلال الزيتون وحدائق الشط: المساحات والحدائق وأنواع المنازل."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "3b8a9181-f7d1-5ce2-818d-217ec2047f49",
+    "slug": "/what-we-do",
+    "title": "What we do",
+    "template": "what-we-do",
+    "status": "published",
+    "seo": {
+      "description": "Development, construction, landscape, sales and community management under one holding."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "66e88345-09ee-51ee-b099-eaef56090e83",
+    "slug": "/ar/what-we-do",
+    "title": "ما نقوم به",
+    "template": "what-we-do",
+    "status": "published",
+    "seo": {
+      "description": "التطوير والبناء وتنسيق الحدائق والبيع وإدارة المجتمعات السكنية تحت مظلة واحدة."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "6760decf-b2bb-5791-ab71-9dec23d0fe99",
+    "slug": "/our-story",
+    "title": "Our story",
+    "template": "story",
+    "status": "published",
+    "seo": {
+      "description": "From a restored date orchard in 2009 to three compounds on the rivers of Iraq."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "9398acb8-4076-53a7-8f5f-e242f1666a08",
+    "slug": "/ar/our-story",
+    "title": "قصتنا",
+    "template": "story",
+    "status": "published",
+    "seo": {
+      "description": "من بستان نخيل أُعيد إحياؤه عام ٢٠٠٩ إلى ثلاثة مجمّعات على أنهار العراق."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "2a8f61b3-6cdc-5696-8913-0033a16bca9c",
     "slug": "/contact",
     "title": "Contact",
     "template": "contact",
-    "status": "draft",
-    "seo": {},
-    "createdAt": "2026-11-14T00:00:00.000Z",
-    "updatedAt": "2026-11-14T00:00:00.000Z",
-    "publishedAt": null
+    "status": "published",
+    "seo": {
+      "description": "Send an enquiry or visit a sales gallery in Baghdad, Erbil or Basra."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
+  },
+  {
+    "id": "0990dbb4-f727-5e23-bbef-d76db3a15ead",
+    "slug": "/ar/contact",
+    "title": "تواصل معنا",
+    "template": "contact",
+    "status": "published",
+    "seo": {
+      "description": "أرسل استفسارًا أو زر صالة عرض في بغداد أو أربيل أو البصرة."
+    },
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "updatedAt": "2026-11-19T00:00:00.000Z",
+    "publishedAt": "2026-11-19T00:00:00.000Z"
   }
 ]

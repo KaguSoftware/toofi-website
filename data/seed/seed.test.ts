@@ -23,7 +23,7 @@ describe("seed content", () => {
   it("list items have their field blocks' parent list", () => {
     const keys = new Set(blocks.map((b) => `${b.scope}|${b.key}`));
     for (const b of blocks.filter((x) => x.type === "list")) {
-      expect((b.value as { items: string[] }).items.length).toBeGreaterThan(0);
+      expect((b.value as unknown as { items: string[] }).items.length).toBeGreaterThan(0);
       expect(keys.has(`${b.scope}|${b.key}`)).toBe(true);
     }
   });

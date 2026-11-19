@@ -1,108 +1,108 @@
 /*
  * Inline editor chrome. Loaded only in edit mode (imported by EditorRoot).
- * Every selector is scoped under .toofi-editor-root so nothing leaks into the site,
+ * Every selector is scoped under .sawad-editor-root so nothing leaks into the site,
  * and nothing here changes the page's layout: outlines (not borders), fixed-position
  * chrome, absolutely positioned list controls.
  */
 
-.toofi-editor-root {
+.sawad-editor-root {
   display: contents;
-  --toofi-accent: #2563eb;
-  --toofi-accent-fg: #fff;
-  --toofi-danger: #dc2626;
-  --toofi-chrome-bg: rgb(255 255 255 / 0.96);
-  --toofi-chrome-fg: #111827;
-  --toofi-chrome-muted: #6b7280;
-  --toofi-chrome-line: rgb(0 0 0 / 0.12);
-  --toofi-chrome-hover: rgb(0 0 0 / 0.06);
-  --toofi-shadow: 0 8px 28px rgb(0 0 0 / 0.16), 0 1px 3px rgb(0 0 0 / 0.08);
-  --toofi-outline: rgb(37 99 235 / 0.55);
-  --toofi-font: 500 13px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --toofi-ease: cubic-bezier(0.2, 0, 0, 1);
+  --sawad-accent: #2563eb;
+  --sawad-accent-fg: #fff;
+  --sawad-danger: #dc2626;
+  --sawad-chrome-bg: rgb(255 255 255 / 0.96);
+  --sawad-chrome-fg: #111827;
+  --sawad-chrome-muted: #6b7280;
+  --sawad-chrome-line: rgb(0 0 0 / 0.12);
+  --sawad-chrome-hover: rgb(0 0 0 / 0.06);
+  --sawad-shadow: 0 8px 28px rgb(0 0 0 / 0.16), 0 1px 3px rgb(0 0 0 / 0.08);
+  --sawad-outline: rgb(37 99 235 / 0.55);
+  --sawad-font: 500 13px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sawad-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 @media (prefers-color-scheme: dark) {
-  .toofi-editor-root {
-    --toofi-accent: #3b82f6;
-    --toofi-chrome-bg: rgb(24 24 27 / 0.96);
-    --toofi-chrome-fg: #f4f4f5;
-    --toofi-chrome-muted: #a1a1aa;
-    --toofi-chrome-line: rgb(255 255 255 / 0.14);
-    --toofi-chrome-hover: rgb(255 255 255 / 0.08);
-    --toofi-outline: rgb(96 165 250 / 0.7);
+  .sawad-editor-root {
+    --sawad-accent: #3b82f6;
+    --sawad-chrome-bg: rgb(24 24 27 / 0.96);
+    --sawad-chrome-fg: #f4f4f5;
+    --sawad-chrome-muted: #a1a1aa;
+    --sawad-chrome-line: rgb(255 255 255 / 0.14);
+    --sawad-chrome-hover: rgb(255 255 255 / 0.08);
+    --sawad-outline: rgb(96 165 250 / 0.7);
   }
 }
 
 /* ───────── editable regions ───────── */
 
 /* No transition/radius here: those would override the site's own styles on the element. */
-.toofi-editor-root [data-toofi-editable] {
+.sawad-editor-root [data-sawad-editable] {
   outline: 1px dashed transparent;
   outline-offset: 3px;
   cursor: text;
 }
-.toofi-editor-root [data-toofi-editable="image"] {
+.sawad-editor-root [data-sawad-editable="image"] {
   cursor: pointer;
 }
-.toofi-editor-root [data-toofi-editable]:hover {
-  outline-color: var(--toofi-outline);
+.sawad-editor-root [data-sawad-editable]:hover {
+  outline-color: var(--sawad-outline);
 }
-.toofi-editor-root [data-toofi-editable]:focus,
-.toofi-editor-root [data-toofi-editable]:focus-visible,
-.toofi-editor-root [data-toofi-editable][aria-expanded="true"] {
-  outline: 2px dashed var(--toofi-accent);
+.sawad-editor-root [data-sawad-editable]:focus,
+.sawad-editor-root [data-sawad-editable]:focus-visible,
+.sawad-editor-root [data-sawad-editable][aria-expanded="true"] {
+  outline: 2px dashed var(--sawad-accent);
 }
-.toofi-editor-root [data-toofi-editable][aria-invalid="true"],
-.toofi-editor-root .toofi-rich-host[data-invalid] [data-toofi-editable] {
-  outline: 2px solid var(--toofi-danger);
+.sawad-editor-root [data-sawad-editable][aria-invalid="true"],
+.sawad-editor-root .sawad-rich-host[data-invalid] [data-sawad-editable] {
+  outline: 2px solid var(--sawad-danger);
 }
-.toofi-editor-root [data-toofi-editable="image"][data-busy] {
+.sawad-editor-root [data-sawad-editable="image"][data-busy] {
   opacity: 0.55;
   cursor: progress;
 }
 
 /* Placeholders for empty plaintext blocks */
-.toofi-editor-root [data-toofi-editable][data-placeholder]:empty::before {
+.sawad-editor-root [data-sawad-editable][data-placeholder]:empty::before {
   content: attr(data-placeholder);
   opacity: 0.45;
   pointer-events: none;
 }
 
 /* Rich text: the host wrapper adds no box */
-.toofi-editor-root .toofi-rich-host {
+.sawad-editor-root .sawad-rich-host {
   display: contents;
 }
-.toofi-editor-root .toofi-rich[data-empty]::before {
+.sawad-editor-root .sawad-rich[data-empty]::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;
   opacity: 0.45;
   pointer-events: none;
 }
-.toofi-editor-root .toofi-rich:focus {
+.sawad-editor-root .sawad-rich:focus {
   outline-offset: 6px;
 }
 
 /* ───────── list items ───────── */
 
-.toofi-editor-root [data-toofi-list-item] {
+.sawad-editor-root [data-sawad-list-item] {
   outline: 1px dashed transparent;
   outline-offset: 6px;
 }
-.toofi-editor-root [data-toofi-list-item]:hover,
-.toofi-editor-root [data-toofi-list-item]:focus-within {
-  outline-color: var(--toofi-chrome-line);
+.sawad-editor-root [data-sawad-list-item]:hover,
+.sawad-editor-root [data-sawad-list-item]:focus-within {
+  outline-color: var(--sawad-chrome-line);
 }
-.toofi-editor-root [data-toofi-list-item][data-dragging] {
+.sawad-editor-root [data-sawad-list-item][data-dragging] {
   z-index: 50;
   opacity: 0.85;
-  outline: 2px solid var(--toofi-accent);
+  outline: 2px solid var(--sawad-accent);
 }
-.toofi-editor-root [aria-busy="true"][data-toofi-list] {
+.sawad-editor-root [aria-busy="true"][data-sawad-list] {
   cursor: progress;
 }
 
-.toofi-editor-root .toofi-item-controls {
+.sawad-editor-root .sawad-item-controls {
   position: absolute;
   top: -14px;
   right: -6px;
@@ -111,33 +111,33 @@
   gap: 1px;
   padding: 2px;
   border-radius: 8px;
-  background: var(--toofi-chrome-bg);
-  color: var(--toofi-chrome-fg);
-  box-shadow: var(--toofi-shadow);
-  font: var(--toofi-font);
+  background: var(--sawad-chrome-bg);
+  color: var(--sawad-chrome-fg);
+  box-shadow: var(--sawad-shadow);
+  font: var(--sawad-font);
   opacity: 0;
   transform: translateY(2px);
   pointer-events: none;
   transition:
-    opacity 120ms var(--toofi-ease),
-    transform 120ms var(--toofi-ease);
+    opacity 120ms var(--sawad-ease),
+    transform 120ms var(--sawad-ease);
 }
-.toofi-editor-root [data-toofi-list-item]:hover > .toofi-item-controls,
-.toofi-editor-root [data-toofi-list-item]:focus-within > .toofi-item-controls,
-.toofi-editor-root [data-toofi-list-item][data-dragging] > .toofi-item-controls {
+.sawad-editor-root [data-sawad-list-item]:hover > .sawad-item-controls,
+.sawad-editor-root [data-sawad-list-item]:focus-within > .sawad-item-controls,
+.sawad-editor-root [data-sawad-list-item][data-dragging] > .sawad-item-controls {
   opacity: 1;
   transform: none;
   pointer-events: auto;
 }
 @media (hover: none) {
-  .toofi-editor-root .toofi-item-controls {
+  .sawad-editor-root .sawad-item-controls {
     opacity: 1;
     transform: none;
     pointer-events: auto;
   }
 }
 
-.toofi-editor-root .toofi-icon-btn {
+.sawad-editor-root .sawad-icon-btn {
   all: unset;
   box-sizing: border-box;
   display: inline-grid;
@@ -146,48 +146,48 @@
   height: 24px;
   padding: 0 4px;
   border-radius: 6px;
-  font: var(--toofi-font);
+  font: var(--sawad-font);
   font-size: 14px;
   color: inherit;
   cursor: pointer;
 }
-.toofi-editor-root .toofi-icon-btn:hover:not(:disabled) {
-  background: var(--toofi-chrome-hover);
+.sawad-editor-root .sawad-icon-btn:hover:not(:disabled) {
+  background: var(--sawad-chrome-hover);
 }
-.toofi-editor-root .toofi-icon-btn:focus-visible {
-  outline: 2px solid var(--toofi-accent);
+.sawad-editor-root .sawad-icon-btn:focus-visible {
+  outline: 2px solid var(--sawad-accent);
   outline-offset: 1px;
 }
-.toofi-editor-root .toofi-icon-btn:disabled {
+.sawad-editor-root .sawad-icon-btn:disabled {
   opacity: 0.35;
   cursor: default;
 }
-.toofi-editor-root .toofi-drag {
+.sawad-editor-root .sawad-drag {
   cursor: grab;
   touch-action: none;
 }
-.toofi-editor-root .toofi-drag:active {
+.sawad-editor-root .sawad-drag:active {
   cursor: grabbing;
 }
-.toofi-editor-root .toofi-danger:hover:not(:disabled) {
-  color: var(--toofi-danger);
+.sawad-editor-root .sawad-danger:hover:not(:disabled) {
+  color: var(--sawad-danger);
 }
 
-.toofi-editor-root .toofi-item-loading {
+.sawad-editor-root .sawad-item-loading {
   display: flex;
   align-items: center;
   gap: 8px;
   min-height: 48px;
-  font: var(--toofi-font);
-  color: var(--toofi-chrome-muted);
+  font: var(--sawad-font);
+  color: var(--sawad-chrome-muted);
 }
-.toofi-editor-root .toofi-list-empty {
+.sawad-editor-root .sawad-list-empty {
   border-style: dashed;
 }
 
 /* ───────── fixed chrome ───────── */
 
-.toofi-editor-root .toofi-chrome {
+.sawad-editor-root .sawad-chrome {
   /* Out of flow: never adds a box (or a flex/grid gap) to the page. */
   position: fixed;
   width: 0;
@@ -196,7 +196,7 @@
   z-index: 2147483000;
 }
 
-.toofi-editor-root .toofi-toolbar {
+.sawad-editor-root .sawad-toolbar {
   position: fixed;
   left: 50%;
   bottom: max(16px, env(safe-area-inset-bottom));
@@ -207,34 +207,34 @@
   gap: 4px;
   max-width: calc(100vw - 24px);
   padding: 6px;
-  border: 1px solid var(--toofi-chrome-line);
+  border: 1px solid var(--sawad-chrome-line);
   border-radius: 14px;
-  background: var(--toofi-chrome-bg);
-  color: var(--toofi-chrome-fg);
-  box-shadow: var(--toofi-shadow);
+  background: var(--sawad-chrome-bg);
+  color: var(--sawad-chrome-fg);
+  box-shadow: var(--sawad-shadow);
   backdrop-filter: blur(12px);
-  font: var(--toofi-font);
+  font: var(--sawad-font);
   overflow-x: auto;
   scrollbar-width: none;
-  animation: toofi-rise 200ms var(--toofi-ease);
+  animation: sawad-rise 200ms var(--sawad-ease);
 }
 
-@keyframes toofi-rise {
+@keyframes sawad-rise {
   from {
     opacity: 0;
     transform: translate(-50%, 8px);
   }
 }
 
-.toofi-editor-root .toofi-sep {
+.sawad-editor-root .sawad-sep {
   flex: none;
   width: 1px;
   height: 20px;
   margin: 0 2px;
-  background: var(--toofi-chrome-line);
+  background: var(--sawad-chrome-line);
 }
 
-.toofi-editor-root .toofi-pill {
+.sawad-editor-root .sawad-pill {
   flex: none;
   padding: 3px 8px;
   border-radius: 999px;
@@ -244,38 +244,38 @@
   font-weight: 600;
 }
 
-.toofi-editor-root .toofi-status {
+.sawad-editor-root .sawad-status {
   flex: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 0 6px;
-  color: var(--toofi-chrome-muted);
+  color: var(--sawad-chrome-muted);
   white-space: nowrap;
 }
-.toofi-editor-root .toofi-dot {
+.sawad-editor-root .sawad-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #22c55e;
 }
-.toofi-editor-root .toofi-status[data-state="draft"] .toofi-dot {
+.sawad-editor-root .sawad-status[data-state="draft"] .sawad-dot {
   background: #f59e0b;
 }
-.toofi-editor-root .toofi-status[data-state="unsaved"] .toofi-dot {
-  background: var(--toofi-accent);
+.sawad-editor-root .sawad-status[data-state="unsaved"] .sawad-dot {
+  background: var(--sawad-accent);
 }
-.toofi-editor-root .toofi-status[data-state="saving"] .toofi-dot {
-  background: var(--toofi-accent);
-  animation: toofi-pulse 900ms ease-in-out infinite alternate;
+.sawad-editor-root .sawad-status[data-state="saving"] .sawad-dot {
+  background: var(--sawad-accent);
+  animation: sawad-pulse 900ms ease-in-out infinite alternate;
 }
-@keyframes toofi-pulse {
+@keyframes sawad-pulse {
   to {
     opacity: 0.3;
   }
 }
 
-.toofi-editor-root .toofi-btn {
+.sawad-editor-root .sawad-btn {
   all: unset;
   box-sizing: border-box;
   flex: none;
@@ -285,167 +285,167 @@
   height: 30px;
   padding: 0 11px;
   border-radius: 8px;
-  font: var(--toofi-font);
-  color: var(--toofi-chrome-fg);
+  font: var(--sawad-font);
+  color: var(--sawad-chrome-fg);
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 120ms var(--toofi-ease),
-    transform 120ms var(--toofi-ease);
+    background-color 120ms var(--sawad-ease),
+    transform 120ms var(--sawad-ease);
 }
-.toofi-editor-root .toofi-btn:hover:not(:disabled) {
-  background: var(--toofi-chrome-hover);
+.sawad-editor-root .sawad-btn:hover:not(:disabled) {
+  background: var(--sawad-chrome-hover);
 }
-.toofi-editor-root .toofi-btn:active:not(:disabled) {
+.sawad-editor-root .sawad-btn:active:not(:disabled) {
   transform: scale(0.97);
 }
-.toofi-editor-root .toofi-btn:focus-visible {
-  outline: 2px solid var(--toofi-accent);
+.sawad-editor-root .sawad-btn:focus-visible {
+  outline: 2px solid var(--sawad-accent);
   outline-offset: 2px;
 }
-.toofi-editor-root .toofi-btn:disabled {
+.sawad-editor-root .sawad-btn:disabled {
   opacity: 0.4;
   cursor: default;
 }
-.toofi-editor-root .toofi-btn-primary {
-  background: var(--toofi-accent);
-  color: var(--toofi-accent-fg);
+.sawad-editor-root .sawad-btn-primary {
+  background: var(--sawad-accent);
+  color: var(--sawad-accent-fg);
 }
-.toofi-editor-root .toofi-btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--toofi-accent) 88%, black);
+.sawad-editor-root .sawad-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--sawad-accent) 88%, black);
 }
-.toofi-editor-root .toofi-btn-ghost {
-  color: var(--toofi-chrome-muted);
+.sawad-editor-root .sawad-btn-ghost {
+  color: var(--sawad-chrome-muted);
 }
-.toofi-editor-root .toofi-list-empty {
-  border: 1px dashed var(--toofi-chrome-line);
+.sawad-editor-root .sawad-list-empty {
+  border: 1px dashed var(--sawad-chrome-line);
   color: inherit;
 }
 
 /* ───────── popovers & forms ───────── */
 
-.toofi-editor-root .toofi-popover {
+.sawad-editor-root .sawad-popover {
   position: fixed;
   z-index: 2147483001;
   width: min(340px, calc(100vw - 24px));
   max-height: min(420px, calc(100vh - 24px));
   overflow: auto;
   padding: 12px;
-  border: 1px solid var(--toofi-chrome-line);
+  border: 1px solid var(--sawad-chrome-line);
   border-radius: 12px;
-  background: var(--toofi-chrome-bg);
-  color: var(--toofi-chrome-fg);
-  box-shadow: var(--toofi-shadow);
+  background: var(--sawad-chrome-bg);
+  color: var(--sawad-chrome-fg);
+  box-shadow: var(--sawad-shadow);
   backdrop-filter: blur(12px);
-  font: var(--toofi-font);
+  font: var(--sawad-font);
   text-align: left;
-  animation: toofi-fade 140ms var(--toofi-ease);
+  animation: sawad-fade 140ms var(--sawad-ease);
 }
-@keyframes toofi-fade {
+@keyframes sawad-fade {
   from {
     opacity: 0;
     transform: translateY(4px);
   }
 }
 
-.toofi-editor-root .toofi-form {
+.sawad-editor-root .sawad-form {
   display: grid;
   gap: 8px;
 }
-.toofi-editor-root .toofi-row {
+.sawad-editor-root .sawad-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.toofi-editor-root .toofi-field {
+.sawad-editor-root .sawad-field {
   display: grid;
   gap: 4px;
   font-weight: 600;
 }
-.toofi-editor-root .toofi-popover input[type="text"],
-.toofi-editor-root .toofi-popover textarea,
-.toofi-editor-root .toofi-bubble input {
+.sawad-editor-root .sawad-popover input[type="text"],
+.sawad-editor-root .sawad-popover textarea,
+.sawad-editor-root .sawad-bubble input {
   box-sizing: border-box;
   width: 100%;
   padding: 7px 9px;
-  border: 1px solid var(--toofi-chrome-line);
+  border: 1px solid var(--sawad-chrome-line);
   border-radius: 8px;
   background: transparent;
   color: inherit;
   font: 400 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   resize: vertical;
 }
-.toofi-editor-root .toofi-popover input:focus-visible,
-.toofi-editor-root .toofi-popover textarea:focus-visible,
-.toofi-editor-root .toofi-bubble input:focus-visible {
-  outline: 2px solid var(--toofi-accent);
+.sawad-editor-root .sawad-popover input:focus-visible,
+.sawad-editor-root .sawad-popover textarea:focus-visible,
+.sawad-editor-root .sawad-bubble input:focus-visible {
+  outline: 2px solid var(--sawad-accent);
   outline-offset: 0;
   border-color: transparent;
 }
-.toofi-editor-root [aria-invalid="true"]:is(input, textarea) {
-  border-color: var(--toofi-danger);
+.sawad-editor-root [aria-invalid="true"]:is(input, textarea) {
+  border-color: var(--sawad-danger);
 }
-.toofi-editor-root .toofi-check {
+.sawad-editor-root .sawad-check {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 400;
   cursor: pointer;
 }
-.toofi-editor-root .toofi-check input {
-  accent-color: var(--toofi-accent);
+.sawad-editor-root .sawad-check input {
+  accent-color: var(--sawad-accent);
 }
-.toofi-editor-root .toofi-hint {
+.sawad-editor-root .sawad-hint {
   margin: 0;
-  color: var(--toofi-chrome-muted);
+  color: var(--sawad-chrome-muted);
   font-weight: 400;
   font-size: 12px;
 }
-.toofi-editor-root .toofi-error {
+.sawad-editor-root .sawad-error {
   margin: 0;
-  color: var(--toofi-danger);
+  color: var(--sawad-danger);
   font-weight: 400;
   font-size: 12px;
 }
 
 /* History */
-.toofi-editor-root .toofi-history-title {
+.sawad-editor-root .sawad-history-title {
   margin: 0 0 8px;
   font-weight: 600;
 }
-.toofi-editor-root .toofi-history-title code {
+.sawad-editor-root .sawad-history-title code {
   font: 400 12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--toofi-chrome-muted);
+  color: var(--sawad-chrome-muted);
 }
-.toofi-editor-root .toofi-history-list {
+.sawad-editor-root .sawad-history-list {
   display: grid;
   gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.toofi-editor-root .toofi-history-list li {
+.sawad-editor-root .sawad-history-list li {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px;
   border-radius: 8px;
 }
-.toofi-editor-root .toofi-history-list li:hover {
-  background: var(--toofi-chrome-hover);
+.sawad-editor-root .sawad-history-list li:hover {
+  background: var(--sawad-chrome-hover);
 }
-.toofi-editor-root .toofi-history-meta {
+.sawad-editor-root .sawad-history-meta {
   display: grid;
   gap: 2px;
   min-width: 0;
   flex: 1;
 }
-.toofi-editor-root .toofi-history-meta time {
+.sawad-editor-root .sawad-history-meta time {
   font-size: 12px;
-  color: var(--toofi-chrome-muted);
+  color: var(--sawad-chrome-muted);
 }
-.toofi-editor-root .toofi-history-preview {
+.sawad-editor-root .sawad-history-preview {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -453,27 +453,27 @@
 }
 
 /* Rich-text bubble menu */
-.toofi-editor-root .toofi-bubble {
+.sawad-editor-root .sawad-bubble {
   z-index: 2147483001;
   padding: 3px;
-  border: 1px solid var(--toofi-chrome-line);
+  border: 1px solid var(--sawad-chrome-line);
   border-radius: 10px;
-  background: var(--toofi-chrome-bg);
-  color: var(--toofi-chrome-fg);
-  box-shadow: var(--toofi-shadow);
-  font: var(--toofi-font);
+  background: var(--sawad-chrome-bg);
+  color: var(--sawad-chrome-fg);
+  box-shadow: var(--sawad-shadow);
+  font: var(--sawad-font);
 }
-.toofi-editor-root .toofi-bubble-row,
-.toofi-editor-root .toofi-bubble-link {
+.sawad-editor-root .sawad-bubble-row,
+.sawad-editor-root .sawad-bubble-link {
   display: flex;
   align-items: center;
   gap: 1px;
 }
-.toofi-editor-root .toofi-bubble-link {
+.sawad-editor-root .sawad-bubble-link {
   gap: 4px;
   min-width: 280px;
 }
-.toofi-editor-root .toofi-bubble-btn {
+.sawad-editor-root .sawad-bubble-btn {
   all: unset;
   box-sizing: border-box;
   display: inline-grid;
@@ -482,48 +482,48 @@
   height: 28px;
   padding: 0 7px;
   border-radius: 7px;
-  font: var(--toofi-font);
+  font: var(--sawad-font);
   color: inherit;
   white-space: nowrap;
   cursor: pointer;
 }
-.toofi-editor-root .toofi-bubble-btn:hover {
-  background: var(--toofi-chrome-hover);
+.sawad-editor-root .sawad-bubble-btn:hover {
+  background: var(--sawad-chrome-hover);
 }
-.toofi-editor-root .toofi-bubble-btn[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--toofi-accent) 16%, transparent);
-  color: var(--toofi-accent);
+.sawad-editor-root .sawad-bubble-btn[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--sawad-accent) 16%, transparent);
+  color: var(--sawad-accent);
 }
-.toofi-editor-root .toofi-bubble-btn:focus-visible {
-  outline: 2px solid var(--toofi-accent);
+.sawad-editor-root .sawad-bubble-btn:focus-visible {
+  outline: 2px solid var(--sawad-accent);
 }
 
 /* Spinner */
-.toofi-editor-root .toofi-spinner {
+.sawad-editor-root .sawad-spinner {
   display: inline-block;
   width: 12px;
   height: 12px;
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
-  animation: toofi-spin 700ms linear infinite;
+  animation: sawad-spin 700ms linear infinite;
 }
-@keyframes toofi-spin {
+@keyframes sawad-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toofi-editor-root .toofi-chrome *,
-  .toofi-editor-root .toofi-item-controls,
-  .toofi-editor-root .toofi-item-controls *,
-  .toofi-editor-root .toofi-popover,
-  .toofi-editor-root .toofi-bubble * {
+  .sawad-editor-root .sawad-chrome *,
+  .sawad-editor-root .sawad-item-controls,
+  .sawad-editor-root .sawad-item-controls *,
+  .sawad-editor-root .sawad-popover,
+  .sawad-editor-root .sawad-bubble * {
     animation: none !important;
     transition: none !important;
   }
-  .toofi-editor-root .toofi-spinner {
-    animation: toofi-spin 1.6s linear infinite !important;
+  .sawad-editor-root .sawad-spinner {
+    animation: sawad-spin 1.6s linear infinite !important;
   }
 }

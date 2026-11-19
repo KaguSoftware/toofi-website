@@ -4,11 +4,11 @@ import { SignJWT, jwtVerify } from "jose";
  * Local-mode session token helpers. Pure (no next/headers), so proxy.ts can use them.
  * The token only carries the user id; the role is always re-read server-side.
  */
-export const LOCAL_SESSION_COOKIE = "toofi_session";
+export const LOCAL_SESSION_COOKIE = "sawad_session";
 export const LOCAL_SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-const ISSUER = "toofi-local";
-const AUDIENCE = "toofi";
+const ISSUER = "sawad-local";
+const AUDIENCE = "sawad";
 
 export async function signLocalSession(userId: string, secret: Uint8Array): Promise<string> {
   return new SignJWT({})

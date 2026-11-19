@@ -21,9 +21,9 @@ async function LoginContent({ searchParams }: { searchParams: Promise<{ next?: s
           <p className="font-semibold">Local demo mode</p>
           <p className="mt-1">Password for all accounts: <code>password</code></p>
           <ul className="mt-1 space-y-0.5 font-mono">
-            <li>admin@toofi.local</li>
-            <li>editor@toofi.local</li>
-            <li>viewer@toofi.local</li>
+            <li>admin@sawad.local</li>
+            <li>editor@sawad.local</li>
+            <li>viewer@sawad.local</li>
           </ul>
         </div>
       )}
