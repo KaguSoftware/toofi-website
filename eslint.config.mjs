@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored Basis Universal transcoder (copied from three/examples/jsm/libs/basis).
     "public/sawad/basis/**",
+    // Parallel agent worktrees (full checkouts) and Blender build output.
+    ".claude/worktrees/**",
+    "scripts/blender/out/**",
   ]),
 ]);
 

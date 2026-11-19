@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
   test: {
     include: ["**/*.test.ts", "**/*.test.tsx"],
-    exclude: ["node_modules/**", ".next/**", ".data/**"],
+    exclude: ["**/node_modules/**", ".next/**", ".data/**", ".claude/worktrees/**", "scripts/blender/out/**"],
     environment: "node", // component tests opt in with `// @vitest-environment jsdom`
     setupFiles: ["./vitest.setup.ts"],
     coverage: {
