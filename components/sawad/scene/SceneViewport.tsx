@@ -1,14 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
+import { ErrorBoundary } from "@/components/monitoring/ErrorBoundary";
 import { reportError } from "@/lib/monitoring";
 import { canRender3D, qualityTier, readCapabilityEnv } from "./capability";
-import type { Engine } from "./engine";
-import type { SceneViewportProps } from "./types";
+import type { QualityTier, SceneApi, SceneViewportProps } from "./types";
 import "./scene.css";
 
+// The WebGL scene (three.js + React Three Fiber) is its own chunk, fetched in the browser
+// only once a capable device asks for it.
+const SceneCanvas = dynamic(() => import("./SceneCanvas"), { ssr: false });
+
 type Phase = "poster" | "idle" | "loading" | "running" | "unavailable";
+/** What one mounted canvas has reached. Another compound or mode starts again from nothing. */
+type Run = { key: string; status: "running" | "failed"; captureReady: boolean };
+/** Facts read from the browser when the canvas stage mounts. */
+type Setup = { key: string; tier: QualityTier; reducedMotion: boolean; frame?: { x: number; y: number }; capture: boolean };
 
 function isCaptureMode(): boolean {
   if (process.env.NODE_ENV === "production" || typeof window === "undefined") return false;
@@ -33,6 +42,12 @@ export function resetCapabilityCache(): void {
   capabilityCache.clear();
 }
 
+/** Runs once when it mounts: how the error boundary's fallback tells the viewport it failed. */
+function OnMount({ run }: { run: () => void }) {
+  useEffect(run, [run]);
+  return null;
+}
+
 /**
  * Poster first, always. The 3D scene loads on capable devices only and fades in
  * after its first rendered frame, so there is never a blank canvas.
@@ -50,75 +65,61 @@ export function SceneViewport({
   className,
 }: SceneViewportProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<Engine | null>(null);
+  const apiRef = useRef<SceneApi | null>(null);
   const capable = useSyncExternalStore<boolean | null>(noopSubscribe, () => capableSnapshot(mode), () => null);
   const capture = useSyncExternalStore(noopSubscribe, isCaptureMode, () => false);
-  const [status, setStatus] = useState<"off" | "loading" | "running" | "failed">("off");
+  // The scene is rebuilt from scratch for another compound or mode; so is everything it reached.
+  const sceneKey = `${variant}:${mode}`;
+  const [run, setRun] = useState<Run | null>(null);
+  const [setup, setSetup] = useState<Setup | null>(null);
   const [requested, setRequested] = useState(autoLoad);
   const [playing, setPlaying] = useState(true);
   const [onScreen, setOnScreen] = useState(true);
   const [tabVisible, setTabVisible] = useState(true);
   const [hint, setHint] = useState(mode === "explorer");
-  const [captureReady, setCaptureReady] = useState(false);
 
-  // Latest props for engine callbacks and for the initial state of a fresh engine.
-  const latest = useRef({ view, markers, selectedId, onSelect });
-  useEffect(() => {
-    latest.current = { view, markers, selectedId, onSelect };
-  });
+  const status = run?.key === sceneKey ? run.status : "off";
+  const captureReady = run?.key === sceneKey && run.captureReady;
+  const mark = useCallback(
+    (patch: Partial<Omit<Run, "key">>) =>
+      setRun((prev) => ({ key: sceneKey, status: "running", captureReady: false, ...(prev?.key === sceneKey ? prev : null), ...patch })),
+    [sceneKey],
+  );
 
+  const onFirstFrame = useCallback(() => mark({ status: "running" }), [mark]);
+  const onFrame = useCallback(
+    (n: number) => {
+      if (n === CAPTURE_FRAMES) mark({ captureReady: true });
+    },
+    [mark],
+  );
+  const onBoundaryError = useCallback(() => mark({ status: "failed" }), [mark]);
   const fail = useCallback(
     (err: unknown) => {
       reportError("SceneViewport", err, { variant, mode });
-      engineRef.current?.dispose();
-      engineRef.current = null;
-      setStatus("failed");
+      mark({ status: "failed" });
     },
-    [variant, mode],
+    [variant, mode, mark],
   );
 
-  // The engine lives exactly as long as this effect.
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!capable || !requested || !canvas) return;
-    let cancelled = false;
-    const env = readCapabilityEnv(mode);
-    const captureNow = isCaptureMode();
-    const tier = captureNow ? "high" : qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 });
-    import("./engine")
-      .then(({ createEngine }) => {
-        if (cancelled) return;
-        const engine = createEngine(canvas, {
-          variant,
-          tier,
-          mode,
-          view: latest.current.view,
-          reducedMotion: env.reducedMotion,
-          // Keep the compound clear of the hero text panel, which sits at the inline start.
-          frame: mode === "film" ? { x: getComputedStyle(canvas).direction === "rtl" ? -0.12 : 0.12, y: 0.1 } : undefined,
-          onSelect: (id) => latest.current.onSelect?.(id),
-          onFirstFrame: () => setStatus("running"),
-          onFrame: captureNow ? (n) => n === CAPTURE_FRAMES && setCaptureReady(true) : undefined,
-          onError: fail,
-        });
-        engineRef.current = engine;
-        if (mode === "explorer" && !captureNow) {
-          engine.setMarkers(latest.current.markers ?? []);
-          engine.setSelected(latest.current.selectedId ?? null);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) fail(err);
+  // The stage element exists only while the scene should load. Mounting it reads the device
+  // once: quality tier, motion preference, and which side the film must keep clear.
+  const stageRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (!el) return;
+      const env = readCapabilityEnv(mode);
+      const captureNow = isCaptureMode();
+      setSetup({
+        key: sceneKey,
+        tier: captureNow ? "high" : qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 }),
+        reducedMotion: env.reducedMotion,
+        // Keep the compound clear of the hero text panel, which sits at the inline start.
+        frame: mode === "film" ? { x: getComputedStyle(el).direction === "rtl" ? -0.12 : 0.12, y: 0.1 } : undefined,
+        capture: captureNow,
       });
-    return () => {
-      cancelled = true;
-      engineRef.current?.dispose();
-      engineRef.current = null;
-      setStatus("off");
-      setCaptureReady(false);
-    };
-  }, [capable, requested, variant, mode, fail]);
+    },
+    [mode, sceneKey],
+  );
 
   // Pause when offscreen or the tab is hidden.
   useEffect(() => {
@@ -150,32 +151,6 @@ export function SceneViewport({
             ? "running"
             : "loading";
 
-  useEffect(() => {
-    engineRef.current?.setPlaying(playing && onScreen && tabVisible);
-  }, [playing, onScreen, tabVisible, phase]);
-
-  // Keep the canvas sized to its box.
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el || phase !== "running" || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => engineRef.current?.resize());
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [phase]);
-
-  // Controlled props → engine.
-  useEffect(() => {
-    if (phase === "running") engineRef.current?.setView(view, true);
-  }, [view, phase]);
-  useEffect(() => {
-    if (phase === "running" && mode === "explorer" && !capture) engineRef.current?.setMarkers(markers ?? []);
-  }, [markers, phase, mode, capture]);
-  useEffect(() => {
-    if (phase !== "running" || mode !== "explorer") return;
-    engineRef.current?.setSelected(selectedId ?? null);
-    if (selectedId) engineRef.current?.flyToMarker(selectedId);
-  }, [selectedId, phase, mode]);
-
   // The drag hint disappears after first interaction or a few seconds.
   useEffect(() => {
     if (!hint || phase !== "running") return;
@@ -186,6 +161,8 @@ export function SceneViewport({
   const running = phase === "running";
   const ready = capture ? captureReady : running;
   const showUi = !capture;
+  const loads = capable === true && requested && status !== "failed";
+  const current = setup?.key === sceneKey ? setup : null;
 
   return (
     <div
@@ -199,7 +176,30 @@ export function SceneViewport({
       onPointerDown={() => setHint(false)}
     >
       <Image className="scene__poster" src={poster.src} alt={poster.alt} fill priority sizes="100vw" />
-      <canvas ref={canvasRef} className="scene__canvas" data-visible={running} aria-hidden="true" />
+      {loads && (
+        <div key={sceneKey} ref={stageRef} className="scene__canvas" data-visible={running} aria-hidden="true">
+          {current && (
+            <ErrorBoundary name="SceneViewport" fallback={<OnMount run={onBoundaryError} />}>
+              <SceneCanvas
+                variant={variant}
+                tier={current.tier}
+                mode={mode}
+                view={view}
+                reducedMotion={current.reducedMotion}
+                frame={current.frame}
+                markers={mode === "explorer" && !current.capture ? (markers ?? []) : undefined}
+                selectedId={mode === "explorer" ? selectedId : null}
+                playing={playing && onScreen && tabVisible}
+                apiRef={apiRef}
+                onSelect={onSelect}
+                onFirstFrame={onFirstFrame}
+                onFrame={current.capture ? onFrame : undefined}
+                onError={fail}
+              />
+            </ErrorBoundary>
+          )}
+        </div>
+      )}
 
       {showUi && phase === "loading" && mode === "explorer" && (
         <p className="scene__note" role="status">
@@ -230,13 +230,13 @@ export function SceneViewport({
       {showUi && running && mode === "explorer" && (
         <>
           <div className="scene__controls">
-            <button type="button" className="scene__btn" aria-label={labels.zoomIn} onClick={() => engineRef.current?.zoom(1)}>
+            <button type="button" className="scene__btn" aria-label={labels.zoomIn} onClick={() => apiRef.current?.zoom(1)}>
               <PlusIcon />
             </button>
-            <button type="button" className="scene__btn" aria-label={labels.zoomOut} onClick={() => engineRef.current?.zoom(-1)}>
+            <button type="button" className="scene__btn" aria-label={labels.zoomOut} onClick={() => apiRef.current?.zoom(-1)}>
               <MinusIcon />
             </button>
-            <button type="button" className="scene__btn" aria-label={labels.reset} onClick={() => engineRef.current?.reset()}>
+            <button type="button" className="scene__btn" aria-label={labels.reset} onClick={() => apiRef.current?.reset()}>
               <ResetIcon />
             </button>
           </div>

@@ -28,5 +28,8 @@ export type SceneViewportProps = {
   className?: string;
 };
 
+/** The actions behind the explorer's on-screen buttons. */
+export type SceneApi = { zoom: (dir: 1 | -1) => void; reset: () => void };
+
 export type QualityTier = "high" | "low";
 export type Vec3 = [number, number, number];

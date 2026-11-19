@@ -1,12 +1,13 @@
-import { BoxGeometry, Group, InstancedMesh, Mesh, MeshStandardMaterial, Scene, ShaderMaterial, Texture, type WebGLRenderer } from "three";
+import { BoxGeometry, Group, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Scene, ShaderMaterial, Texture, type WebGLRenderer } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 // PMREM needs a GPU; record what it was asked to prefilter instead.
-const pmrem = vi.hoisted(() => ({ scenes: [] as unknown[], targets: [] as Array<{ texture: unknown; dispose: () => void }>, disposed: 0 }));
+const pmrem = vi.hoisted(() => ({ scenes: [] as unknown[], targets: [] as Array<{ texture: unknown; dispose: () => void }>, disposed: 0, fail: false }));
 vi.mock("three", async (importOriginal) => {
   const actual = await importOriginal<typeof import("three")>();
   class FakePMREMGenerator {
     fromScene(scene: unknown) {
+      if (pmrem.fail) throw new Error("no float targets");
       pmrem.scenes.push(scene);
       const target = { texture: new actual.Texture(), dispose: vi.fn() };
       pmrem.targets.push(target);
@@ -19,41 +20,77 @@ vi.mock("three", async (importOriginal) => {
   return { ...actual, PMREMGenerator: FakePMREMGenerator };
 });
 
-import { ENVIRONMENT_INTENSITY, REFLECTIVE_ENV_INTENSITY, buildArchitecture, buildWorld, createWaterMaterial, sunDirection } from "./world";
+import {
+  ENVIRONMENT_INTENSITY,
+  HAZE_COLOR,
+  HEMISPHERE_LIGHT,
+  REFLECTIVE_ENV_INTENSITY,
+  SUN_LIGHT,
+  applyReflections,
+  buildArchitecture,
+  buildGardenPool,
+  buildPalms,
+  buildRoundTrees,
+  buildSky,
+  buildSkyEnvironment,
+  buildTerrain,
+  buildWater,
+  createWaterMaterial,
+  fogDensity,
+  paletteHex,
+  sunDirection,
+  sunLightPosition,
+} from "./world";
+import { PLAN_SITE, SITE, planApartmentBlocks, planVillas } from "./layout";
+import { planLandscape } from "./landscape";
+import { planGroundAxes, planPoolWater } from "./planWorld";
 
-describe("buildWorld", () => {
-  it("builds the low-tier Tigris scene without a renderer", () => {
-    const world = buildWorld({ variant: "dijla", tier: "low" });
-    const names = world.scene.children.map((c) => c.name).filter(Boolean);
-    expect(names).toEqual(expect.arrayContaining(["sky", "terrain", "river", "garden-pool", "palm-trunks", "palm-crowns", "architecture"]));
-    const palms = world.scene.getObjectByName("palm-crowns") as InstancedMesh;
-    expect(palms).toBeInstanceOf(InstancedMesh);
-    expect(palms.count).toBeGreaterThan(300);
-    expect(world.sun.castShadow).toBe(false);
-    // Few draw calls: everything is instanced or merged.
-    const meshes: Mesh[] = [];
-    world.scene.traverse((o) => {
-      if ((o as Mesh).isMesh) meshes.push(o as Mesh);
-    });
-    expect(meshes.length).toBeLessThan(15);
-    world.dispose();
-    expect(world.scene.children).toHaveLength(0);
+describe("the procedural world", () => {
+  it("builds the land, river and pool as single named meshes", () => {
+    const terrain = buildTerrain("dijla", "low");
+    expect(terrain.name).toBe("terrain");
+    expect(terrain.receiveShadow).toBe(true);
+    // The high tier is a finer grid.
+    const fine = buildTerrain("dijla", "high");
+    expect(fine.geometry.getAttribute("position").count).toBeGreaterThan(terrain.geometry.getAttribute("position").count);
+    const material = createWaterMaterial(sunDirection("dijla"), "dijla");
+    const river = buildWater("dijla", material);
+    const pool = buildGardenPool(material);
+    expect(river.name).toBe("river");
+    expect(pool.name).toBe("garden-pool");
+    expect(pool.material).toBe(river.material); // one shader animates both
+    for (const m of [terrain, fine, river, pool]) m.geometry.dispose();
+    material.dispose();
   });
 
-  it("casts shadows on the high tier and plants olives on Zaitun", () => {
-    const world = buildWorld({ variant: "zaitun", tier: "high" });
-    expect(world.sun.castShadow).toBe(true);
-    const olives = world.scene.getObjectByName("tree-crowns") as InstancedMesh;
-    expect(olives.count).toBeGreaterThan(800);
-    world.dispose();
+  it("plants palms as two instanced meshes, fewer on the low tier", () => {
+    const low = buildPalms("dijla", "low");
+    expect(low.objects.map((o) => o.name)).toEqual(["palm-trunks", "palm-crowns"]);
+    const crowns = low.objects[1];
+    expect(crowns).toBeInstanceOf(InstancedMesh);
+    expect(crowns.count).toBeGreaterThan(300);
+    expect(crowns.castShadow).toBe(true);
+    const high = buildPalms("dijla", "high");
+    expect(high.objects[1].count).toBeGreaterThan(crowns.count);
+    const geometry = vi.spyOn(crowns.geometry, "dispose");
+    const material = vi.spyOn(crowns.material as MeshStandardMaterial, "dispose");
+    const instances = vi.spyOn(crowns, "dispose");
+    low.dispose();
+    high.dispose();
+    expect(geometry).toHaveBeenCalled();
+    expect(material).toHaveBeenCalled();
+    expect(instances).toHaveBeenCalled();
   });
 
-  it("animates the water and sky through update()", () => {
-    const world = buildWorld({ variant: "shatt", tier: "low" });
-    world.update(12.5);
-    const water = world.water.material as ShaderMaterial;
-    expect(water.uniforms.uTime.value).toBe(12.5);
-    world.dispose();
+  it("covers Zaitun's foothills in olives and keeps a few shade trees elsewhere", () => {
+    const olives = buildRoundTrees("zaitun", "high");
+    expect(olives.objects.map((o) => o.name)).toEqual(["tree-trunks", "tree-crowns"]);
+    expect(olives.objects[1].count).toBeGreaterThan(800);
+    const fewer = buildRoundTrees("zaitun", "low");
+    expect(fewer.objects[1].count).toBeLessThan(olives.objects[1].count);
+    const shade = buildRoundTrees("dijla", "high");
+    expect(shade.objects[1].count).toBeLessThan(100);
+    for (const p of [olives, fewer, shade]) p.dispose();
   });
 
   it("keeps the sun low on the horizon for golden hour", () => {
@@ -66,88 +103,140 @@ describe("buildWorld", () => {
     expect(sunDirection("dijla", 4).y).toBeGreaterThan(sunDirection("dijla").y);
   });
 
-  it("swaps the procedural architecture for the baked model and disposes both", () => {
-    const world = buildWorld({ variant: "dijla", tier: "low" });
-    const procedural = world.scene.getObjectByName("architecture") as Mesh;
-    expect(procedural).toBeInstanceOf(Mesh);
-    const oldGeometry = vi.spyOn(procedural.geometry, "dispose");
-    const oldMaterial = vi.spyOn(procedural.material as MeshStandardMaterial, "dispose");
-    const model = new Group();
-    model.name = "architecture-model";
-    const map = new Texture();
-    const part = new Mesh(new BoxGeometry(), new MeshStandardMaterial({ map }));
-    model.add(part);
-    world.setArchitecture(model);
-    expect(world.scene.getObjectByName("architecture")).toBeUndefined();
-    expect(world.scene.getObjectByName("architecture-model")).toBe(model);
-    expect(oldGeometry).toHaveBeenCalled();
-    expect(oldMaterial).toHaveBeenCalled();
-    world.setArchitecture(model); // idempotent
-    expect(world.scene.getObjectByName("architecture-model")).toBe(model);
-    const newGeometry = vi.spyOn(part.geometry, "dispose");
-    const newMap = vi.spyOn(map, "dispose");
-    world.dispose();
-    expect(newGeometry).toHaveBeenCalled();
-    expect(newMap).toHaveBeenCalled();
+  it("puts the sun light above the visible sun, with a warm colour and one large shadow map", () => {
+    const p = sunLightPosition("zaitun");
+    expect(p.length()).toBeCloseTo(SUN_LIGHT.distance, 3);
+    expect(p.clone().normalize().y).toBeGreaterThan(sunDirection("zaitun").y); // lifted so the ground still reads
+    expect(SUN_LIGHT.color).toBe("#ffa65c");
+    expect(SUN_LIGHT.shadow.mapSize).toBe(4096);
+    expect(HEMISPHERE_LIGHT.intensity).toBeGreaterThan(0);
   });
 
-  it("prefilters the golden-hour sky alone into scene.environment", () => {
-    const world = buildWorld({ variant: "shatt", tier: "low" });
-    world.setEnvironment({} as WebGLRenderer);
+  it("hazes every compound, Shatt a little more", () => {
+    expect(HAZE_COLOR).toBe("#e6ae86");
+    expect(fogDensity("shatt")).toBeGreaterThan(fogDensity("zaitun"));
+    expect(fogDensity("dijla")).toBe(fogDensity("zaitun"));
+  });
+
+  it("exposes the palette as sRGB hex for the model check", () => {
+    const palette = paletteHex();
+    expect(palette.cream).toBe("#ecdfc7");
+    expect(palette.brass).toBe("#c9a24a");
+  });
+
+  it("prefilters the golden-hour sky alone into an environment map", () => {
+    const sky = buildSky(sunDirection("shatt"));
+    expect(sky.mesh.name).toBe("sky");
+    const target = buildSkyEnvironment({} as WebGLRenderer, sky);
     const envScene = pmrem.scenes.at(-1) as Scene;
     expect(envScene.children).toHaveLength(1);
-    const sky = world.scene.getObjectByName("sky") as Mesh;
     const envSky = (envScene.children[0] as Mesh).material as ShaderMaterial;
-    const screenSky = sky.material as ShaderMaterial;
     // Same sky, minus the sun disc (an HDR spike that the prefilter would smear); the
     // on-screen sky is unchanged.
-    expect(envSky.fragmentShader).toBe(screenSky.fragmentShader);
+    expect(envSky.fragmentShader).toBe(sky.material.fragmentShader);
     expect(envSky.uniforms.uSunDisc.value).toBe(0);
-    expect(screenSky.uniforms.uSunDisc.value).toBe(1);
+    expect(sky.material.uniforms.uSunDisc.value).toBe(1);
     // NaN guard: pow() of a slightly negative azimuth term would poison the whole env map.
-    expect(screenSky.fragmentShader).toMatch(/float az = clamp\(/);
-    expect(world.scene.environment).toBe(pmrem.targets.at(-1)!.texture);
-    expect(world.scene.environmentIntensity).toBe(ENVIRONMENT_INTENSITY);
+    expect(sky.material.fragmentShader).toMatch(/float az = clamp\(/);
+    expect(target).toBe(pmrem.targets.at(-1));
     expect(ENVIRONMENT_INTENSITY).toBeGreaterThan(0);
     expect(ENVIRONMENT_INTENSITY).toBeLessThanOrEqual(1);
     expect(pmrem.disposed).toBeGreaterThan(0);
-    // Rebuilding replaces the old target; dispose() frees the current one.
-    const first = pmrem.targets.at(-1)!;
-    world.setEnvironment({} as WebGLRenderer);
-    expect(first.dispose).toHaveBeenCalled();
-    world.dispose();
-    expect(pmrem.targets.at(-1)!.dispose).toHaveBeenCalled();
-    expect(world.scene.environment).toBeNull();
+  });
+
+  it("frees the prefilter even when it fails", () => {
+    const sky = buildSky(sunDirection("dijla"));
+    const before = pmrem.disposed;
+    pmrem.fail = true;
+    try {
+      expect(() => buildSkyEnvironment({} as WebGLRenderer, sky)).toThrow("no float targets");
+    } finally {
+      pmrem.fail = false;
+    }
+    expect(pmrem.disposed).toBe(before + 1);
   });
 
   it("gives the model's metals and polished glass full sky reflections, not the trim sheet", () => {
-    const world = buildWorld({ variant: "dijla", tier: "low" });
-    world.setEnvironment({} as WebGLRenderer);
-    const env = world.scene.environment;
+    const env = new Texture();
     const brass = new MeshStandardMaterial({ metalness: 1, roughness: 0.35 });
     const glass = new MeshStandardMaterial({ metalness: 0, roughness: 0.05 });
     // glTF trim-sheet materials carry factors of 1 and take metalness/roughness from a texture.
     const atlas = new MeshStandardMaterial({ metalness: 1, roughness: 1, metalnessMap: new Texture(), roughnessMap: new Texture() });
     const model = new Group();
     for (const m of [brass, glass, atlas]) model.add(new Mesh(new BoxGeometry(), m));
-    world.setArchitecture(model);
+    applyReflections(model, env);
     expect(brass.envMap).toBe(env);
     expect(brass.envMapIntensity).toBe(REFLECTIVE_ENV_INTENSITY);
     expect(glass.envMap).toBe(env);
     expect(atlas.envMap).toBeNull(); // uses scene.environment at ENVIRONMENT_INTENSITY
-    world.dispose();
   });
 
   it("keeps the procedural compound buildable as the fallback", () => {
     const mesh = buildArchitecture();
     expect(mesh.name).toBe("architecture");
+    expect(mesh.castShadow && mesh.receiveShadow).toBe(true);
     expect(mesh.geometry.getAttribute("position").count).toBeGreaterThan(1000);
     mesh.geometry.dispose();
   });
 
-  it("creates a water material with the sun direction", () => {
+  it("draws Zaitun Hills' land and water on the 28 ha plan, and the others on the 7 ha layout", () => {
+    const zaitun = buildTerrain("zaitun", "low");
+    const { xs, zs } = planGroundAxes("low");
+    expect(zaitun.geometry.getAttribute("position").count).toBe(xs.length * zs.length);
+    const material = createWaterMaterial(sunDirection("zaitun"), "zaitun");
+    const pool = buildGardenPool(material, "zaitun");
+    pool.geometry.computeBoundingBox();
+    const w = planPoolWater();
+    expect(pool.geometry.boundingBox!.min.x).toBeCloseTo(w.minX, 5);
+    expect(pool.geometry.boundingBox!.max.z).toBeCloseTo(w.maxZ, 5);
+    const old = buildGardenPool(material);
+    old.geometry.computeBoundingBox();
+    expect(old.geometry.boundingBox!.max.z).toBeCloseTo(-16, 5); // the 7 ha pool, 60 m long about z = -46
+    const river = buildWater("zaitun", material);
+    expect(river.name).toBe("river");
+    for (const m of [zaitun, pool, old, river]) m.geometry.dispose();
+    material.dispose();
+  });
+
+  it("falls back to procedural trees at the plan's own spots on Zaitun Hills", () => {
+    const land = planLandscape("low");
+    const palms = buildPalms("zaitun", "low");
+    expect(palms.objects[1].count).toBeLessThanOrEqual(land.palms.length);
+    expect(palms.objects[1].count).toBeGreaterThan(300);
+    // Every fallback palm stands where the plan puts one.
+    const m = new Matrix4();
+    const spots = new Set(land.palms.map((p) => `${p.x.toFixed(2)},${p.z.toFixed(2)}`));
+    for (let i = 0; i < palms.objects[0].count; i += 37) {
+      palms.objects[0].getMatrixAt(i, m);
+      const e = m.elements;
+      expect(spots.has(`${e[12].toFixed(2)},${e[14].toFixed(2)}`)).toBe(true);
+    }
+    palms.dispose();
+  });
+
+  it("builds Zaitun Hills' fallback compound on the 28 ha plan: 60 villas, 6 blocks, walls to the site's edge", () => {
+    const plan = buildArchitecture("zaitun");
+    const old = buildArchitecture("dijla");
+    plan.geometry.computeBoundingBox();
+    old.geometry.computeBoundingBox();
+    const box = plan.geometry.boundingBox!;
+    expect(box.min.x).toBeLessThan(PLAN_SITE.minX + 1);
+    expect(box.max.x).toBeGreaterThan(PLAN_SITE.maxX - 1);
+    expect(box.min.z).toBeLessThan(PLAN_SITE.minZ + 1);
+    expect(old.geometry.boundingBox!.min.x).toBeGreaterThan(SITE.minX - 40);
+    expect(plan.geometry.getAttribute("position").count).toBeGreaterThan(2 * old.geometry.getAttribute("position").count);
+    // A villa's slab stands at its own ground level (the upper rows are 6 m up, on the terrace).
+    const upper = planVillas().find((v) => v.row === "terrace-hill")!;
+    expect(upper.y).toBeGreaterThan(planVillas()[0].y);
+    expect(planApartmentBlocks()).toHaveLength(6);
+    plan.geometry.dispose();
+    old.geometry.dispose();
+  });
+
+  it("creates a water material with the sun direction and the scene's haze", () => {
     const m = createWaterMaterial(sunDirection("dijla"), "dijla");
     expect(m.uniforms.uSunDir.value.y).toBeGreaterThan(0);
+    expect(m.uniforms.uFogDensity.value).toBe(fogDensity("dijla"));
     expect(m.fragmentShader).toContain("glint");
     m.dispose();
   });

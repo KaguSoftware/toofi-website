@@ -8,7 +8,7 @@ const calls = vi.hoisted(() => ({
   meshopt: null as unknown,
   ktx2: null as unknown,
   urls: [] as string[],
-  result: null as null | (() => Promise<{ scene: Group }>),
+  result: null as null | (() => Promise<{ scene: Group; animations?: unknown[] }>),
 }));
 const reportError = vi.fn();
 
@@ -46,7 +46,18 @@ vi.mock("three/examples/jsm/loaders/GLTFLoader.js", () => ({
 }));
 vi.mock("@/lib/monitoring", () => ({ reportError: (...a: unknown[]) => reportError(...a) }));
 
-import { BASIS_TRANSCODER_PATH, COMPOUND_MODEL_URL, COMPOUND_NAME, disposeObject, loadCompound, prepareCompound } from "./compoundModel";
+import {
+  BASIS_TRANSCODER_PATH,
+  COMPOUND_MODEL_URL,
+  COMPOUND_NAME,
+  LIBRARY_URL,
+  PLAN_COMPOUND_MODEL_URL,
+  compoundModelUrl,
+  disposeObject,
+  loadCompound,
+  loadLibrary,
+  prepareCompound,
+} from "./compoundModel";
 
 const renderer = { id: "renderer" } as unknown as WebGLRenderer;
 
@@ -102,6 +113,50 @@ describe("loadCompound", () => {
     await expect(loadCompound("low", renderer)).rejects.toBe(error);
     expect(reportError).toHaveBeenCalledWith("sawad-scene", error, expect.objectContaining({ tier: "low", url: COMPOUND_MODEL_URL.low }));
     expect(calls.ktx2Disposed).toBe(1);
+  });
+});
+
+describe("compoundModelUrl", () => {
+  it("gives Zaitun Hills its 28 ha model and keeps the 7 ha model for the other compounds", () => {
+    expect(compoundModelUrl("zaitun", "high")).toBe("/sawad/models/compound-zaitun-high.glb");
+    expect(compoundModelUrl("zaitun", "low")).toBe(PLAN_COMPOUND_MODEL_URL.low);
+    expect(compoundModelUrl("dijla", "high")).toBe(COMPOUND_MODEL_URL.high);
+    expect(compoundModelUrl("shatt", "low")).toBe(COMPOUND_MODEL_URL.low);
+  });
+
+  it("loads the variant's model", async () => {
+    calls.result = () => Promise.resolve({ scene: new Group() });
+    await loadCompound("low", renderer, "zaitun");
+    expect(calls.urls).toEqual([PLAN_COMPOUND_MODEL_URL.low]);
+  });
+
+  it("names the variant when the model fails", async () => {
+    const error = new Error("404");
+    calls.result = () => Promise.reject(error);
+    await expect(loadCompound("high", renderer, "zaitun")).rejects.toBe(error);
+    expect(reportError).toHaveBeenCalledWith("sawad-scene", error, expect.objectContaining({ variant: "zaitun", url: PLAN_COMPOUND_MODEL_URL.high }));
+  });
+});
+
+describe("loadLibrary", () => {
+  it("loads the tier's plant or life library with its animation clips, untouched", async () => {
+    const scene = new Group();
+    const animations = [{ name: "walk" }];
+    calls.result = () => Promise.resolve({ scene, animations });
+    const lib = await loadLibrary("life", "high", renderer);
+    expect(calls.urls).toEqual([LIBRARY_URL.life.high]);
+    expect(lib.scene).toBe(scene);
+    expect(lib.animations).toBe(animations);
+    expect(scene.name).toBe(""); // not renamed or prepared like the compound
+    expect(calls.ktx2Disposed).toBe(1);
+    expect(LIBRARY_URL.vegetation.low).toBe("/sawad/models/vegetation-low.glb");
+  });
+
+  it("reports which library failed and rejects", async () => {
+    const error = new Error("broken");
+    calls.result = () => Promise.reject(error);
+    await expect(loadLibrary("vegetation", "low", renderer)).rejects.toBe(error);
+    expect(reportError).toHaveBeenCalledWith("sawad-scene", error, { stage: "vegetation", tier: "low", url: LIBRARY_URL.vegetation.low });
   });
 });
 
