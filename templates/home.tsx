@@ -4,20 +4,105 @@ import { Container, Section } from "@/components/ui";
 import { CompoundFacts } from "@/components/sawad/CompoundFacts";
 import { HomeSearch } from "@/components/sawad/HomeSearch";
 import { TweaksPanel } from "@/components/sawad/TweaksPanel";
-import { SceneViewport } from "@/components/sawad/scene/SceneViewport";
+import { BEAT_IDS, type BeatId } from "@/components/sawad/experience/beats";
+import { HERO_HOME_ID } from "@/components/sawad/experience/story";
+import type { BeatContent, ExperienceLabels } from "@/components/sawad/experience/types";
+import { finderHref } from "@/components/sawad/experience/links";
+import { ZaitunExperience } from "@/components/sawad/experience/ZaitunExperience";
+import { planAmenities } from "@/components/sawad/scene/layout";
 import { OPERATIONS } from "@/lib/sawad/content";
-import { COMPOUNDS, sceneImage } from "@/lib/sawad/data";
-import { formatNumber } from "@/lib/sawad/format";
-import { localeFromPath, localizedPath, ROUTES, t } from "@/lib/sawad/i18n";
+import { COMPOUNDS, RESIDENCE_TYPES, fromPrice, getCompound, getResidence, sceneImage, type Locale } from "@/lib/sawad/data";
+import { countHectares, formatArea, formatNumber, formatPercent, formatUsd } from "@/lib/sawad/format";
+import { localeFromPath, localizedPath, ROUTES, t, type Dict } from "@/lib/sawad/i18n";
 import { parseExperience, parseView, showsFilm, TWEAK_KEYS } from "@/lib/sawad/tweaks";
 import type { TemplateDefinition } from "./types";
 
+/** Stills of the Zaitun Hills story, rendered from the scene (scripts/render-story-stills.mjs). */
+export const storyStill = (name: string): string => `/sawad/story/zaitun-${name}.jpg`;
+
+/** The numbers under each caption, from the same data and layout the scene is built from. */
+function beatFigures(id: BeatId, locale: Locale, d: Dict): BeatContent["figures"] {
+  const zaitun = getCompound("zaitun-hills")!;
+  const metres = (n: number) => `${formatNumber(n, locale)} ${locale === "ar" ? "م" : "m"}`;
+  switch (id) {
+    case "entrance":
+      return [
+        { label: d.facts.site, value: countHectares(zaitun.siteHa, locale) },
+        { label: d.facts.landscape, value: formatPercent(zaitun.landscapePct, locale) },
+      ];
+    case "boulevard":
+      return [
+        { label: d.showcase.figures.villas, value: formatNumber(zaitun.phaseOne.villas, locale) },
+        { label: d.showcase.figures.apartments, value: formatNumber(zaitun.phaseOne.apartments, locale) },
+      ];
+    case "villa": {
+      const type = RESIDENCE_TYPES.cv5;
+      const from = fromPrice("zaitun-hills", "cv5");
+      return [
+        { label: d.finder.bedrooms, value: formatNumber(type.bedrooms, locale) },
+        { label: d.finder.built, value: formatArea(type.builtM2, locale) },
+        ...(type.landM2 ? [{ label: d.finder.land, value: formatArea(type.landM2, locale) }] : []),
+        ...(from ? [{ label: d.facts.fromPrice, value: formatUsd(from, locale) }] : []),
+      ];
+    }
+    case "amenities": {
+      const amenities = planAmenities();
+      const pool = amenities.find((a) => a.id === "pool");
+      const courts = amenities.filter((a) => a.kind === "padel" || a.kind === "tennis").length;
+      return [
+        ...(pool?.size ? [{ label: d.showcase.figures.pool, value: metres(pool.size.depth) }] : []),
+        { label: d.showcase.figures.courts, value: formatNumber(courts, locale) },
+      ];
+    }
+    case "aerial":
+      return [
+        { label: d.facts.homes, value: formatNumber(zaitun.phaseOne.villas + zaitun.phaseOne.apartments, locale) },
+        { label: d.facts.handover, value: zaitun.handover[locale] },
+      ];
+  }
+}
+
+function experienceLabels(d: Dict): ExperienceLabels {
+  const { scene, close } = d.finder;
+  const s = d.showcase;
+  return {
+    region: s.region,
+    loading: scene.loading,
+    stills: s.stills,
+    load3d: s.load3d,
+    pause: scene.pause,
+    play: scene.play,
+    skipIntro: s.skipIntro,
+    scrollHint: s.scrollHint,
+    explore: s.explore,
+    backToStory: s.backToStory,
+    orbit: s.orbit,
+    walk: s.walk,
+    exploreMode: s.exploreMode,
+    toDusk: s.toDusk,
+    toDay: s.toDay,
+    soundOn: s.soundOn,
+    soundOff: s.soundOff,
+    zoomIn: scene.zoomIn,
+    zoomOut: scene.zoomOut,
+    reset: scene.reset,
+    orbitHint: s.orbitHint,
+    walkHint: s.walkHint,
+    joystick: s.joystick,
+    panelTitle: s.panelTitle,
+    close,
+    inFinder: s.inFinder,
+    beatsLabel: s.beatsLabel,
+  };
+}
+
 /**
- * Home. Editable keys: hero.title, hero.lead, name.title, name.body, name.rule,
+ * Home. Editable keys: hero.title, hero.lead, showcase.<beat>.eyebrow / .title / .body (beats:
+ * entrance, boulevard, villa, amenities, aerial), name.title, name.body, name.rule,
  * compounds.title, compounds.lead, ops.title, ops.lead, visit.title, visit.body.
- * The opening film holds one shot (Tweaks: startView), then flies slowly around the
- * compound. Switching viewpoints lives in the finder, so the hero has a single job:
- * lead to Find a residence.
+ * The page opens on Zaitun Hills, the showcase compound: an opening shot (Tweaks: startView),
+ * then a scroll-driven tour with captions, then free exploring. Tweaks experience = explorer
+ * shows the tour as stills. In edit mode it is always stills, so every caption can be edited.
  */
 export const homeTemplate: TemplateDefinition = {
   id: "home",
@@ -28,30 +113,53 @@ export const homeTemplate: TemplateDefinition = {
     const d = t(locale);
     const experience = parseExperience(g?.text(TWEAK_KEYS.experience, "both"));
     const startView = parseView(g?.text(TWEAK_KEYS.startView, "flight"), "flight");
-    const poster = { src: sceneImage("dijla", startView), alt: d.home.sceneCaption };
+    // Each opening starts on its viewpoint's own poster frame (public/sawad/scene-zaitun-*.jpg).
+    const poster = { src: sceneImage("zaitun", startView), alt: d.showcase.caption };
+    const heroHome = getResidence(HERO_HOME_ID);
+    const finder = localizedPath(ROUTES.residences, locale);
+    const beats: BeatContent[] = BEAT_IDS.map((id) => {
+      const copy = d.showcase.beats[id];
+      return {
+        id,
+        eyebrow: <c.Text k={`showcase.${id}.eyebrow`} as="span" fallback={copy.eyebrow} />,
+        title: <c.Text k={`showcase.${id}.title`} as="h2" fallback={copy.title} />,
+        body: <c.Text k={`showcase.${id}.body`} as="p" fallback={copy.body} multiline />,
+        figures: beatFigures(id, locale, d),
+        still: { src: storyStill(id), alt: copy.still },
+        link:
+          id === "villa" && heroHome
+            ? { href: finderHref(heroHome, locale), label: d.showcase.seeHome }
+            : id === "aerial"
+              ? { href: `${finder}?compound=zaitun-hills`, label: d.showcase.findHome }
+              : undefined,
+      };
+    });
 
     return (
       <main id="main">
         <TweaksPanel g={g} locale={locale} />
-        <section className="home-hero" aria-labelledby="home-title">
-          <div className="home-hero__stage">
-            {showsFilm(experience) ? (
-              <SceneViewport mode="film" variant="dijla" view={startView} poster={poster} labels={d.finder.scene} />
-            ) : (
-              <Image src={poster.src} alt={poster.alt} fill priority sizes="100vw" style={{ objectFit: "cover" }} />
-            )}
-          </div>
-          <div className="home-hero__panel">
-            <div id="home-title">
-              <c.Text k="hero.title" as="h1" className="t-display home-hero__title" fallback={d.home.title} />
+        <ZaitunExperience
+          locale={locale}
+          view={startView}
+          live={showsFilm(experience) && !c.editing}
+          poster={poster}
+          labels={experienceLabels(d)}
+          beats={beats}
+          hero={
+            <div className="home-hero__panel">
+              <div id="home-title">
+                <c.Text k="hero.title" as="h1" className="t-display home-hero__title" fallback={d.home.title} />
+              </div>
+              <c.Text k="hero.lead" as="p" className="t-lead home-hero__lead" fallback={d.home.lead} multiline />
+              <p className="t-small home-hero__caption">{d.showcase.caption}</p>
             </div>
-            <c.Text k="hero.lead" as="p" className="t-lead home-hero__lead" fallback={d.home.lead} multiline />
-            <p className="t-small home-hero__caption">{d.home.sceneCaption}</p>
-          </div>
-          <Container>
-            <HomeSearch locale={locale} />
-          </Container>
-        </section>
+          }
+          after={
+            <Container>
+              <HomeSearch locale={locale} />
+            </Container>
+          }
+        />
 
         <section className="name-band on-dark" aria-labelledby="name-title">
           <Container className="name-band__grid">

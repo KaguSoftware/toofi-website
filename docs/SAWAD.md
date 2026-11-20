@@ -30,14 +30,22 @@ Arabic pages use Arabic-Indic digits (٠–٩) everywhere, through `lib/sawad/fo
 
 Sign in as an editor and open Home or Find a residence in edit mode. A "Site settings" strip appears that visitors never see:
 
-- `tweaks.experience`: `both` (default), `film` (no interactive scene in the finder) or `explorer` (a still image on Home instead of the film).
-- `tweaks.startView`: `flight` (default), `street`, `terrace` or `aerial`. This is the Home film's opening shot (it matches the poster). After about two seconds the camera lifts off and circles the compound, one slow circuit every two and a half minutes.
+- `tweaks.experience`: `both` (default), `film` (no interactive scene in the finder) or `explorer` (the Zaitun Hills tour on Home is shown as stills instead of the live scene).
+- `tweaks.startView`: `flight` (default), `street`, `terrace` or `aerial`. This is the opening shot of the tour on Home (it matches the poster). The camera then travels to the main gate in about 14 seconds, and the scroll takes it from there. A visitor who does not scroll gets one slow circuit of the compound every four minutes.
 
 Typos fall back to the default.
 
+## The Zaitun Hills experience (Home)
+
+Home opens on Zaitun Hills, the showcase compound: an opening shot under a letterbox, a scroll-driven tour of five stops (entrance, boulevard, courtyard villa, garden and amenities, aerial) with captions in English and Arabic, then free exploring: orbit, walk (arrow keys or a touch joystick), clickable homes with a details panel, a day and dusk switch, and ambient sound (off until asked for). It lives in `components/sawad/experience/`; its [README](../components/sawad/experience/README.md) covers updating the homes, editing the camera in Theatre.js, swapping the model, the quality levels and the stills.
+
+- Captions: `showcase` in `lib/sawad/i18n.ts`, editable inline (`showcase.<stop>.eyebrow`, `.title`, `.body`). Numbers come from `lib/sawad/data.ts` and the masterplan.
+- Visitors without 3D (no JavaScript, weak devices, Save-Data, slow connections) and editors in edit mode see the tour as stills with the same captions. With reduced motion nothing moves unasked: the stills, plus a button that opens the explorer.
+- Stills: `public/sawad/story/`, rendered with `node scripts/render-story-stills.mjs` (instructions are in the file).
+
 ## The 3D scene
 
-The scene lives in `components/sawad/scene/` and uses three.js. On Home it plays as a film: a slow flight around the compound (`tourPose` in `viewpoints.ts`), low over the water and high over the land, framed clear of the headline panel on wide screens. It loads only after a still poster has painted. It does not load at all on weak devices, with Save-Data on, on slow connections, or for film under reduced motion. On phones the finder waits for a tap on "Show the 3D view". The residence list is always the accessible way through the homes, and the 3D canvas is hidden from screen readers.
+The scene lives in `components/sawad/scene/` and uses three.js with React Three Fiber. The residence finder shows it as an explorer; the Home experience above is built on the same world. Its film mode (a slow flight around the compound, `tourPose` in `viewpoints.ts`) is what the Home experience falls into for a visitor who does not scroll. It loads only after a still poster has painted. It does not load at all on weak devices, with Save-Data on, on slow connections, or for film under reduced motion. On phones the finder waits for a tap on "Show the 3D view". The residence list is always the accessible way through the homes, and the 3D canvas is hidden from screen readers.
 
 Status is shown by shape as well as colour, in the scene, the legend and the list: available is a filled disc, reserved a half-filled ring, sold a grey disc with a cross. Brass is never used for status or selection.
 

@@ -1,0 +1,615 @@
+/*
+ * The Zaitun Hills experience. A stage that stays put (poster, canvas, letterbox, controls)
+ * with full-screen panels scrolling over it: the hero, then one per beat. Square corners,
+ * hairlines and solid cream controls, like the rest of the site; captions are cream type set
+ * straight on the picture. Logical properties throughout, so Arabic pages mirror.
+ */
+.xp {
+  --xp-h: calc(100svh - var(--header-h));
+  --xp-cream: oklch(0.962 0.012 85);
+  --xp-cream-solid: oklch(0.962 0.012 85 / 0.94);
+  --xp-ink: oklch(0.18 0.004 80);
+  --xp-line: oklch(0.18 0.004 80 / 0.18);
+  --xp-edge: max(var(--gutter), calc((100% - var(--container)) / 2));
+  position: relative;
+  background: var(--night);
+}
+
+/* ---------------------------------------------------------------- stage */
+
+.xp__stage {
+  position: sticky;
+  inset-block-start: var(--header-h);
+  height: var(--xp-h);
+  overflow: hidden;
+  isolation: isolate;
+  z-index: 0;
+  contain: layout paint;
+  background: oklch(0.42 0.05 60);
+}
+.xp__poster {
+  position: absolute;
+  inset: 0;
+}
+.xp__poster img {
+  object-fit: cover;
+}
+.xp__canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms var(--ease-out);
+}
+.xp__canvas[data-visible="true"] {
+  opacity: 1;
+}
+.xp:is([data-mode="orbit"], [data-mode="walk"]) .xp__canvas {
+  pointer-events: auto;
+  touch-action: none;
+}
+/* Lower third in shade, so captions read on any frame. */
+.xp[data-state="story"] .xp__stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top, oklch(0.16 0.012 70 / 0.62), oklch(0.16 0.012 70 / 0.2) 34%, transparent 58%);
+  transition: opacity 600ms var(--ease-out);
+}
+.xp:is([data-mode="orbit"], [data-mode="walk"]) .xp__stage::after {
+  opacity: 0;
+}
+
+/* The letterbox: 2.39:1 while the opening plays, open once the visitor does anything. */
+.xp__bar {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 2;
+  height: clamp(0px, calc((var(--xp-h) - 100vw / 2.39) / 2), 14svh);
+  background: oklch(0.12 0.006 75);
+  pointer-events: none;
+  transition: transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.xp__bar--top {
+  inset-block-start: 0;
+  transform-origin: top;
+}
+.xp__bar--bottom {
+  inset-block-end: 0;
+  transform-origin: bottom;
+}
+.xp[data-letterbox="open"] .xp__bar {
+  transform: scaleY(0);
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.xp__panels {
+  position: relative;
+  z-index: 1;
+  margin-block-start: calc(-1 * var(--xp-h));
+  pointer-events: none;
+}
+.xp:is([data-mode="orbit"], [data-mode="walk"]) .xp__panels {
+  visibility: hidden;
+}
+.xp__panel {
+  position: relative;
+  min-height: var(--xp-h);
+}
+/* The first screen is mostly picture: the hero slab starts low on it and carries on below the
+   fold, then rides up over the stage as the page scrolls. */
+.xp__panel--hero {
+  padding-block: calc(var(--xp-h) * 0.6) var(--space-8);
+}
+@media (min-width: 64rem) {
+  .xp__panel--hero {
+    padding-block-start: calc(var(--xp-h) - 15rem);
+  }
+}
+.xp__panel--hero > * {
+  pointer-events: auto;
+}
+/* The hero slab sits at the foot of the first screen instead of hanging off a fixed-height stage. */
+.xp__panel--hero .home-hero__panel {
+  margin-block-start: 0;
+}
+.xp__beats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.xp__beat {
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.xp__still {
+  object-fit: cover;
+  z-index: 0;
+}
+.xp__beat::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(to top, oklch(0.16 0.012 70 / 0.7), oklch(0.16 0.012 70 / 0.22) 36%, transparent 60%);
+}
+/* Live story: the stage shows through; the stills are never fetched. */
+.xp[data-state="story"] .xp__still,
+.xp[data-state="story"] .xp__beat::after {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- captions */
+
+.xp__caption {
+  position: relative;
+  z-index: 1;
+  max-width: min(36rem, calc(100% - 2 * var(--gutter)));
+  margin-inline-start: var(--xp-edge);
+  margin-block-end: clamp(3.5rem, 11svh, 6.5rem);
+  color: var(--xp-cream);
+  pointer-events: auto;
+}
+/* Once the scroll driver runs, captions hold one place on the stage and fade there. */
+.xp[data-scroll="ready"] .xp__caption {
+  position: fixed;
+  inset-block-end: clamp(3.5rem, 11svh, 6.5rem);
+  inset-inline-start: var(--xp-edge);
+  margin: 0;
+  visibility: hidden;
+}
+.xp__eyebrow {
+  margin: 0 0 var(--space-3);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: oklch(0.9 0.03 85);
+}
+:lang(ar) .xp__eyebrow {
+  letter-spacing: 0;
+  font-size: 0.9375rem;
+}
+.xp__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.2rem + 3vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+:lang(ar) .xp__title {
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+.xp__title > * {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+.xp__body {
+  margin-block-start: var(--space-4);
+  max-width: 46ch;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: oklch(0.93 0.015 85);
+}
+.xp__body > * {
+  margin: 0;
+  color: inherit;
+}
+.xp__figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  margin: var(--space-6) 0 0;
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid oklch(0.962 0.012 85 / 0.32);
+}
+.xp__figures div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-1);
+}
+.xp__figures dt {
+  font-size: 0.8125rem;
+  color: oklch(0.86 0.02 85);
+}
+.xp__figures dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.xp__more {
+  margin: var(--space-5) 0 0;
+}
+.xp__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--xp-cream);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+.xp__link:focus-visible {
+  outline: 2px solid var(--xp-cream);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------- controls */
+
+.xp__hud {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.xp__hud > * {
+  pointer-events: auto;
+}
+.xp__tools {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.xp__hud[data-hud="explore"] .xp__tools {
+  flex-direction: column;
+  align-items: flex-end;
+}
+.xp__group {
+  display: flex;
+  border: 1px solid var(--xp-line);
+  background: var(--xp-cream-solid);
+}
+.xp__group--column {
+  flex-direction: column;
+}
+.xp__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--xp-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease-out-quart),
+    color 160ms var(--ease-out-quart);
+}
+.xp__group .xp__btn + .xp__btn {
+  border-inline-start: 1px solid var(--xp-line);
+}
+.xp__group--column .xp__btn + .xp__btn {
+  border-inline-start: 0;
+  border-block-start: 1px solid var(--xp-line);
+}
+.xp__btn--text {
+  padding: 0 0.875rem;
+  border: 1px solid var(--xp-line);
+  background: var(--xp-cream-solid);
+}
+.xp__btn[aria-pressed="true"] {
+  background: var(--xp-ink);
+  color: var(--xp-cream);
+}
+@media (hover: hover) {
+  .xp__btn:hover {
+    background: oklch(0.9 0.016 85);
+  }
+  .xp__btn[aria-pressed="true"]:hover {
+    background: oklch(0.28 0.006 80);
+  }
+}
+.xp__btn:active {
+  background: oklch(0.86 0.02 85);
+}
+.xp__btn:focus-visible,
+.xp__prompt:focus-visible {
+  outline: 2px solid var(--xp-ink);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 2px var(--xp-cream);
+}
+[dir="rtl"] .xp__flip {
+  scale: -1 1;
+}
+
+.xp__back {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-start: 1rem;
+}
+.xp__modes {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-start: 50%;
+  display: flex;
+  translate: -50% 0;
+}
+[dir="rtl"] .xp__modes {
+  translate: 50% 0;
+}
+.xp__modes .xp__btn + .xp__btn {
+  border-inline-start: 0;
+}
+
+/* "Skip the intro", then "Scroll to begin": a quiet line of type with a falling stroke. */
+.xp__prompt {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-start: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--xp-cream);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-shadow: 0 1px 8px oklch(0.16 0.012 70 / 0.6);
+}
+.xp__prompt-line {
+  position: relative;
+  width: 1px;
+  height: 1.75rem;
+  overflow: hidden;
+  background: oklch(0.962 0.012 85 / 0.3);
+}
+.xp__prompt-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--xp-cream);
+  animation: xp-fall 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes xp-fall {
+  0% {
+    transform: translateY(-100%);
+  }
+  55%,
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.xp__hint {
+  position: absolute;
+  inset-block-end: 1rem;
+  inset-inline-start: 50%;
+  max-width: min(26rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  translate: -50% 0;
+  border: 1px solid var(--xp-line);
+  background: var(--xp-cream-solid);
+  color: var(--xp-ink);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  pointer-events: none;
+  animation: xp-hint 6s var(--ease-out) forwards;
+}
+[dir="rtl"] .xp__hint {
+  translate: 50% 0;
+}
+@keyframes xp-hint {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: the stills are the story; this offers the explorer. */
+.xp__offer {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  max-width: min(30rem, calc(100% - 2rem));
+}
+.xp__offer p {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--xp-line);
+  background: var(--xp-cream-solid);
+  color: var(--xp-ink);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------- walk and the home panel */
+
+.xp__stick {
+  position: absolute;
+  z-index: 4;
+  inset-block-end: 1.5rem;
+  inset-inline-start: 1.5rem;
+  display: grid;
+  place-items: center;
+  width: 7rem;
+  height: 7rem;
+  border: 1px solid oklch(0.962 0.012 85 / 0.7);
+  border-radius: 50%;
+  background: oklch(0.18 0.004 80 / 0.28);
+  touch-action: none;
+  user-select: none;
+}
+.xp__stick-knob {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--xp-cream);
+  box-shadow: 0 2px 10px oklch(0.16 0.012 70 / 0.35);
+}
+/* A mouse and keyboard walk with the arrow keys. */
+@media (hover: hover) and (pointer: fine) {
+  .xp__stick {
+    display: none;
+  }
+}
+
+.xp__unit {
+  position: absolute;
+  z-index: 4;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  width: min(22rem, calc(100% - 2rem));
+  padding: var(--space-5);
+  border: 1px solid var(--xp-line);
+  background: var(--xp-cream);
+  color: var(--xp-ink);
+  box-shadow: var(--shadow-lg);
+  animation: xp-unit 420ms var(--ease-out) both;
+}
+@keyframes xp-unit {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.xp__unit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0;
+}
+[dir="rtl"] .xp__unit-head {
+  margin: calc(-1 * var(--space-2)) 0 0 calc(-1 * var(--space-2));
+}
+.xp__unit-code {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+}
+.xp__unit-title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+.xp__unit-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+  margin: var(--space-4) 0;
+  padding-block: var(--space-4);
+  border-block: 1px solid var(--xp-line);
+}
+.xp__unit-facts dt {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+.xp__unit-facts dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.xp__unit-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+.xp__unit-price span {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+.xp__unit-price strong {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.xp__unit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+}
+
+/* ---------------------------------------------------------------- small screens, capture, motion */
+
+@media (max-width: 47.99rem) {
+  .xp__explore span,
+  .xp__back span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .xp__explore,
+  .xp__back {
+    padding: 0;
+  }
+  .xp__unit {
+    inset-inline: 0;
+    inset-block-end: 0;
+    width: auto;
+    max-height: 62%;
+    overflow-y: auto;
+  }
+  .xp__figures {
+    gap: var(--space-3) var(--space-6);
+  }
+  .xp__figures dd {
+    font-size: 1.25rem;
+  }
+}
+
+/* Rendering stills: the picture alone. */
+.xp[data-capture="true"] .xp__panels,
+.xp[data-capture="true"] .xp__bar,
+.xp[data-capture="true"] .xp__stage::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp__canvas,
+  .xp__bar,
+  .xp__stage::after {
+    transition-duration: 1ms;
+  }
+  .xp__prompt-line::after,
+  .xp__hint,
+  .xp__unit {
+    animation: none;
+  }
+}
