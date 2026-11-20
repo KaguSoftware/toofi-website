@@ -1,7 +1,8 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Bloom, DepthOfField, EffectComposer, N8AO, Noise, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
-import { BlendFunction, ToneMappingMode, type DepthOfFieldEffect, type EffectComposer as Composer } from "postprocessing";
+import { BlendFunction, ToneMappingMode, type DepthOfFieldEffect, type EffectComposer as Composer, type VignetteEffect } from "postprocessing";
+import { HANDOVER } from "./daylight";
 import type { WebGLRenderer } from "three";
 import type { QualitySettings } from "./quality";
 import type { RigState } from "./types";
@@ -13,6 +14,12 @@ export type PostFXProps = {
   /** Receives the composer: the render pass draws through it. */
   composerRef: RefObject<Composer | null>;
 };
+
+/** The live look's vignette; at the poster handover it starts at `HANDOVER.vignette` and settles here. */
+export const VIGNETTE_DARKNESS = 0.46;
+
+/** Vignette darkness for how far the handover has settled (0 poster, 1 live). */
+export const vignetteDarkness = (handover: number) => HANDOVER.vignette + (VIGNETTE_DARKNESS - HANDOVER.vignette) * Math.min(1, Math.max(0, handover));
 
 /** The widest the blur gets (bokeh scale at blur = 1). */
 export const MAX_BOKEH = 2.4;
@@ -33,6 +40,7 @@ function focusLens(effect: DepthOfFieldEffect, rig: RigState): void {
  */
 export function PostFX({ settings, rig, composerRef }: PostFXProps) {
   const dof = useRef<DepthOfFieldEffect>(null);
+  const vignette = useRef<VignetteEffect>(null);
   const composer = useRef<Composer>(null);
 
   useEffect(() => {
@@ -44,6 +52,7 @@ export function PostFX({ settings, rig, composerRef }: PostFXProps) {
 
   useFrame(() => {
     if (dof.current && rig.current) focusLens(dof.current, rig.current);
+    if (vignette.current && rig.current) vignette.current.darkness = vignetteDarkness(rig.current.handover);
   }, 0.8);
 
   return (
@@ -53,7 +62,7 @@ export function PostFX({ settings, rig, composerRef }: PostFXProps) {
       {settings.bloom ? <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.35} intensity={0.5} radius={0.72} /> : null}
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       {settings.smaa ? <SMAA /> : null}
-      {settings.vignette ? <Vignette offset={0.3} darkness={0.46} /> : null}
+      {settings.vignette ? <Vignette ref={vignette} offset={0.3} darkness={VIGNETTE_DARKNESS} /> : null}
       {settings.grain ? <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.13} /> : null}
     </EffectComposer>
   );

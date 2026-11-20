@@ -31,6 +31,13 @@ vi.mock("./lightmaps", async (importActual) => ({
   loadLightmapTexture: (url: string) => lm.texture(url),
 }));
 
+// The model's own dusk pages load through the scene's KTX2 helper: each test decides what it gives.
+const kt = vi.hoisted(() => ({ load: vi.fn() }));
+vi.mock("../scene/compoundModel", async (importActual) => ({
+  ...(await importActual<typeof import("../scene/compoundModel")>()),
+  withKtx2: (_gl: unknown, work: (loader: { loadAsync: (url: string) => Promise<unknown> }) => Promise<unknown>) => work({ loadAsync: (url: string) => kt.load(url) }),
+}));
+
 // The scene world has its own tests. This stand-in builds just the parts the daylight drives,
 // under the names world.ts gives them.
 const world = vi.hoisted(() => ({ props: [] as unknown[], parts: null as null | Record<string, Object3D> }));
@@ -48,6 +55,7 @@ function worldParts(): Record<string, Object3D> {
         uGround: color("#a89880"),
         uSunDir: { value: new Vector3(0.5, 0.5, -0.7).normalize() },
         uSunDisc: { value: 1 },
+        uGain: { value: 1 },
       },
     }),
   );
@@ -63,6 +71,7 @@ function worldParts(): Record<string, Object3D> {
         uFogColor: color("#d0d8e0"),
         uSunDir: { value: new Vector3(0.5, 0.5, -0.7).normalize() },
         uFogDensity: { value: 0.001 },
+        uGlint: { value: 1 },
       },
     }),
   );
@@ -98,8 +107,9 @@ vi.mock("../scene/SceneWorld", () => ({
   },
 }));
 
-import { DAYLIGHT_SECONDS, WINDOW_GLOW } from "./daylight";
-import { ExperienceWorld, findWorldParts, type ExperienceWorldProps } from "./ExperienceWorld";
+import { createBakedLight, type BakedManifest } from "../scene/bakedLight";
+import { DAYLIGHT_SECONDS, HANDOVER, WINDOW_GLOW } from "./daylight";
+import { ExperienceWorld, dressHandover, findWorldParts, type ExperienceWorldProps } from "./ExperienceWorld";
 import { SHAFT_STRENGTH } from "./godrays";
 import { initialRigState, type RigState } from "./types";
 
@@ -173,7 +183,21 @@ beforeEach(() => {
   reportError.mockReset();
   lm.manifest.mockReset().mockResolvedValue(manifest);
   lm.texture.mockReset().mockImplementation(async () => new Texture());
+  kt.load.mockReset().mockImplementation(async () => new Texture());
 });
+
+const uniformsOf = (o: Object3D) => ((o as Mesh).material as ShaderMaterial).uniforms;
+
+/** A model carrying the baked light, as loadCompound leaves it. */
+function bakedModel() {
+  const files = (p: string) => ({ day: `day-${p}-high.png`, dusk: `dusk-${p}-high.png` });
+  const tier = { pages: { buildings: { files: files("buildings") }, site: { files: files("site") } }, instances: {} };
+  const m: BakedManifest = { version: 1, states: { day: { intensity: 3.86 }, dusk: { intensity: 7.49 } }, tiers: { high: tier, low: tier } };
+  const light = createBakedLight(m, "high", { buildings: new Texture(), site: new Texture() });
+  const group = new Group();
+  group.userData.bakedLight = light;
+  return { group, light };
+}
 afterEach(() => vi.restoreAllMocks());
 
 describe("findWorldParts", () => {
@@ -205,6 +229,18 @@ describe("findWorldParts", () => {
         expect(findWorldParts(scene)?.terrain).toBeNull();
       }
     }
+  });
+});
+
+describe("dressHandover", () => {
+  it("needs the sky, and dresses the stream only when there is one", () => {
+    expect(dressHandover(new Scene(), 1, 0)).toBe(false);
+    const scene = new Scene();
+    const parts = worldParts();
+    scene.add(parts.sky);
+    expect(dressHandover(scene, 2, 0.5)).toBe(true);
+    expect(uniformsOf(parts.sky).uSunDisc.value).toBe(1);
+    expect(uniformsOf(parts.sky).uGain.value).toBeCloseTo((HANDOVER.skyGain + 1) / 2, 9);
   });
 });
 
@@ -291,6 +327,92 @@ describe("ExperienceWorld", () => {
     await settle();
     expect(dispose).toHaveBeenCalledOnce();
     expect(reportError).not.toHaveBeenCalled();
+  });
+
+  it("takes over from the poster dressed as it, then settles into the live look", async () => {
+    const w = await mount({ sunRise: true });
+    const sky = uniformsOf(world.parts!.sky);
+    const water = uniformsOf(world.parts!.river);
+    expect(w.rig.current.handover).toBe(0); // before the first frame: the vignette starts light
+    await w.frames(1, 0.05);
+    expect(sky.uSunDisc.value).toBe(0);
+    expect(sky.uGain.value).toBeCloseTo(HANDOVER.skyGain, 9);
+    expect(water.uGlint.value).toBeCloseTo(HANDOVER.glint, 9);
+    await w.frames(Math.ceil((HANDOVER.hold + HANDOVER.seconds / 2) / 0.1));
+    expect(w.rig.current.handover).toBeGreaterThan(0.3);
+    expect(w.rig.current.handover).toBeLessThan(1);
+    await w.frames(Math.ceil(HANDOVER.seconds / 0.1) + 2);
+    expect(w.rig.current.handover).toBe(1);
+    expect(sky.uSunDisc.value).toBe(1);
+    expect(sky.uGain.value).toBe(1);
+    expect(water.uGlint.value).toBe(1);
+    await w.unmount();
+  });
+
+  it("touches nothing without a poster to take over from", async () => {
+    const w = await mount();
+    await w.frames(3);
+    expect(w.rig.current.handover).toBe(1);
+    expect(uniformsOf(world.parts!.sky).uGain.value).toBe(1);
+    expect(uniformsOf(world.parts!.sky).uSunDisc.value).toBe(1);
+    await w.unmount();
+  });
+
+  it("settles at once when dusk is asked for during the handover, so day comes back with the full sun", async () => {
+    const w = await mount({ sunRise: true });
+    await w.frames(2);
+    await w.update({ sunRise: true, daylight: "dusk" });
+    await settle();
+    await w.frames(DUSK_FRAMES);
+    expect(w.rig.current.handover).toBe(1);
+    expect(uniformsOf(world.parts!.sky).uGain.value).toBe(1);
+    await w.update({ sunRise: true, daylight: "day" });
+    await w.frames(DUSK_FRAMES);
+    expect(uniformsOf(world.parts!.sky).uSunDisc.value).toBe(1);
+    await w.unmount();
+  });
+
+  it("loads the model's dusk pages on the first request for dusk and blends them with the sky", async () => {
+    const { group, light } = bakedModel();
+    const w = await mount({ model: group });
+    await w.update({ model: group, daylight: "dusk" });
+    await settle();
+    expect(kt.load.mock.calls.map((c) => c[0])).toEqual(["/sawad/lightmaps/zaitun/dusk-buildings-high.ktx2", "/sawad/lightmaps/zaitun/dusk-site-high.ktx2"]);
+    expect(light.dusk?.buildings.channel).toBe(2);
+    await w.frames(DUSK_FRAMES);
+    expect(light.uniforms.buildings.uBakedMix.value).toBe(1);
+    await w.update({ model: group, daylight: "day" });
+    await w.frames(DUSK_FRAMES);
+    expect(light.uniforms.site.uBakedMix.value).toBe(0);
+    await w.update({ model: group, daylight: "dusk" });
+    await settle();
+    expect(kt.load).toHaveBeenCalledTimes(2); // once per model
+    await w.unmount();
+  });
+
+  it("reports dusk pages that fail, and frees pages that arrive too late", async () => {
+    const boom = new Error("dusk-buildings-low.ktx2: 404");
+    kt.load.mockRejectedValue(boom);
+    const first = bakedModel();
+    const w = await mount({ tier: "low", model: first.group, daylight: "dusk" });
+    await settle();
+    expect(reportError).toHaveBeenCalledWith("sawad-experience", boom, { stage: "baked-light-dusk", tier: "low" });
+    expect(first.light.dusk).toBeNull();
+    await w.unmount();
+
+    const arrivals: Array<(t: Texture) => void> = [];
+    kt.load.mockReset().mockImplementation(() => new Promise<Texture>((res) => arrivals.push(res)));
+    const second = bakedModel();
+    const v = await mount({ model: second.group, daylight: "dusk" });
+    await settle();
+    await v.unmount();
+    const late = [new Texture(), new Texture()];
+    const disposed = late.map((t) => vi.spyOn(t, "dispose"));
+    expect(arrivals).toHaveLength(2);
+    arrivals.forEach((arrive, i) => arrive(late[i]));
+    await settle();
+    for (const d of disposed) expect(d).toHaveBeenCalled();
+    expect(second.light.dusk).toBeNull();
   });
 
   it("adds light shafts only when the quality allows, and fades them out at dusk", async () => {

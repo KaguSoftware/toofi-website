@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { RESIDENCES } from "./data";
+import { COMPOUNDS, RESIDENCES } from "./data";
 import {
+  SHOWCASE_COMPOUND,
   budgetLabel,
   defaultFinderState,
   filterResidences,
@@ -9,30 +10,33 @@ import {
   matchesBudget,
   mergeFinderQuery,
   parseFinderState,
+  showcaseFirst,
   toggleCompare,
 } from "./finder";
 
 const q = (s: string) => new URLSearchParams(s);
 
 describe("finder URL state", () => {
-  it("defaults to Bustan Dijla, available + reserved, aerial view", () => {
+  it("defaults to Zaitun Hills (the showcase), available + reserved, aerial view", () => {
     const s = parseFinderState(q(""));
     expect(s).toEqual(defaultFinderState());
-    expect(s.compound).toBe("bustan-dijla");
+    expect(s.compound).toBe("zaitun-hills");
+    expect(s.compound).toBe(SHOWCASE_COMPOUND);
     expect(s.statuses).toEqual(["available", "reserved"]);
     expect(finderStateToQuery(s)).toBe("");
   });
 
   it("reads the home search form (empty values mean any)", () => {
     const s = parseFinderState(q("compound=&type=&beds="));
-    expect([s.compound, s.kind, s.beds]).toEqual(["bustan-dijla", "all", null]);
-    const s2 = parseFinderState(q("compound=zaitun-hills&type=villa&beds=4"));
-    expect([s2.compound, s2.kind, s2.beds]).toEqual(["zaitun-hills", "villa", 4]);
+    expect([s.compound, s.kind, s.beds]).toEqual(["zaitun-hills", "all", null]);
+    const s2 = parseFinderState(q("compound=bustan-dijla&type=villa&beds=4"));
+    expect([s2.compound, s2.kind, s2.beds]).toEqual(["bustan-dijla", "villa", 4]);
+    expect(finderStateToQuery(s2)).toContain("compound=bustan-dijla");
   });
 
   it("ignores junk and round-trips", () => {
     const s = parseFinderState(q("compound=x&type=castle&beds=9&status=sold,lost&budget=free&view=moon&compare=bd-v01,bd-v02,bd-v03,bd-v04&home=bd-a03"));
-    expect(s.compound).toBe("bustan-dijla");
+    expect(s.compound).toBe("zaitun-hills");
     expect(s.kind).toBe("all");
     expect(s.beds).toBeNull();
     expect(s.statuses).toEqual(["sold"]);
@@ -45,6 +49,20 @@ describe("finder URL state", () => {
 
   it("falls back to defaults when no status survives parsing", () => {
     expect(parseFinderState(q("status=lost")).statuses).toEqual(["available", "reserved"]);
+  });
+});
+
+describe("the showcase", () => {
+  it("puts Zaitun Hills first and keeps the others in order", () => {
+    const ordered = showcaseFirst(COMPOUNDS).map((c) => c.id);
+    expect(ordered[0]).toBe("zaitun-hills");
+    expect(ordered.slice(1)).toEqual(COMPOUNDS.map((c) => c.id).filter((id) => id !== "zaitun-hills"));
+    expect(ordered).toHaveLength(COMPOUNDS.length);
+  });
+
+  it("leaves a list without the showcase as it is", () => {
+    const others = COMPOUNDS.filter((c) => c.id !== SHOWCASE_COMPOUND);
+    expect(showcaseFirst(others)).toEqual(others);
   });
 });
 

@@ -43,7 +43,7 @@ vi.mock("@gsap/react", () => ({
   },
 }));
 
-import StoryScroll from "./StoryScroll";
+import StoryScroll, { CAPTIONS, LAST_CAPTION_END } from "./StoryScroll";
 
 const triggers = () => g.triggers as Trigger[];
 
@@ -105,19 +105,22 @@ describe("StoryScroll", () => {
     expect(onProgress).toHaveBeenLastCalledWith(expect.closeTo(0.5));
   });
 
-  it("gives each caption a scroll-toggled timeline", () => {
+  it("gives each caption a scroll-toggled timeline, one caption at a time however fast the scroll", () => {
     const { root, ref } = mountRoot(3);
     render(<StoryScroll root={ref} scroll={{ current: { progress: 0 } }} />);
     expect(g.timelines).toHaveLength(3);
     const caption = root.querySelector("[data-caption]");
     expect(g.set).toHaveBeenCalledWith(caption, { autoAlpha: 0 });
-    for (const tl of g.timelines) {
-      const st = tl.config.scrollTrigger as { toggleActions: string; start: string; end: string };
+    g.timelines.forEach((tl, i) => {
+      const st = tl.config.scrollTrigger as { toggleActions: string; start: string; end: string; fastScrollEnd: boolean; preventOverlaps: string };
       expect(st.toggleActions).toBe("play reverse play reverse");
       expect(st.start).toBe("top 62%");
-      expect(st.end).toBe("bottom 62%");
+      // The last caption leaves with the stage, never over the page below it.
+      expect(st.end).toBe(i === 2 ? LAST_CAPTION_END : "bottom 62%");
+      expect(st.fastScrollEnd).toBe(true);
+      expect(st.preventOverlaps).toBe(CAPTIONS);
       expect(tl.calls.map((c) => c[0])).toEqual(["to", "from"]);
-    }
+    });
   });
 
   it("skips the caption timeline for a panel without a caption", () => {

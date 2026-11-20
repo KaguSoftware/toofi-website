@@ -10,6 +10,8 @@ export type BeatId = (typeof BEAT_IDS)[number];
 
 /** The auto-playing opening: from the poster frame down to the main gate. */
 export const INTRO_SECONDS = 14;
+/** Seconds the opening holds still on its poster frame before the camera starts to move. */
+export const INTRO_HOLD_SECONDS = 2;
 /** Where the sequence ends: the aerial, where free exploring takes over. */
 export const STORY_END = 86;
 
@@ -57,9 +59,17 @@ export function scrollToPosition(progress: number): number {
   return STORY_END;
 }
 
-/** How quickly the playhead closes on the scroll (per second), and its top speed in sequence seconds per second. */
-export const HEAD_RATE = 3.2;
-export const HEAD_MAX_SPEED = 4.5;
+/**
+ * How quickly the playhead closes on the scroll (per second), and its top speed in sequence
+ * seconds per second. Tight enough that the camera stays with the captions, which follow the
+ * scroll exactly (a flick through the whole tour is caught up within a second); the top speed only stops a single
+ * frame from jumping.
+ */
+export const HEAD_RATE = 12;
+export const HEAD_MAX_SPEED = 96;
+
+/** The playhead counts as caught up with the scroll within this many sequence seconds. */
+export const HEAD_SETTLED = 0.05;
 
 /**
  * Moves the playhead toward where the scroll wants it: eased, and never faster than

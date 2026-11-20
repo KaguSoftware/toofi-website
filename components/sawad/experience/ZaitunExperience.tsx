@@ -6,9 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ErrorBoundary } from "@/components/monitoring/ErrorBoundary";
 import { reportError } from "@/lib/monitoring";
-import { residencesIn } from "@/lib/sawad/data";
+import { residencesIn, sceneImage } from "@/lib/sawad/data";
 import { canRender3D, qualityTier, readCapabilityEnv } from "../scene/capability";
-import type { QualityTier, SceneMarker } from "../scene/types";
+import type { QualityTier, SceneMarker, ViewId } from "../scene/types";
 import { audioSupported, createAmbience, type Ambience } from "./audio";
 import type { Daylight } from "./daylight";
 import { ExperienceHud } from "./ExperienceHud";
@@ -25,7 +25,7 @@ const StoryScroll = dynamic(() => import("./StoryScroll"), { ssr: false });
 
 /** What this device gets, once the browser has been asked. */
 type Device = { capable: boolean; reducedMotion: boolean };
-type Setup = { tier: QualityTier; holdAt: number | null };
+type Setup = { tier: QualityTier; holdAt: number | null; view: ViewId | null };
 
 const CAPTURE_FRAMES = 30;
 const HINT_MS = 6000;
@@ -45,16 +45,20 @@ export function resetDeviceCache(): void {
   deviceCache = null;
 }
 
+const VIEWS: readonly ViewId[] = ["flight", "street", "terrace", "aerial"];
+
 /**
  * Development only: `?story=32` holds the story at sequence position 32 and hides the controls,
- * for rendering stills; `&dusk=1` renders it at dusk.
+ * for rendering stills; `&dusk=1` renders it at dusk; `&view=street` plays another start view's
+ * opening over its own poster (to check each poster-to-scene handover).
  */
-function captureAt(): { at: number; dusk: boolean } | null {
+export function captureAt(): { at: number; dusk: boolean; view: ViewId | null } | null {
   if (process.env.NODE_ENV === "production" || typeof window === "undefined") return null;
   const params = new URLSearchParams(window.location.search);
   const raw = params.get("story");
   const at = raw === null ? NaN : Number(raw);
-  return Number.isFinite(at) ? { at, dusk: params.get("dusk") === "1" } : null;
+  const view = VIEWS.find((v) => v === params.get("view")) ?? null;
+  return Number.isFinite(at) ? { at, dusk: params.get("dusk") === "1", view } : null;
 }
 
 function OnMount({ run }: { run: () => void }) {
@@ -80,7 +84,7 @@ const newInput = (): WalkInput => ({ move: { x: 0, y: 0 }, run: false, look: { d
 /** The homes a visitor can pick while exploring: the same sample data the residence finder shows. */
 const HOMES = residencesIn("zaitun-hills");
 
-export function ZaitunExperience({ locale, view, live, poster, hero, after, beats, labels }: ZaitunExperienceProps) {
+export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerPoster, hero, after, beats, labels }: ZaitunExperienceProps) {
   const rootRef = useRef<HTMLElement>(null);
   const exploreButton = useRef<HTMLButtonElement>(null);
   const backButton = useRef<HTMLButtonElement>(null);
@@ -94,6 +98,9 @@ export function ZaitunExperience({ locale, view, live, poster, hero, after, beat
   const soundAvailable = useSyncExternalStore(noopSubscribe, audioSupported, () => false);
 
   const [setup, setSetup] = useState<Setup | null>(null);
+  // A capture may play another start view; everyone else gets the owner's.
+  const view = setup?.view ?? ownerView;
+  const poster = setup?.view ? { src: sceneImage("zaitun", setup.view), alt: ownerPoster.alt } : ownerPoster;
   const [status, setStatus] = useState<"off" | "running" | "failed">("off");
   const [captureReady, setCaptureReady] = useState(false);
   const [asked, setAsked] = useState(false);
@@ -142,7 +149,7 @@ export function ZaitunExperience({ locale, view, live, poster, hero, after, beat
     if (!el) return;
     const hold = captureAt();
     const env = readCapabilityEnv("explorer");
-    setSetup({ holdAt: hold?.at ?? null, tier: hold ? "high" : qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 }) });
+    setSetup({ holdAt: hold?.at ?? null, view: hold?.view ?? null, tier: hold ? "high" : qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 }) });
     if (hold?.dusk) setDaylight("dusk");
   }, []);
 

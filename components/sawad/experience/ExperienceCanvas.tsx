@@ -6,7 +6,7 @@ import { reportError } from "@/lib/monitoring";
 import { CAMERA_FAR, CAMERA_NEAR, EXPOSURE } from "../scene/SceneCanvas";
 import { viewpoints } from "../scene/viewpoints";
 import { ExperienceRoot, type ExperienceRootProps } from "./ExperienceRoot";
-import { pixelRatio, startQuality, stepQuality } from "./quality";
+import { pixelRatio, startQuality, stepQuality, type QualityLevel } from "./quality";
 import { openStoryStudio, storyPose } from "./storySheet";
 
 export type ExperienceCanvasProps = Omit<ExperienceRootProps, "level" | "onReady" | "onQuality" | "playing"> & {
@@ -21,6 +21,13 @@ const RENDERER = { antialias: false, alpha: false, powerPreference: "high-perfor
 const RESIZE = { scroll: false } as const;
 const STYLE = { pointerEvents: "inherit" } as const;
 
+/** Development only: `?level=2` pins the quality level (to measure frame times without the monitor moving it). */
+export function pinnedLevel(): QualityLevel | null {
+  if (process.env.NODE_ENV === "production" || typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("level");
+  return raw === "0" || raw === "1" || raw === "2" || raw === "3" ? (Number(raw) as QualityLevel) : null;
+}
+
 /**
  * The WebGL canvas for the Zaitun Hills experience (React Three Fiber). Client-only and heavy:
  * loaded lazily, after the poster has painted. Nothing is drawn until the compound is ready,
@@ -29,13 +36,13 @@ const STYLE = { pointerEvents: "inherit" } as const;
  */
 export default function ExperienceCanvas({ playing, moving = true, tier, view, mode, holdAt = null, ...rest }: ExperienceCanvasProps) {
   const [ready, setReady] = useState(false);
-  const [level, setLevel] = useState(() => startQuality(tier));
+  const [level, setLevel] = useState(() => pinnedLevel() ?? startQuality(tier));
   // The opening shot. Later moves go through the rig, not through this prop.
   const [camera] = useState(() => {
     const start = mode === "story" ? storyPose(view, holdAt ?? 0) : viewpoints("zaitun").aerial;
     return { fov: start.fov, near: CAMERA_NEAR, far: CAMERA_FAR, position: start.position };
   });
-  const [dpr] = useState(() => pixelRatio(startQuality(tier), window.devicePixelRatio));
+  const [dpr] = useState(() => pixelRatio(pinnedLevel() ?? startQuality(tier), window.devicePixelRatio));
   // Development only: `?studio=1` opens Theatre Studio on the story sheet (see README.md).
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
@@ -43,7 +50,7 @@ export default function ExperienceCanvas({ playing, moving = true, tier, view, m
     openStoryStudio().catch((err) => reportError("ExperienceCanvas", err, { stage: "theatre-studio" }));
   }, []);
   // A capture holds its level: stills must not depend on how fast the capturing machine is.
-  const onQuality = useCallback((direction: 1 | -1) => setLevel((l) => (holdAt === null ? stepQuality(l, direction, tier) : l)), [holdAt, tier]);
+  const onQuality = useCallback((direction: 1 | -1) => setLevel((l) => (holdAt === null && pinnedLevel() === null ? stepQuality(l, direction, tier) : l)), [holdAt, tier]);
 
   return (
     <Canvas

@@ -157,6 +157,15 @@ describe("applyGroundLight", () => {
     expect(patched(model)).toEqual([true, true, false, false]);
   });
 
+  it("leaves surfaces lit by the model's own baked site page alone", () => {
+    const light = createGroundLight();
+    const baked = meshOf("site-atlas");
+    ((baked.material as MeshStandardMaterial).userData.baked = "site");
+    const model = new Object3D().add(baked, meshOf("garden-atlas"));
+    expect(applyGroundLight(light, null, model)).toBe(1);
+    expect((baked.material as MeshStandardMaterial).userData.groundLight).toBeUndefined();
+  });
+
   it("does not count a material twice and copes with null roots", () => {
     const light = createGroundLight();
     const shared = new MeshStandardMaterial({ name: "site-atlas" });

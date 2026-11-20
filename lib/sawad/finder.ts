@@ -10,6 +10,14 @@ import {
 } from "./data";
 import { parseView, type ViewId } from "./tweaks";
 
+/** The showcase compound: the finder opens on it and the Compounds page leads with it. */
+export const SHOWCASE_COMPOUND: CompoundId = "zaitun-hills";
+
+/** The compounds with the showcase first, the rest in their usual order. */
+export function showcaseFirst<T extends { id: CompoundId }>(compounds: readonly T[]): T[] {
+  return [...compounds.filter((c) => c.id === SHOWCASE_COMPOUND), ...compounds.filter((c) => c.id !== SHOWCASE_COMPOUND)];
+}
+
 /** Finder state, mirrored in the URL so a search can be shared or bookmarked. */
 export type FinderState = {
   compound: CompoundId;
@@ -31,7 +39,7 @@ type ParamsLike = { get(name: string): string | null };
 
 export function defaultFinderState(view: ViewId = "aerial"): FinderState {
   return {
-    compound: COMPOUNDS[0].id,
+    compound: getCompound(SHOWCASE_COMPOUND)?.id ?? COMPOUNDS[0].id,
     kind: "all",
     beds: null,
     statuses: [...DEFAULT_STATUSES],

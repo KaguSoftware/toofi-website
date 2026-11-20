@@ -30,6 +30,16 @@ describe("compounds template", () => {
     expect(within(shatt).getByRole("link", { name: /Register interest/ })).toBeDefined();
   });
 
+  it("leads with Zaitun Hills, the showcase, in the table and the profiles", () => {
+    const { container } = renderPage("/compounds");
+    const rows = within(screen.getAllByRole("table")[0]).getAllByRole("rowheader").map((r) => r.textContent);
+    expect(rows[0]).toBe("Zaitun Hills");
+    const profiles = Array.from(container.querySelectorAll("section.profile")).map((p) => p.id);
+    expect(profiles[0]).toBe("zaitun-hills");
+    expect(profiles).toEqual(expect.arrayContaining(["bustan-dijla", "shatt-gardens"]));
+    expect(within(screen.getByRole("region", { name: "Zaitun Hills" })).getByText(/^1 \/ 3$/)).toBeDefined();
+  });
+
   it("makes wide tables keyboard-scrollable regions", () => {
     renderPage("/compounds");
     expect(screen.getByRole("region", { name: "Sawad portfolio" }).getAttribute("tabindex")).toBe("0");

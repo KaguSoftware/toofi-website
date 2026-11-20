@@ -1,3 +1,4 @@
+import { INTRO_HOLD_SECONDS } from "./beats";
 import { Color, Vector3, type Fog, type FogExp2, type Light, type MeshStandardMaterial, type Scene, type ShaderMaterial, type WebGLRenderer } from "three";
 
 /**
@@ -56,6 +57,30 @@ export function phases(k: number): { sky: number; practicals: number; sun: numbe
   return { sky: smoothstep(0, 1, k), practicals: smoothstep(0.42, 0.92, k), sun: 1 - smoothstep(0, 0.5, k) };
 }
 
+/**
+ * The poster handover. The posters are Cycles frames (track 5B): their sun is a lamp the camera
+ * cannot see, so their sky is the scene's sky without the disc; that sky reads brighter, and their
+ * vignette is lighter. The live scene takes over dressed as the poster, holds that while the
+ * poster fades out, then settles into its own look while the camera starts to move.
+ */
+export const HANDOVER = {
+  /** Seconds the poster look holds after the first live frame: as long as the camera holds still. */
+  hold: INTRO_HOLD_SECONDS,
+  /** Seconds it then takes to settle. */
+  seconds: 3.5,
+  /** Visible sky brightness at the cut (1 is the live look). */
+  skyGain: 1.35,
+  /** Vignette darkness at the cut (the live look is VIGNETTE_DARKNESS in PostFX). */
+  vignette: 0.12,
+  /** Sun glitter on the stream at the cut (Cycles shows a narrow streak where the web glitters). */
+  glint: 0.15,
+} as const;
+
+/** How far the handover has settled `t` seconds after the first live frame (0 poster, 1 live). */
+export function handoverAmount(t: number): number {
+  return smoothstep(HANDOVER.hold, HANDOVER.hold + HANDOVER.seconds, t);
+}
+
 /** A unit vector for the sun at an elevation, keeping the heading of `from`. */
 export function sunAtElevation(from: Vector3, elevationDeg: number, out = new Vector3()): Vector3 {
   const el = (elevationDeg * Math.PI) / 180;
@@ -81,6 +106,8 @@ export type DaylightTargets = {
   onPracticals?: (strength: number) => void;
   /** Called with the daylight's strength (1 to 0): the light shafts. */
   onSun?: (strength: number) => void;
+  /** Called with how far the sky has gone toward dusk (0 to 1): the baked light's day-to-dusk blend. */
+  onSky?: (k: number) => void;
 };
 
 export type DaylightControl = {
@@ -175,6 +202,7 @@ export function createDaylight(t: DaylightTargets): DaylightControl {
     });
     t.onPracticals?.(practicals);
     t.onSun?.(sun);
+    t.onSky?.(sky);
   };
 
   return { set, restore: () => set(0) };

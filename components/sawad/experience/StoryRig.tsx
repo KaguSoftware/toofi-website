@@ -7,7 +7,7 @@ import { PLAN_CENTER } from "../scene/layout";
 import { siteFor } from "../scene/site";
 import type { SceneMarker, Vec3, ViewId } from "../scene/types";
 import { lerpCamera, tourAngleNear, tourPose, viewpoints, type CameraPose } from "../scene/viewpoints";
-import { AMBIENT_BLEND_SECONDS, AMBIENT_IDLE_SECONDS, INTRO_SECONDS, approach, scrollToPosition } from "./beats";
+import { AMBIENT_BLEND_SECONDS, AMBIENT_IDLE_SECONDS, HEAD_SETTLED, INTRO_HOLD_SECONDS, INTRO_SECONDS, approach, scrollToPosition } from "./beats";
 import { storyPose } from "./storySheet";
 import type { ExperienceApi, ExperienceMode, RigState, ScrollState } from "./types";
 import { WALK_KEYS, keysToMove, stepWalk, walkPose, walkStart, type WalkInput, type WalkState } from "./walk";
@@ -130,7 +130,7 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
   const flight = useRef<Flight | null>(null);
   const walker = useRef<WalkState | null>(null);
   const keys = useRef(new Set<string>());
-  const story = useRef({ head: holdAt ?? 0, idle: 0, ambient: 0, tourSeconds: 0, tourAngle: 0, introDone: false });
+  const story = useRef({ head: holdAt ?? 0, held: 0, idle: 0, ambient: 0, tourSeconds: 0, tourAngle: 0, introDone: false });
   const currentMode = useRef<ExperienceMode>(mode);
   const failed = useRef(false);
   const latest = useRef({ markers, reducedMotion, playing, holdAt, view, onIntroEnd, onError });
@@ -321,14 +321,18 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
       const atTop = progress <= AT_TOP;
       if (hold !== null) s.head = hold;
       else if (atTop && s.head < INTRO_SECONDS) {
-        if (moving) s.head = Math.min(INTRO_SECONDS, s.head + dt);
+        // The opening holds on its poster frame first; a scroll skips the hold (the branch below).
+        if (moving && s.held < INTRO_HOLD_SECONDS) s.held += dt;
+        else if (moving) s.head = Math.min(INTRO_SECONDS, s.head + dt);
       } else s.head = approach(s.head, scrollToPosition(progress), dt);
       if (!s.introDone && s.head >= INTRO_SECONDS) {
         s.introDone = true;
         introEnd?.();
       }
-      // The slow circuit, for a visitor who stays at the top and does nothing.
-      if (hold === null && atTop && s.introDone && moving) {
+      // The slow circuit, for a visitor who stays at the top and does nothing. A camera still
+      // gliding back up from the tour first arrives at the gate; only then does the wait start.
+      const caughtUp = Math.abs(s.head - scrollToPosition(progress)) < HEAD_SETTLED;
+      if (hold === null && atTop && s.introDone && moving && (caughtUp || s.ambient > 0)) {
         s.idle += dt;
         if (s.idle > AMBIENT_IDLE_SECONDS) {
           if (s.ambient === 0) {
@@ -338,7 +342,7 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
           s.ambient = Math.min(1, s.ambient + dt / AMBIENT_BLEND_SECONDS);
           s.tourSeconds += dt;
         }
-      } else if (!atTop || hold !== null) {
+      } else if (!atTop || hold !== null || !caughtUp) {
         s.idle = 0;
         if (s.ambient > 0) {
           // Come back at a speed the eye can follow, however far the circuit had gone.

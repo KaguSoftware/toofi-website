@@ -166,6 +166,21 @@ describe("ExperienceRoot", () => {
     await scene.unmount();
   });
 
+  it("lets only the story's opening take over from its poster (no capture, no explorer on request)", async () => {
+    const story = await mount(base);
+    expect(world().sunRise).toBe(true);
+    // Read once: a later change of mode does not start it again.
+    await story.update({ ...base, mode: "orbit" });
+    expect(world().sunRise).toBe(true);
+    await story.unmount();
+    const capture = await mount({ ...base, holdAt: 30 });
+    expect(world().sunRise).toBe(false);
+    await capture.unmount();
+    const explorer = await mount({ ...base, mode: "orbit" });
+    expect(world().sunRise).toBe(false);
+    await explorer.unmount();
+  });
+
   it("hands the homes to markers and click targets only while exploring", async () => {
     const onSelect = vi.fn();
     const story = await mount({ ...base, markers, selectedId: "ZH-V05", onSelect });

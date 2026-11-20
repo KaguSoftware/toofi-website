@@ -23,9 +23,11 @@ export type RigState = {
   open: number;
   /** 0 by day, 1 at dusk. */
   dusk: number;
+  /** 0 at the poster handover (the live frame dressed as the poster), 1 once it has settled into the live look. */
+  handover: number;
 };
 
-export const initialRigState = (): RigState => ({ head: 0, focus: 100, blur: 0, water: 0.3, open: 0.6, dusk: 0 });
+export const initialRigState = (): RigState => ({ head: 0, focus: 100, blur: 0, water: 0.3, open: 0.6, dusk: 0, handover: 1 });
 
 /** The actions behind the on-screen buttons. */
 export type ExperienceApi = {

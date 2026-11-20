@@ -3,14 +3,13 @@ import type { QualityTier } from "../scene/types";
 import type { Daylight } from "./daylight";
 
 /**
- * The lighting track's baked light (docs/zaitun/LIGHTING.md), as far as today's files allow.
+ * The lighting track's baked `ground` page (docs/zaitun/LIGHTING.md) on the terrain.
  *
- * The baked `ground` page is projected straight down, so it needs no second UV set: it is
- * blended in here as extra irradiance on the terrain and on the model's ground-level surfaces
- * (streets, sidewalks, garden paving). At dusk that is the lamp pools, the pool lights and the
- * spill from the windows. The `buildings` and `site` pages need TEXCOORD_2 on the model, which
- * arrives with the final export (track 6B); track 7D wires those through `material.lightMap`.
- * Day keeps the real-time sun, so the day frames are unchanged.
+ * The page is projected straight down, so it needs no second UV set: it is blended in here as
+ * extra irradiance on the terrain at dusk (the lamp pools, the pool lights, the spill from the
+ * windows). The `buildings` and `site` pages ride on the model's own lightmap UVs
+ * (`../scene/bakedLight.ts`, day and dusk); surfaces lit by them are left alone here. Day keeps
+ * the terrain on the real-time sun.
  */
 export const LIGHTMAP_BASE = "/sawad/lightmaps/zaitun/";
 
@@ -138,7 +137,10 @@ export function patchGroundLight(material: MeshStandardMaterial, light: GroundLi
   material.needsUpdate = true;
 }
 
-/** Materials of the baked model that lie on the ground: streets, kerbs, sidewalks, walls and the central garden. */
+/**
+ * Materials of the baked model that lie on the ground: streets, kerbs, sidewalks, walls and the
+ * central garden. They take the ground page only when the model has no baked `site` page on them.
+ */
 export const GROUND_MATERIALS: ReadonlySet<string> = new Set(["site-atlas", "garden-atlas"]);
 
 const materialsOf = (mesh: Mesh): Material[] => (Array.isArray(mesh.material) ? mesh.material : [mesh.material]);
@@ -152,7 +154,7 @@ export function applyGroundLight(light: GroundLight, terrain: Object3D | null, m
       if (!mesh.isMesh) return;
       for (const m of materialsOf(mesh)) {
         const std = m as MeshStandardMaterial;
-        if (!std.isMeshStandardMaterial || !accept(m) || std.userData[PATCHED]) continue;
+        if (!std.isMeshStandardMaterial || !accept(m) || std.userData[PATCHED] || std.userData.baked) continue;
         patchGroundLight(std, light, wall);
         count += 1;
       }

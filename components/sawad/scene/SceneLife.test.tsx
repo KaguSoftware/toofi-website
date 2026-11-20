@@ -15,6 +15,7 @@ import {
   Skeleton,
   SkinnedMesh,
   Uint16BufferAttribute,
+  Vector3,
   VectorKeyframeTrack,
   type Object3D,
 } from "three";
@@ -24,7 +25,7 @@ const reportError = vi.fn();
 vi.mock("@/lib/monitoring", () => ({ reportError: (...args: unknown[]) => reportError(...args) }));
 
 import { planLife, type CarKind } from "./landscape";
-import { SceneLife, type GltfLibrary, type SceneLifeProps } from "./SceneLife";
+import { LIFE_DISTANCE, SceneLife, advanceLife, buildLife, showLife, startLife, stopLife, type GltfLibrary, type SceneLifeProps } from "./SceneLife";
 import type { QualityTier } from "./types";
 
 // ---------------------------------------------------------------- a small stand-in for life-<tier>.glb
@@ -190,6 +191,8 @@ describe("SceneLife", () => {
     const vehicle = scene.life.getObjectByName(`car:${car.id}`)!;
     const hips = person.getObjectByName("hips")!;
     const birds = scene.life.getObjectByName("birds") as InstancedMesh;
+    // People are drawn (and animated) only near the camera: stand next to this one.
+    root.camera.position.copy(person.position).add(new Vector3(0, 2, 6));
     const before = { person: person.position.clone(), still: still.position.clone(), car: vehicle.position.clone(), hips: hips.position.y, bird: new Matrix4() };
     birds.getMatrixAt(0, before.bird);
 
@@ -208,6 +211,70 @@ describe("SceneLife", () => {
     expect(after.equals(before.bird)).toBe(false);
     expect(birds.morphTexture).not.toBeNull();
     await scene.unmount();
+  });
+
+  it("draws people and cars only near the camera, and lets them cast shadows only closer still", () => {
+    const life = buildLife("high", makeLibrary());
+    const walker = planLife("high").walkers[0];
+    const person = life.root.getObjectByName(`person:${walker.id}`)!;
+    const car = life.root.getObjectByName(`car:${planLife("high").parked[0].id}`)!;
+    const casts = (o: Object3D) => {
+      let any = false;
+      o.traverse((m) => {
+        if ((m as Mesh).isMesh && m.castShadow) any = true;
+      });
+      return any;
+    };
+    const away = (o: Object3D, metres: number) => o.position.clone().add(new Vector3(metres, 0, 0));
+
+    showLife(life, away(person, 10));
+    expect(person.visible).toBe(true);
+    expect(casts(person)).toBe(true);
+    showLife(life, away(person, (LIFE_DISTANCE.person.shadow + LIFE_DISTANCE.person.draw) / 2));
+    expect(person.visible).toBe(true);
+    expect(casts(person)).toBe(false);
+    showLife(life, away(person, LIFE_DISTANCE.person.draw + 5));
+    expect(person.visible).toBe(false);
+
+    // Cars carry further than people.
+    showLife(life, away(car, LIFE_DISTANCE.person.draw + 5));
+    expect(car.visible).toBe(true);
+    showLife(life, away(car, LIFE_DISTANCE.car.draw + 5));
+    expect(car.visible).toBe(false);
+    showLife(life, away(car, 5));
+    expect(car.visible).toBe(true);
+    expect(casts(car)).toBe(true);
+  });
+
+  it("never casts shadows on the low tier, however close", () => {
+    const life = buildLife("low", makeLibrary());
+    const walker = planLife("low").walkers[0];
+    const person = life.root.getObjectByName(`person:${walker.id}`)!;
+    showLife(life, person.position.clone().add(new Vector3(2, 0, 0)));
+    let any = false;
+    person.traverse((m) => {
+      if ((m as Mesh).isMesh && m.castShadow) any = true;
+    });
+    expect(person.visible).toBe(true);
+    expect(any).toBe(false);
+  });
+
+  it("pauses a figure out of range and catches its clip up when it is back", () => {
+    const life = buildLife("high", makeLibrary());
+    startLife(life);
+    const figure = life.figures[0];
+    const update = vi.spyOn(figure.mixer, "update");
+    figure.root.visible = false;
+    advanceLife(life, 0.05);
+    advanceLife(life, 0.05);
+    expect(update).not.toHaveBeenCalled();
+    figure.root.visible = true;
+    advanceLife(life, 0.05);
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update.mock.calls[0][0]).toBeCloseTo(0.15);
+    advanceLife(life, 0.05);
+    expect(update.mock.calls[1][0]).toBeCloseTo(0.05);
+    stopLife(life);
   });
 
   it("never jumps more than a tenth of a second after a stalled tab", async () => {

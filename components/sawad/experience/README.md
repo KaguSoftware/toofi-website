@@ -41,7 +41,7 @@ Plain modules:
 | `story.theatre.json` | `null`, or a state exported from Theatre Studio (see below). |
 | `quality.ts` | The four quality levels and which effects each runs. |
 | `daylight.ts` | The dusk look and the control that blends the live scene toward it. |
-| `lightmaps.ts` | The baked ground light from track 4, projected top-down and blended in at dusk. |
+| `lightmaps.ts` | The baked ground page from track 4, projected top-down onto the terrain at dusk (the model's own `buildings` and `site` pages are in `../scene/bakedLight.ts`). |
 | `practicals.ts` | Windows and lamps found in the model; windows glow room by room. |
 | `godrays.ts` | Light-shaft planes through the palms. |
 | `walk.ts` | Walk mode: movement, collisions, where a walk starts. |
@@ -53,9 +53,9 @@ Plain modules:
 
 The camera plays one Theatre.js sequence, 86 units long (`beats.ts`):
 
-- **0 to 14, the opening.** Plays by the clock under a 2.39:1 letterbox, which opens at the visitor's first scroll, key or touch. Each owner start view (`tweaks.startView`) has its own opening: it starts on that view's poster frame and ends outside the main gate. A scroll during the opening fast-forwards it along its path.
-- **14 to 86, the tour.** Follows the scroll: entrance, boulevard, courtyard villa (home ZH-V05), garden and amenities, aerial. Each stop's panel adds one fifth to the progress as it rises to fill the screen. The playhead eases toward the scroll and has a top speed, so a flung scroll becomes a glide along the authored path, never a jump.
-- **A visitor who stays at the top** and does nothing for five seconds after the opening gets the scene's slow circuit (`tourPose` in `../scene/viewpoints.ts`); the first scroll brings the camera back.
+- **0 to 14, the opening.** Holds still on its poster frame for 2 seconds (`INTRO_HOLD_SECONDS`), then plays by the clock under a 2.39:1 letterbox, which opens at the visitor's first scroll, key or touch. Each owner start view (`tweaks.startView`) has its own opening: it starts on that view's poster frame and ends outside the main gate. A scroll during the opening fast-forwards it along its path.
+- **14 to 86, the tour.** Follows the scroll: entrance, boulevard, courtyard villa (home ZH-V05), garden and amenities, aerial. Each stop's panel adds one fifth to the progress as it rises to fill the screen. The camera stays with the captions: the playhead closes on the scroll within a fraction of a second (a flick through the whole tour is caught up within a second), always gliding along the authored path, never jumping. Only one caption shows at a time, however fast the scroll. The last stop holds the final aerial for almost half a screen more; its caption leaves just before the stage does.
+- **A visitor who stays at the top** and does nothing for five seconds after the opening (counted once the camera is back at the gate) gets the scene's slow circuit (`tourPose` in `../scene/viewpoints.ts`); the first scroll brings the camera back.
 
 `story.test.ts` flies the whole sequence and fails if the camera passes through the ground, a building, a lamp or a tree crown, pans faster than 32 degrees per sequence second, or fails to ease into a resting frame.
 
@@ -79,12 +79,18 @@ The explorer shows the same sample homes as the residence finder: `residencesIn(
 Nothing here names a model file. The compound, plants and life load through `useCompoundModel` and `useSceneLibrary` from the scene folder, on its terms (the first frame waits for them; after 8 seconds the procedural compound shows and the error is reported as `sawad-scene`). To ship a new model, replace the files in `public/sawad/models/` as described in `docs/SAWAD.md`. What this folder expects of the model:
 
 - materials named `glass` (windows that light up at dusk) and `lamp-glow` (lamp heads and fittings);
-- materials named `site-atlas` and `garden-atlas` for ground-level surfaces, which receive the baked ground light;
-- when the model gains `TEXCOORD_2` (the final export, track 6B), wire the `buildings` and `site` lightmap pages through `material.lightMap` as `docs/zaitun/LIGHTING.md` describes; `lightmaps.ts` says where.
+- `TEXCOORD_2` and the node names of single copies, for the baked light (`../scene/bakedLight.ts`); without them the model shows on real-time light;
+- materials named `site-atlas` and `garden-atlas` for ground-level surfaces, which take the projected ground page at dusk only where the model has no baked `site` page.
+
+## The poster handover
+
+The poster is a Cycles frame (track 5B): its sun is a lamp the camera cannot see, its sky reads brighter, its vignette is lighter and the stream shows a narrow streak where the web scene glitters. So the story's live scene takes over dressed as the poster (no sun disc, sky lifted, light vignette, calm water: `HANDOVER` in `daylight.ts`), holds that for the 2 seconds the opening camera holds still (the poster's fade takes 0.9 of them), then settles into its own look over 3.5 s as the camera starts to move. A capture, or an explorer opened on request, starts in the live look. Asking for dusk during the settle finishes it first.
+
+To check a handover: `?story=0&view=<flight|street|terrace|aerial>` (development only) holds that start view's opening on its first frame over its own poster.
 
 ## Day and dusk
 
-By day nothing is touched, so frames keep matching the scene and its posters. The first request for dusk captures the day values from the live scene and blends over five seconds: the sun sinks five degrees under the horizon, sky, haze, lights, water and exposure follow, then windows and lamps come on and the baked dusk ground page (lamp pools, pool lights, window spill) fades in. That page is fetched on that first request only.
+The day look is the scene's own, lit by the baked day lightmaps that load with the model. The first request for dusk captures the day values from the live scene and blends over five seconds: the sun sinks five degrees under the horizon, sky, haze, lights, water and exposure follow, then windows and lamps come on. The model's baked dusk pages (lamp pools, window spill, the dusk sky on every wall) and the terrain's dusk ground page are fetched on that first request only and blend in with the sky.
 
 ## Quality
 
@@ -96,6 +102,8 @@ By day nothing is touched, so frames keep matching the scene and its posters. Th
 | 1 | 1.25 | + edge smoothing, light shafts | low tier at most; high tier at least |
 | 2 | 1.5 | + depth of field | high tier, start |
 | 3 | 1.75 | + ambient occlusion | high tier with headroom |
+
+`?level=0..3` (development only) pins the level, to measure frame times without the monitor moving it.
 
 The render pass in `ExperienceRoot.tsx` owns the draw call (the composer is built with `enabled={false}`), so a failed frame or a lost context is caught, reported as `ZaitunExperience`, and the page falls back to the stills.
 

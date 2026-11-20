@@ -77,7 +77,7 @@ vi.mock("./StoryScroll", async () => {
   return { default: StoryStub };
 });
 
-import { ZaitunExperience, resetDeviceCache } from "./ZaitunExperience";
+import { ZaitunExperience, captureAt, resetDeviceCache } from "./ZaitunExperience";
 
 const labels: ExperienceLabels = {
   region: "A tour of Zaitun Hills",
@@ -520,6 +520,21 @@ describe("ZaitunExperience capture mode", () => {
     expect(root.getAttribute("data-scene-ready")).toBeNull();
     act(() => last().onFrame?.(30));
     expect(root.getAttribute("data-scene-ready")).toBe("true");
+  });
+
+  it("plays another start view over its own poster, to check each handover", async () => {
+    window.history.replaceState({}, "", "/?story=0&view=street");
+    const { container } = await mount();
+    expect(last()).toMatchObject({ holdAt: 0, view: "street" });
+    expect(container.querySelector(".xp__poster img")!.getAttribute("src")).toBe("/sawad/scene-zaitun-street.jpg");
+    expect(captureAt()).toEqual({ at: 0, dusk: false, view: "street" });
+  });
+
+  it("ignores a view it does not know, and a view without a held story", async () => {
+    window.history.replaceState({}, "", "/?story=0&view=moon");
+    expect(captureAt()?.view).toBeNull();
+    window.history.replaceState({}, "", "/?view=street");
+    expect(captureAt()).toBeNull();
   });
 
   it("is ignored in production", async () => {

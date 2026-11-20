@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import type { Object3D, Texture, WebGLRenderTarget } from "three";
+import { Frustum, type Object3D, type Texture, type WebGLRenderTarget } from "three";
 import { reportError } from "@/lib/monitoring";
 import { disposeObject, type GltfLibrary } from "./compoundModel";
+import { cameraFrustum, cullInstances, prepareInstanceCulling, restoreInstances } from "./instanceCulling";
 import { SceneLife } from "./SceneLife";
 import { SceneVegetation } from "./SceneVegetation";
 import { usesPlan } from "./site";
@@ -58,7 +59,7 @@ export function SceneWorld({ variant, tier, model, fallback, vegetation = null, 
       <Water variant={variant} />
       <Planting variant={variant} tier={tier} vegetation={vegetation} fallback={plantingFallback} />
       {usesPlan(variant) && life ? <SceneLife tier={tier} library={life} /> : null}
-      <Architecture variant={variant} model={model} fallback={fallback} environment={environment} />
+      <Architecture variant={variant} tier={tier} model={model} fallback={fallback} environment={environment} />
     </>
   );
 }
@@ -216,11 +217,13 @@ export function RoundTrees({ variant, tier }: Place) {
  */
 export function Architecture({
   variant = "dijla",
+  tier = "high",
   model,
   fallback,
   environment,
 }: {
   variant?: SceneVariant;
+  tier?: QualityTier;
   model: Object3D | null;
   fallback: boolean;
   environment: Texture | null;
@@ -237,5 +240,30 @@ export function Architecture({
     if (object && environment) applyReflections(object, environment);
   }, [object, environment]);
 
-  return object ? <primitive object={object} /> : null;
+  return object ? (
+    <>
+      <primitive object={object} />
+      {model ? <InstanceCulling model={model} margin={CULL_MARGIN[tier]} /> : null}
+    </>
+  ) : null;
+}
+
+/**
+ * Metres a copy may stand outside the view and still be drawn. The high tier's real-time sun
+ * throws a villa's shadow some 50 m at golden hour; the low tier has only baked shadows.
+ */
+export const CULL_MARGIN: Record<QualityTier, number> = { high: 60, low: 4 };
+
+/**
+ * Draws only the copies of the model's instanced meshes that are in view (instanceCulling.ts).
+ * Runs after the camera rigs (priority 0.5, as the plants) and before the render pass.
+ */
+export function InstanceCulling({ model, margin }: { model: Object3D; margin: number }) {
+  const culled = useMemo(() => prepareInstanceCulling(model), [model]);
+  const frustum = useMemo(() => new Frustum(), []);
+  useEffect(() => () => restoreInstances(culled), [culled]);
+  useFrame(({ camera }) => {
+    cullInstances(culled, cameraFrustum(camera, frustum), margin);
+  }, 0.5);
+  return null;
 }

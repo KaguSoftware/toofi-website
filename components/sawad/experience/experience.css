@@ -126,6 +126,10 @@
   align-items: flex-end;
   overflow: hidden;
 }
+/* Live story: the last stop holds the final aerial for half a screen more before the page moves on. */
+.xp[data-state="story"] .xp__beat:last-child {
+  min-height: calc(var(--xp-h) * 1.5);
+}
 .xp__still {
   object-fit: cover;
   z-index: 0;

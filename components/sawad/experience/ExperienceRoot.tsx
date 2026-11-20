@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei/core/PerformanceMonitor";
 import type { EffectComposer as Composer } from "postprocessing";
@@ -90,6 +90,8 @@ export function ExperienceRoot({
 
   const composer = useRef<Composer | null>(null);
   const exploring = mode !== "story";
+  // The story takes over from its poster; a capture or an explorer opened on request does not.
+  const [sunRise] = useState(() => mode === "story" && holdAt == null);
   const homes = markers ?? [];
 
   return (
@@ -103,6 +105,7 @@ export function ExperienceRoot({
         life={life.library}
         daylight={daylight}
         godRays={settings.godRays}
+        sunRise={sunRise}
         rig={rig}
       />
       {exploring ? <SceneMarkers variant="zaitun" markers={homes} selectedId={selectedId} onSelect={onSelect} /> : null}

@@ -238,6 +238,17 @@ describe("the procedural world", () => {
     expect(m.uniforms.uSunDir.value.y).toBeGreaterThan(0);
     expect(m.uniforms.uFogDensity.value).toBe(fogDensity("dijla"));
     expect(m.fragmentShader).toContain("glint");
+    // Full glitter by default; the poster handover turns it down for a moment.
+    expect(m.uniforms.uGlint.value).toBe(1);
+    expect(m.fragmentShader).toContain("* uGlint");
     m.dispose();
+  });
+
+  it("draws the visible sky at its own brightness, with a gain the poster handover can lift", () => {
+    const sky = buildSky(sunDirection("zaitun"));
+    expect(sky.material.uniforms.uGain.value).toBe(1);
+    expect(sky.material.fragmentShader).toContain("col * uGain");
+    sky.material.dispose();
+    sky.mesh.geometry.dispose();
   });
 });

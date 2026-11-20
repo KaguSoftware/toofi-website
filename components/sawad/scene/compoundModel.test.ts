@@ -8,6 +8,7 @@ const calls = vi.hoisted(() => ({
   meshopt: null as unknown,
   ktx2: null as unknown,
   urls: [] as string[],
+  textures: [] as string[],
   result: null as null | (() => Promise<{ scene: Group; animations?: unknown[] }>),
 }));
 const reportError = vi.fn();
@@ -24,6 +25,10 @@ vi.mock("three/examples/jsm/loaders/KTX2Loader.js", () => ({
     }
     dispose() {
       calls.ktx2Disposed++;
+    }
+    loadAsync(url: string) {
+      calls.textures.push(url);
+      return Promise.resolve(new Texture());
     }
   },
 }));
@@ -52,12 +57,15 @@ import {
   COMPOUND_NAME,
   LIBRARY_URL,
   PLAN_COMPOUND_MODEL_URL,
+  bakedLightOf,
   compoundModelUrl,
   disposeObject,
   loadCompound,
   loadLibrary,
   prepareCompound,
+  withKtx2,
 } from "./compoundModel";
+import { BAKED_LIGHT_BASE, type BakedManifest } from "./bakedLight";
 
 const renderer = { id: "renderer" } as unknown as WebGLRenderer;
 
@@ -71,7 +79,26 @@ function fakeModel() {
   return { scene, wall, glass, villas, ao };
 }
 
+/** The bake's manifest: the model's wall stands where the "gym" copy was baked. */
+const MANIFEST: BakedManifest = (() => {
+  const files = (p: string, t: string) => ({ day: `day-${p}-${t}.png`, dusk: `dusk-${p}-${t}.png` });
+  const tier = (t: string) => ({
+    pages: { buildings: { files: files("buildings", t) }, site: { files: files("site", t) } },
+    instances: { gym: { page: "buildings", scaleOffset: [0.5, 0.5, 0, 0] as [number, number, number, number], position: [0, 0, 0] as [number, number, number] } },
+  });
+  return { version: 1, states: { day: { intensity: 3.86 }, dusk: { intensity: 7.49 } }, tiers: { high: tier("high"), low: tier("low") } };
+})();
+
+function bakeableModel() {
+  const m = fakeModel();
+  m.wall.name = "gym";
+  m.wall.geometry.setAttribute("uv2", m.wall.geometry.getAttribute("uv").clone());
+  return m;
+}
+
 afterEach(() => {
+  vi.unstubAllGlobals();
+  calls.textures.length = 0;
   calls.urls.length = 0;
   calls.detectSupport.length = 0;
   calls.ktx2Disposed = 0;
@@ -135,6 +162,62 @@ describe("compoundModelUrl", () => {
     calls.result = () => Promise.reject(error);
     await expect(loadCompound("high", renderer, "zaitun")).rejects.toBe(error);
     expect(reportError).toHaveBeenCalledWith("sawad-scene", error, expect.objectContaining({ variant: "zaitun", url: PLAN_COMPOUND_MODEL_URL.high }));
+  });
+});
+
+describe("the baked light", () => {
+  it("loads Zaitun's day pages beside the model, with the same KTX2 loader, and lights the model", async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify(MANIFEST)));
+    vi.stubGlobal("fetch", fetcher);
+    const m = bakeableModel();
+    calls.result = () => Promise.resolve({ scene: m.scene });
+    const group = await loadCompound("high", renderer, "zaitun");
+    expect(fetcher).toHaveBeenCalledWith(`${BAKED_LIGHT_BASE}lightmaps.json`);
+    expect(calls.textures).toEqual([`${BAKED_LIGHT_BASE}day-buildings-high.ktx2`, `${BAKED_LIGHT_BASE}day-site-high.ktx2`]);
+    expect(calls.ktx2Disposed).toBe(1);
+    const light = bakedLightOf(group)!;
+    expect(light.tier).toBe("high");
+    expect((m.wall.material as MeshStandardMaterial).lightMap).toBe(light.day.buildings);
+    expect(reportError).not.toHaveBeenCalled();
+  });
+
+  it("shows the model on real-time light when the bake cannot load, and reports it", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 500 })));
+    const m = bakeableModel();
+    calls.result = () => Promise.resolve({ scene: m.scene });
+    const group = await loadCompound("low", renderer, "zaitun");
+    expect(group).toBe(m.scene);
+    expect(bakedLightOf(group)).toBeNull();
+    expect((m.wall.material as MeshStandardMaterial).lightMap).toBeNull();
+    expect(reportError).toHaveBeenCalledWith("sawad-scene", expect.any(Error), { stage: "baked-light", tier: "low" });
+  });
+
+  it("never asks for a bake for the 7 ha compounds", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    calls.result = () => Promise.resolve({ scene: new Group() });
+    const group = await loadCompound("high", renderer, "dijla");
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(bakedLightOf(group)).toBeNull();
+    expect(bakedLightOf(null)).toBeNull();
+  });
+
+  it("frees the lightmaps with the model", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(MANIFEST))));
+    const m = bakeableModel();
+    calls.result = () => Promise.resolve({ scene: m.scene });
+    const group = await loadCompound("high", renderer, "zaitun");
+    const light = bakedLightOf(group)!;
+    const lightMap = vi.spyOn(light.day.buildings, "dispose");
+    const whole = vi.spyOn(light, "dispose");
+    disposeObject(group);
+    expect(lightMap).toHaveBeenCalled();
+    expect(whole).toHaveBeenCalledOnce();
+  });
+
+  it("ends the transcoder workers even when the work fails", async () => {
+    await expect(withKtx2(renderer, () => Promise.reject(new Error("bad")))).rejects.toThrow("bad");
+    expect(calls.ktx2Disposed).toBe(1);
   });
 });
 

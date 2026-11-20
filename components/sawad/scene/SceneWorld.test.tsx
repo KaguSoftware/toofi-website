@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import ReactThreeTestRenderer from "@react-three/test-renderer";
 import { useThree, type RootState } from "@react-three/fiber";
-import { BoxGeometry, Group, Mesh, MeshStandardMaterial, Texture, type Color, type DirectionalLight, type FogExp2, type InstancedMesh, type ShaderMaterial } from "three";
+import { BoxGeometry, Group, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Texture, type Color, type DirectionalLight, type FogExp2, type ShaderMaterial } from "three";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // PMREM needs a GPU; hand back a stand-in target instead.
@@ -37,7 +37,7 @@ vi.mock("./SceneLife", () => ({
   },
 }));
 
-import { SceneWorld, type SceneWorldProps } from "./SceneWorld";
+import { CULL_MARGIN, SceneWorld, type SceneWorldProps } from "./SceneWorld";
 import { ENVIRONMENT_INTENSITY, HAZE_COLOR, REFLECTIVE_ENV_INTENSITY, SUN_LIGHT, fogDensity } from "./world";
 
 let root: RootState;
@@ -203,6 +203,21 @@ describe("SceneWorld", () => {
     const geometry = vi.spyOn(wall.geometry, "dispose");
     await world.unmount();
     expect(geometry).not.toHaveBeenCalled(); // useCompoundModel loaded it and frees it
+  });
+
+  it("draws only the model's copies in view, with a wider margin where the sun casts real-time shadows", async () => {
+    expect(CULL_MARGIN.high).toBeGreaterThan(CULL_MARGIN.low);
+    const model = new Group();
+    const villas = new InstancedMesh(new BoxGeometry(10, 6, 10), new MeshStandardMaterial(), 3);
+    [0, 2000, -2000].forEach((x, i) => villas.setMatrixAt(i, new Matrix4().makeTranslation(x, 3, 0)));
+    model.add(villas);
+    const world = await mount({ variant: "zaitun", tier: "low", model, fallback: false });
+    root.camera.position.set(0, 20, 80);
+    root.camera.lookAt(0, 0, 0);
+    await world.frames(1, 1 / 60);
+    expect(villas.count).toBe(1);
+    await world.unmount();
+    expect(villas.count).toBe(3); // every copy back for whoever shows the model next
   });
 
   it("falls back to the procedural compound and frees it", async () => {

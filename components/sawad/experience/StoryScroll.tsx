@@ -29,6 +29,10 @@ export type StoryScrollProps = {
 
 /** Where in the viewport a beat's panel takes over from the one before it. */
 export const HANDOVER = "62%";
+/** The last caption starts to leave a little before the stage unpins (its panel's foot at the screen's foot). */
+export const LAST_CAPTION_END = "bottom 115%";
+/** The captions' overlap group: a caption coming in ends the others' fades. */
+export const CAPTIONS = "captions";
 
 /**
  * Ties the story to the scroll (GSAP ScrollTrigger). Each beat's panel adds one fifth to the
@@ -66,15 +70,26 @@ export default function StoryScroll({ root, scroll, onProgress }: StoryScrollPro
           },
         });
 
-        // The caption: its lines rise and fade in one after another, and leave together.
+        // The caption: its lines rise and fade in one after another, and leave together. Only one
+        // caption shows at a time, however fast the scroll: a fast pass finishes each fade at once
+        // (fastScrollEnd), and a caption coming in ends the ones before it (preventOverlaps). The
+        // last one leaves when the stage does, never floating over the page below.
         const lines = gsap.utils.toArray<HTMLElement>("[data-caption] > *", panel);
         const caption = panel.querySelector<HTMLElement>("[data-caption]");
         if (!caption || !lines.length) return;
+        const last = i === panels.length - 1;
         gsap.set(caption, { autoAlpha: 0 });
         gsap
           .timeline({
             defaults: { ease: "power3.out" },
-            scrollTrigger: { trigger: panel, start: `top ${HANDOVER}`, end: `bottom ${HANDOVER}`, toggleActions: "play reverse play reverse" },
+            scrollTrigger: {
+              trigger: panel,
+              start: `top ${HANDOVER}`,
+              end: last ? LAST_CAPTION_END : `bottom ${HANDOVER}`,
+              toggleActions: "play reverse play reverse",
+              fastScrollEnd: true,
+              preventOverlaps: CAPTIONS,
+            },
           })
           .to(caption, { autoAlpha: 1, duration: 0.3 }, 0)
           .from(lines, { autoAlpha: 0, y: 26, duration: 0.9, stagger: 0.08 }, 0);

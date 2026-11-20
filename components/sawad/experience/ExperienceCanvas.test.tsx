@@ -33,7 +33,7 @@ vi.mock("./ExperienceRoot", () => ({
 
 import { CAMERA_FAR, CAMERA_NEAR, EXPOSURE } from "../scene/SceneCanvas";
 import { viewpoints } from "../scene/viewpoints";
-import ExperienceCanvas, { type ExperienceCanvasProps } from "./ExperienceCanvas";
+import ExperienceCanvas, { pinnedLevel, type ExperienceCanvasProps } from "./ExperienceCanvas";
 import { storyPose } from "./storySheet";
 import { initialRigState } from "./types";
 import { emptyInput } from "./walk";
@@ -56,7 +56,11 @@ beforeEach(() => {
   seen.root.length = 0;
   vi.stubGlobal("devicePixelRatio", 3);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  window.history.replaceState({}, "", "/");
+});
 
 describe("ExperienceCanvas", () => {
   it("draws nothing until the compound is ready, then plays, or draws on demand while paused", () => {
@@ -130,6 +134,24 @@ describe("ExperienceCanvas", () => {
     expect(root().level).toBe(0);
     act(() => root().onQuality?.(1));
     expect(root().level).toBe(0);
+  });
+
+  it("pins the quality level in development with ?level=, to measure frame times", () => {
+    window.history.replaceState({}, "", "/?level=3");
+    expect(pinnedLevel()).toBe(3);
+    render(<ExperienceCanvas {...base} tier="low" />);
+    expect(root().level).toBe(3);
+    act(() => root().onQuality?.(-1));
+    expect(root().level).toBe(3);
+    expect(canvas().dpr).toBe(1.75);
+    window.history.replaceState({}, "", "/?level=7");
+    expect(pinnedLevel()).toBeNull();
+  });
+
+  it("never pins the level in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    window.history.replaceState({}, "", "/?level=3");
+    expect(pinnedLevel()).toBeNull();
   });
 
   it("hands the scene everything else, with `moving` as what plays by itself", () => {

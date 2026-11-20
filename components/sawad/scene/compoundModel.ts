@@ -3,6 +3,7 @@ import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { reportError } from "@/lib/monitoring";
+import { applyBakedLight, createBakedLight, loadBakedManifest, loadBakedPages, type BakedLight } from "./bakedLight";
 import { usesPlan } from "./site";
 import type { QualityTier, SceneVariant } from "./types";
 
@@ -46,8 +47,13 @@ export type GltfLibrary = { scene: Group; animations: AnimationClip[] };
 export const BASIS_TRANSCODER_PATH = "/sawad/basis/";
 export const COMPOUND_NAME = "architecture-model";
 
-type MaterialWithMaps = Material & Partial<Record<"map" | "aoMap" | "normalMap" | "roughnessMap" | "metalnessMap" | "emissiveMap" | "alphaMap", Texture | null>>;
-const TEXTURE_SLOTS = ["map", "aoMap", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap", "alphaMap"] as const;
+type MaterialWithMaps = Material & Partial<Record<"map" | "aoMap" | "normalMap" | "roughnessMap" | "metalnessMap" | "emissiveMap" | "alphaMap" | "lightMap", Texture | null>>;
+const TEXTURE_SLOTS = ["map", "aoMap", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap", "alphaMap", "lightMap"] as const;
+
+/** The baked light a loaded compound carries (Zaitun Hills only), or null. */
+export function bakedLightOf(model: Object3D | null): BakedLight | null {
+  return (model?.userData.bakedLight as BakedLight | undefined) ?? null;
+}
 
 /** Frees the GPU resources of an object tree: geometries, materials and their textures. */
 export function disposeObject(root: Object3D): void {
@@ -68,6 +74,7 @@ export function disposeObject(root: Object3D): void {
     m.dispose();
   }
   for (const t of textures) t.dispose();
+  bakedLightOf(root)?.dispose();
 }
 
 /** Shadows on every mesh (transparent glass receives but does not cast), AO read from UV1. */
@@ -86,16 +93,36 @@ export function prepareCompound(root: Object3D): void {
   });
 }
 
-/** Loads a GLB with the KTX2 textures and meshopt geometry the pipeline ships. */
-async function loadGltf(url: string, renderer: WebGLRenderer): Promise<GLTF> {
+/**
+ * Runs `work` with a KTX2 loader for this renderer (the transcoder in public/sawad/basis), then
+ * ends its transcoder workers; the decoded textures stay valid.
+ */
+export async function withKtx2<T>(renderer: WebGLRenderer, work: (ktx2: KTX2Loader) => Promise<T>): Promise<T> {
   const ktx2 = new KTX2Loader().setTranscoderPath(BASIS_TRANSCODER_PATH);
   try {
     ktx2.detectSupport(renderer);
-    const loader = new GLTFLoader().setKTX2Loader(ktx2).setMeshoptDecoder(MeshoptDecoder);
-    return await loader.loadAsync(url);
+    return await work(ktx2);
   } finally {
-    // Ends the transcoder workers; the decoded textures stay valid.
     ktx2.dispose();
+  }
+}
+
+/** Loads a GLB with the KTX2 textures and meshopt geometry the pipeline ships. */
+function loadGltf(url: string, ktx2: KTX2Loader): Promise<GLTF> {
+  return new GLTFLoader().setKTX2Loader(ktx2).setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
+}
+
+/**
+ * The day pages of the baked light, loaded beside the model. A failure is reported and leaves
+ * the model on real-time light: the scene still shows, only without the bake.
+ */
+async function loadDayLight(tier: QualityTier, ktx2: KTX2Loader): Promise<BakedLight | null> {
+  try {
+    const manifest = await loadBakedManifest();
+    return createBakedLight(manifest, tier, await loadBakedPages(manifest, tier, "day", ktx2));
+  } catch (error) {
+    reportError("sawad-scene", error, { stage: "baked-light", tier });
+    return null;
   }
 }
 
@@ -107,10 +134,14 @@ async function loadGltf(url: string, renderer: WebGLRenderer): Promise<GLTF> {
 export async function loadCompound(tier: QualityTier, renderer: WebGLRenderer, variant: SceneVariant = "dijla"): Promise<Group> {
   const url = compoundModelUrl(variant, tier);
   try {
-    const gltf = await loadGltf(url, renderer);
+    const [gltf, baked] = await withKtx2(renderer, (ktx2) => Promise.all([loadGltf(url, ktx2), usesPlan(variant) ? loadDayLight(tier, ktx2) : null]));
     const group = gltf.scene;
     group.name = COMPOUND_NAME;
     prepareCompound(group);
+    if (baked) {
+      applyBakedLight(group, baked);
+      group.userData.bakedLight = baked;
+    }
     return group;
   } catch (error) {
     reportError("sawad-scene", error, { stage: "compound-model", tier, variant, url });
@@ -122,7 +153,7 @@ export async function loadCompound(tier: QualityTier, renderer: WebGLRenderer, v
 export async function loadLibrary(kind: LibraryKind, tier: QualityTier, renderer: WebGLRenderer): Promise<GltfLibrary> {
   const url = LIBRARY_URL[kind][tier];
   try {
-    const gltf = await loadGltf(url, renderer);
+    const gltf = await withKtx2(renderer, (ktx2) => loadGltf(url, ktx2));
     return { scene: gltf.scene, animations: gltf.animations };
   } catch (error) {
     reportError("sawad-scene", error, { stage: kind, tier, url });

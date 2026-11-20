@@ -30,7 +30,19 @@ export type SceneLifeProps = { tier: QualityTier; library: GltfLibrary };
 /** Names given by scripts/blender/life.py. */
 export const LIFE_NODES = { rig: "person-rig", bird: "bird", paint: "life-paint", wheels: ["fl", "fr", "rl", "rr"] } as const;
 
-type Figure = { id: string; root: Object3D; mixer: AnimationMixer; clip: AnimationClip; timeScale: number; offset: number };
+type Figure = { id: string; root: Object3D; mixer: AnimationMixer; clip: AnimationClip; timeScale: number; offset: number; actor: Actor };
+
+/** A person or a car, for drawing and shadow distances (see `showLife`). */
+type Actor = { root: Object3D; kind: "person" | "car"; meshes: Mesh[]; casts: boolean; shadow: boolean; idle: number };
+
+/**
+ * How far away people and cars are still drawn, and still cast a shadow (metres). Beyond these
+ * a person is a few pixels in the haze; each one is its own draw call (twice, with the shadow).
+ */
+export const LIFE_DISTANCE = {
+  person: { draw: 220, shadow: 70 },
+  car: { draw: 450, shadow: 110 },
+} as const;
 
 /** Everything SceneLife adds to the scene, and what it has to free again. */
 export type LifeScene = {
@@ -38,6 +50,8 @@ export type LifeScene = {
   /** Seconds since the life started. */
   clock: { t: number };
   figures: Figure[];
+  /** Every person and car, with whether it may cast a shadow at all (high tier). */
+  actors: Actor[];
   movers: Array<(t: number) => void>;
   /** Frees what SceneLife made (never the library's geometry or textures). */
   release: Array<() => void>;
@@ -86,7 +100,9 @@ function buildPeople(life: LifeScene, walkers: Walker[], library: GltfLibrary, s
     castShadows(figure, shadows);
     const kept = meshesOf(figure) as SkinnedMesh[];
     life.root.add(figure);
+    const actor = addActor(life, figure, "person", shadows);
     life.figures.push({
+      actor,
       id: walker.id,
       root: figure,
       mixer: new AnimationMixer(figure),
@@ -125,6 +141,12 @@ export function stopLife(life: LifeScene): void {
     f.mixer.uncacheRoot(f.root);
   }
   for (const free of life.release) free();
+}
+
+function addActor(life: LifeScene, root: Object3D, kind: Actor["kind"], casts: boolean): Actor {
+  const actor: Actor = { root, kind, meshes: meshesOf(root), casts, shadow: casts, idle: 0 };
+  life.actors.push(actor);
+  return actor;
 }
 
 // ---------------------------------------------------------------- cars
@@ -192,6 +214,7 @@ function buildCars(life: LifeScene, moving: MovingCar[], parked: ParkedCar[], li
     car.rotation.y = spec.rotation;
     castShadows(car, shadows);
     life.root.add(car);
+    addActor(life, car, "car", shadows);
   }
   for (const spec of moving) {
     const template = templates.get(spec.asset);
@@ -206,6 +229,7 @@ function buildCars(life: LifeScene, moving: MovingCar[], parked: ParkedCar[], li
     }
     const spinning = wheels.length === LIFE_NODES.wheels.length ? wheels : [];
     life.root.add(car);
+    addActor(life, car, "car", shadows);
     life.movers.push((t) => driveCar(car, spinning, spec, template.radius, t));
   }
 }
@@ -269,7 +293,7 @@ function buildBirds(life: LifeScene, tier: QualityTier, library: GltfLibrary): v
 export function buildLife(tier: QualityTier, library: GltfLibrary): LifeScene {
   const root = new Group();
   root.name = "life";
-  const life: LifeScene = { root, clock: { t: 0 }, figures: [], movers: [], release: [] };
+  const life: LifeScene = { root, clock: { t: 0 }, figures: [], actors: [], movers: [], release: [] };
   const plan = planLife(tier);
   const shadows = tier === "high";
   buildPeople(life, plan.walkers, library, shadows);
@@ -279,12 +303,36 @@ export function buildLife(tier: QualityTier, library: GltfLibrary): LifeScene {
   return life;
 }
 
-/** Moves the life on by one frame (never more than MAX_FRAME_SECONDS, so a stalled tab resumes calmly). */
+/**
+ * Moves the life on by one frame (never more than MAX_FRAME_SECONDS, so a stalled tab resumes
+ * calmly). A figure out of drawing range skips its skeleton and catches its clip up when it is back.
+ */
 export function advanceLife(life: LifeScene, deltaSeconds: number): void {
   const dt = Math.min(Math.max(deltaSeconds, 0), MAX_FRAME_SECONDS);
   life.clock.t += dt;
   for (const move of life.movers) move(life.clock.t);
-  for (const f of life.figures) f.mixer.update(dt);
+  for (const f of life.figures) {
+    if (!f.actor.root.visible) {
+      f.actor.idle += dt;
+      continue;
+    }
+    f.mixer.update(dt + f.actor.idle);
+    f.actor.idle = 0;
+  }
+}
+
+/** Draws people and cars only within their distances from the camera, and lets them cast shadows only closer still. */
+export function showLife(life: LifeScene, camera: Vector3): void {
+  for (const a of life.actors) {
+    const d = a.root.position.distanceTo(camera);
+    const limits = LIFE_DISTANCE[a.kind];
+    a.root.visible = d < limits.draw;
+    const shadow = a.casts && d < limits.shadow;
+    if (shadow !== a.shadow) {
+      a.shadow = shadow;
+      for (const m of a.meshes) m.castShadow = shadow;
+    }
+  }
 }
 
 /**
@@ -298,6 +346,9 @@ export function SceneLife({ tier, library }: SceneLifeProps) {
     startLife(life);
     return () => stopLife(life);
   }, [life]);
-  useFrame((_, delta) => advanceLife(life, delta));
+  useFrame(({ camera }, delta) => {
+    showLife(life, camera.position);
+    advanceLife(life, delta);
+  });
   return <primitive object={life.root} />;
 }

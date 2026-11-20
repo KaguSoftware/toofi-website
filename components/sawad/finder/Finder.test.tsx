@@ -34,25 +34,26 @@ beforeEach(() => {
 const head = <h1>Find a residence</h1>;
 
 describe("Finder", () => {
-  it("opens on Bustan Dijla with available and reserved homes, and feeds the scene", () => {
+  it("opens on Zaitun Hills, the showcase, with available and reserved homes, and feeds the scene", () => {
     render(<Finder locale="en" showScene head={head} />);
-    expect((screen.getByLabelText("Bustan Dijla") as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByLabelText("Zaitun Hills") as HTMLInputElement).checked).toBe(true);
     expect(screen.getByRole("status").textContent).toMatch(/^\d+ homes$/);
     expect(m.scene?.mode).toBe("explorer");
-    expect(m.scene?.variant).toBe("dijla");
+    expect(m.scene?.variant).toBe("zaitun");
     expect(m.scene?.autoLoad).toBe(true);
     expect(m.scene?.markers?.every((x) => x.status !== "sold")).toBe(true);
   });
 
   it("applies the home search query and mirrors changes into the URL", () => {
-    m.params = new URLSearchParams("compound=zaitun-hills&type=villa&beds=4");
+    // A compound other than the default, so it has to appear in the URL.
+    m.params = new URLSearchParams("compound=bustan-dijla&type=villa&beds=4");
     render(<Finder locale="en" showScene head={head} />);
-    expect(m.scene?.variant).toBe("zaitun");
+    expect(m.scene?.variant).toBe("dijla");
     expect(m.scene?.markers?.every((x) => x.kind === "villa")).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Street" }));
     expect(m.scene?.view).toBe("street");
     expect(window.location.search).toContain("view=street");
-    expect(window.location.search).toContain("compound=zaitun-hills");
+    expect(window.location.search).toContain("compound=bustan-dijla");
   });
 
   it("selecting a marker in the scene opens that home in the list and announces it", () => {
@@ -88,7 +89,7 @@ describe("Finder", () => {
     m.scene = null;
     render(<Finder locale="ar" showScene={false} head={head} />);
     expect(m.scene).toBeNull();
-    expect(screen.getByRole("img").getAttribute("alt")).toContain("بستان دجلة");
+    expect(screen.getByRole("img").getAttribute("alt")).toContain("تلال الزيتون");
     const legend = screen.getByRole("list", { name: "دليل العلامات" });
     expect(within(legend).getByText("محجوز")).toBeDefined();
   });

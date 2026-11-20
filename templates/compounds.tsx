@@ -5,13 +5,17 @@ import { CompoundFacts } from "@/components/sawad/CompoundFacts";
 import { PageHead } from "@/components/sawad/PageHead";
 import { COMPOUNDS, OTHER_HOLDINGS, RESIDENCE_TYPES, TOTALS, TYPE_ORDER, fromPrice, residencesIn } from "@/lib/sawad/data";
 import { countHectares, countHomes, formatArea, formatNumber, formatPercent, formatUsd } from "@/lib/sawad/format";
+import { showcaseFirst } from "@/lib/sawad/finder";
 import { localeFromPath, localizedPath, ROUTES, t } from "@/lib/sawad/i18n";
 import type { TemplateDefinition } from "./types";
 
 /**
  * Compounds. Editable keys: head.title, head.lead. A portfolio table, then one
- * full-bleed profile per compound, each drenched in its own ground colour.
+ * full-bleed profile per compound, each drenched in its own ground colour. The showcase
+ * compound (Zaitun Hills) leads both.
  */
+const ORDERED = showcaseFirst(COMPOUNDS);
+
 export const compoundsTemplate: TemplateDefinition = {
   id: "compounds",
   name: "Compounds",
@@ -48,7 +52,7 @@ export const compoundsTemplate: TemplateDefinition = {
                   </tr>
                 </thead>
                 <tbody>
-                  {COMPOUNDS.map((cp) => (
+                  {ORDERED.map((cp) => (
                     <tr key={cp.id}>
                       <th scope="row">
                         <a href={`#${cp.id}`} className="link-subtle">
@@ -96,7 +100,7 @@ export const compoundsTemplate: TemplateDefinition = {
           </Container>
         </Section>
 
-        {COMPOUNDS.map((cp, i) => {
+        {ORDERED.map((cp, i) => {
           const coming = cp.status === "coming-soon";
           const homes = residencesIn(cp.id);
           const types = TYPE_ORDER.filter((id) => homes.some((r) => r.type === id));

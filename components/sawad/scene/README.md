@@ -33,7 +33,9 @@ Plain modules with no React in them:
 | `markers.ts` | Marker drawing, materials, size, draw order and picking. |
 | `viewpoints.ts` | The four named views, the film path and easing. |
 | `flight.ts` | Explorer camera maths: flight arc, zoom step, marker framing, orbit limits. |
-| `compoundModel.ts` | Loading the baked `.glb` (KTX2 + meshopt), shadows, disposal. |
+| `compoundModel.ts` | Loading the baked `.glb` (KTX2 + meshopt), shadows, disposal. For Zaitun Hills it loads the day lightmaps beside the model (one KTX2 loader for both). |
+| `bakedLight.ts` | The baked light on the model (tracks 4 and 6B): the `buildings` and `site` pages on `TEXCOORD_2`, one tile per placed copy, day and dusk blended in one shader. |
+| `instanceCulling.ts` | Draws only the copies of each instanced mesh that are in view (three culls an InstancedMesh as one object). |
 | `capability.ts` | Whether a device gets 3D at all, and which quality tier. |
 
 ## Behaviours and where they live
@@ -54,6 +56,9 @@ Plain modules with no React in them:
 | Status markers by shape and colour; selection is an ink ring, never brass; a drag is not a click | `markers.ts`, `SceneMarkers.tsx` |
 | The canvas is hidden from screen readers; the residence list is the accessible route | `SceneViewport.tsx` |
 | Capture mode for stills (`?capture=1`, development only) | `SceneViewport.tsx`, `scripts/render-scene-stills.mjs` |
+| Zaitun Hills: the first frame is already lit by the baked day lightmaps (soft shadows, bounce light, as the Cycles posters); without them the model shows on real-time light and the failure is reported as `sawad-scene` | `loadCompound` in `compoundModel.ts`, `bakedLight.ts` |
+| Only copies in view are drawn, plus those within 60 m (high tier, whose real-time sun throws long shadows) or 4 m (low tier) | `InstanceCulling` in `SceneWorld.tsx`, `instanceCulling.ts` |
+| People are drawn within 220 m and cast shadows within 70 m; cars 450 m and 110 m; a figure out of range skips its skeleton | `LIFE_DISTANCE`, `showLife` in `SceneLife.tsx` |
 
 ## Working on it
 
@@ -63,7 +68,17 @@ Plain modules with no React in them:
 - **Frame time is clamped to 0.1 s** (`MAX_FRAME_SECONDS`), so a stalled tab resumes without a jump. Animate from the frame delta, not from the wall clock.
 - **To swap one part of the world**, replace its component in `SceneWorld.tsx`. Each part (sky, terrain, water, planting, life, buildings) is independent.
 - **Libraries are shared, never mutated per mount.** `prepareVegetationLibrary` bakes the plant geometry and patches the wind once per loaded library and keeps the wind on it; components create instances and clones and free only those. The loader frees the library.
-- **Frame order:** the camera rig moves the camera (priority 0), the plants re-sort for it (0.5), the render pass draws (1).
+- **Frame order:** the camera rig moves the camera (priority 0), the plants re-sort and the model's copies are culled for it (0.5), the render pass draws (1).
+
+## The baked light
+
+`docs/zaitun/LIGHTING.md` is the contract; `bakedLight.ts` is its web side.
+
+- **Which surfaces.** Every mesh of the model with `uv2` (glTF `TEXCOORD_2`) and an opaque standard material gets a lit copy of that material; lattices, screens and clear glass keep real-time light, as in the bake. Meshes without `uv2` (lamps, benches) keep the originals, so a material shared with them is never lit by mistake.
+- **Which tile.** Single copies keep their node names through the export (`gym`, `site`), so their tile is looked up by name and their `uv2` is moved onto it once (copies sharing one mesh get their own geometry first). Instanced copies lose their names, and the export's quantization folds a constant offset into each copy's transform; `solveTiles` solves for that offset and accepts it only if every copy then stands on its own baked copy. A mesh it cannot place stays on real-time light.
+- **What the shader does.** The baked irradiance replaces the ambient and hemisphere light and the sun's real-time diffuse light (it holds both). The sun still adds its highlights and the sky its reflections. Plants, people and cars are not in the bake, so where the sun's shadow map says one of them blocks the sun, the baked sun is taken off (never below the real-time sky light).
+- **Day and dusk.** Day pages load with the model; the experience loads the dusk pages on the first request for dusk (`setBakedDusk`) and blends with the sky (`setBakedMix`). The dusk pages are read one mip level down: the dusk bake's lamp light is blotchy at full resolution.
+- **Swapping the bake.** Re-run `scripts/blender/bake-lightmaps.sh` and `export-final.sh`; nothing here names a copy, so new copies and tiles need no code change. If the export ever drops node names or `TEXCOORD_2`, `applyBakedLight` lights nothing and the scene still shows.
 
 ## Tests
 

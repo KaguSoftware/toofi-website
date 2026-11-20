@@ -26,7 +26,7 @@ import { PLAN_CENTER } from "../scene/layout";
 import { siteFor } from "../scene/site";
 import type { SceneMarker, Vec3 } from "../scene/types";
 import { viewpoints } from "../scene/viewpoints";
-import { AMBIENT_IDLE_SECONDS, HEAD_MAX_SPEED, INTRO_SECONDS, scrollToPosition } from "./beats";
+import { AMBIENT_IDLE_SECONDS, HEAD_MAX_SPEED, INTRO_HOLD_SECONDS, INTRO_SECONDS, scrollToPosition } from "./beats";
 import { StoryRig, type StoryRigProps } from "./StoryRig";
 import { storyPose } from "./storySheet";
 import { initialRigState, type ExperienceApi, type ScrollState } from "./types";
@@ -70,7 +70,9 @@ const gap = (rig: { camera: PerspectiveCamera }, v: Vec3) => rig.camera.position
 const lastControls = () => controls.instances[controls.instances.length - 1];
 const aboveGround = (p: Vector3) => p.y - siteFor("zaitun").ground(p.x, p.z);
 const forward = (camera: PerspectiveCamera) => new Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-const INTRO_FRAMES = Math.ceil(INTRO_SECONDS / 0.1) + 2;
+/** Frames (0.1 s each) the opening holds on its poster frame before it moves. */
+const HOLD_FRAMES = Math.round(INTRO_HOLD_SECONDS / 0.1);
+const INTRO_FRAMES = HOLD_FRAMES + Math.ceil(INTRO_SECONDS / 0.1) + 2;
 const markers: SceneMarker[] = [{ id: "ZH-V05", kind: "villa", slot: 4, status: "available", label: "ZH-V05" }];
 
 afterEach(() => {
@@ -86,6 +88,10 @@ describe("StoryRig in the story", () => {
     expect(rig.camera.position.toArray()).toEqual(open.position);
     expect(rig.camera.fov).toBe(open.fov);
     expect(controls.instances).toHaveLength(0);
+    // It holds on the poster frame for two seconds, then moves.
+    await rig.frames(HOLD_FRAMES);
+    expect(rig.rig.current.head).toBe(0);
+    expect(gap(rig, open.position)).toBeLessThan(1e-6);
     await rig.frames(10);
     expect(rig.rig.current.head).toBeCloseTo(1, 6);
     expect(onIntroEnd).not.toHaveBeenCalled();
@@ -104,8 +110,21 @@ describe("StoryRig in the story", () => {
     expect(rig.rig.current.head).toBe(0);
     expect(gap(rig, storyPose("flight", 0).position)).toBeLessThan(1e-6);
     await rig.update({ playing: true });
+    // Paused time does not count toward the opening's hold.
+    await rig.frames(HOLD_FRAMES);
+    expect(rig.rig.current.head).toBe(0);
     await rig.frames(1, 60); // a minute-long stall counts as a tenth of a second
     expect(rig.rig.current.head).toBeCloseTo(0.1, 9);
+    await rig.unmount();
+  });
+
+  it("skips the opening's hold when the visitor scrolls", async () => {
+    const rig = await mount();
+    await rig.frames(3);
+    expect(rig.rig.current.head).toBe(0);
+    rig.scroll.current.progress = 0.2;
+    await rig.frames(1);
+    expect(rig.rig.current.head).toBeGreaterThan(0);
     await rig.unmount();
   });
 
@@ -136,6 +155,33 @@ describe("StoryRig in the story", () => {
       expect(rig.rig.current[k]).toBeGreaterThanOrEqual(0);
       expect(rig.rig.current[k]).toBeLessThanOrEqual(1);
     }
+    await rig.unmount();
+  });
+
+  it("keeps up with a fast scroll, so the camera stays with the captions", async () => {
+    const rig = await mount();
+    await rig.frames(INTRO_FRAMES);
+    // The whole tour in one flick: the camera is there within a second.
+    rig.scroll.current.progress = 1;
+    await rig.frames(10);
+    expect(rig.rig.current.head).toBeGreaterThan(scrollToPosition(1) - 1);
+    // And all the way back up just as quickly.
+    rig.scroll.current.progress = 0;
+    await rig.frames(10);
+    expect(rig.rig.current.head).toBeLessThan(INTRO_SECONDS + 1);
+    await rig.unmount();
+  });
+
+  it("arrives back at the gate before the slow circuit may start", async () => {
+    const rig = await mount();
+    await rig.frames(INTRO_FRAMES);
+    rig.scroll.current.progress = 1;
+    await rig.frames(20);
+    rig.scroll.current.progress = 0;
+    // Back at the top, the camera settles on the gate shot and waits there.
+    await rig.frames(AMBIENT_IDLE_SECONDS * 10 - 5);
+    expect(rig.rig.current.head).toBe(INTRO_SECONDS);
+    expect(gap(rig, storyPose("flight", INTRO_SECONDS).position)).toBeLessThan(1e-6);
     await rig.unmount();
   });
 

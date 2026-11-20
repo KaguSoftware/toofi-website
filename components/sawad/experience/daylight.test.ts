@@ -1,6 +1,6 @@
 import { Color, DirectionalLight, FogExp2, HemisphereLight, MeshStandardMaterial, Scene, ShaderMaterial, Vector3 } from "three";
 import { describe, expect, it, vi } from "vitest";
-import { createDaylight, DUSK, DUSK_SUN_ELEVATION_DEG, LAMP_BOOST, phases, smoothstep, stepDaylight, sunAtElevation, WINDOW_GLOW } from "./daylight";
+import { createDaylight, DUSK, DUSK_SUN_ELEVATION_DEG, HANDOVER, handoverAmount, LAMP_BOOST, phases, smoothstep, stepDaylight, sunAtElevation, WINDOW_GLOW } from "./daylight";
 
 function rig() {
   const scene = new Scene();
@@ -39,8 +39,9 @@ function rig() {
   const gl = { toneMappingExposure: 0.5 };
   const onPracticals = vi.fn();
   const onSun = vi.fn();
-  const control = createDaylight({ gl, scene, sky, water, sun, hemisphere, windows, lamps, mirrors, onPracticals, onSun });
-  return { scene, sky, water, sun, hemisphere, windows, lamps, mirrors, gl, onPracticals, onSun, control };
+  const onSky = vi.fn();
+  const control = createDaylight({ gl, scene, sky, water, sun, hemisphere, windows, lamps, mirrors, onPracticals, onSun, onSky });
+  return { scene, sky, water, sun, hemisphere, windows, lamps, mirrors, gl, onPracticals, onSun, onSky, control };
 }
 
 const sameColor = (a: Color, b: Color) => a.toArray().forEach((v, i) => expect(v).toBeCloseTo(b.toArray()[i], 9));
@@ -175,10 +176,42 @@ describe("createDaylight", () => {
     expect(r.onSun).toHaveBeenLastCalledWith(1);
   });
 
+  it("reports how far the sky has gone, for the baked light's day-to-dusk blend", () => {
+    const r = rig();
+    r.control.set(0.5);
+    expect(r.onSky).toHaveBeenLastCalledWith(phases(0.5).sky);
+    r.control.set(1);
+    expect(r.onSky).toHaveBeenLastCalledWith(1);
+    r.control.restore();
+    expect(r.onSky).toHaveBeenLastCalledWith(0);
+  });
+
   it("does not turn shadows on for a sun that never cast them", () => {
     const r = rig();
     r.sun.userData.castsShadow = false;
     r.control.set(0);
     expect(r.sun.castShadow).toBe(false);
+  });
+});
+
+describe("handoverAmount", () => {
+  it("holds the poster's look while the poster fades, then settles smoothly into the live look", () => {
+    expect(handoverAmount(0)).toBe(0);
+    expect(handoverAmount(HANDOVER.hold)).toBe(0);
+    expect(HANDOVER.hold).toBeGreaterThan(0.9); // the poster's fade (experience.css) is over first
+    const mid = handoverAmount(HANDOVER.hold + HANDOVER.seconds / 2);
+    expect(mid).toBeCloseTo(0.5, 9);
+    expect(handoverAmount(HANDOVER.hold + HANDOVER.seconds)).toBe(1);
+    expect(handoverAmount(60)).toBe(1);
+    // Eased: slow at both ends.
+    const step = HANDOVER.seconds / 20;
+    expect(handoverAmount(HANDOVER.hold + step)).toBeLessThan(0.05);
+    expect(1 - handoverAmount(HANDOVER.hold + HANDOVER.seconds - step)).toBeLessThan(0.05);
+  });
+
+  it("starts the cut brighter in the sky, lighter at the edges and with a calmer stream, as the posters are", () => {
+    expect(HANDOVER.skyGain).toBeGreaterThan(1);
+    expect(HANDOVER.vignette).toBeLessThan(0.46);
+    expect(HANDOVER.glint).toBeLessThan(1);
   });
 });

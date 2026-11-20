@@ -224,6 +224,7 @@ uniform vec3 uHorizonSun;
 uniform vec3 uGround;
 uniform float uTime;
 uniform float uSunDisc; // 1 on screen; 0 for the environment map (no HDR spike to prefilter)
+uniform float uGain; // brightness of the visible sky (the poster handover lifts it; the environment map keeps 1)
 varying vec3 vDir;
 
 void main() {
@@ -253,7 +254,7 @@ void main() {
     col = mix(horizon, uGround, smoothstep(0.0, -0.06, h));
   }
   if (uSunDisc < 0.5) col = clamp(col, 0.0, 16.0); // environment map: keep the prefilter finite
-  gl_FragColor = vec4(col, 1.0);
+  gl_FragColor = vec4(col * uGain, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
@@ -272,6 +273,7 @@ export function buildSky(sunDir: Vector3): Sky {
       uGround: { value: SKY.ground.clone().multiplyScalar(1.4) },
       uTime: { value: 0 },
       uSunDisc: { value: 1 },
+      uGain: { value: 1 },
     },
     vertexShader: SKY_VERT,
     fragmentShader: SKY_FRAG,
@@ -354,6 +356,7 @@ uniform vec3 uDeep;
 uniform vec3 uFogColor;
 uniform float uFogDensity;
 uniform float uChop;
+uniform float uGlint; // strength of the sun glitter (the poster handover starts it low)
 varying vec3 vWorld;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -389,7 +392,7 @@ void main() {
   vec3 sky = mix(uHorizon, uZenith, pow(clamp(R.y, 0.0, 1.0), 0.5));
   float sunAmt = max(dot(R, uSunDir), 0.0);
   sky += uSunColor * (pow(sunAmt, 6.0) * 0.35 + pow(sunAmt, 40.0) * 0.9);
-  float glint = pow(sunAmt, 1200.0) * 90.0 + pow(sunAmt, 260.0) * 9.0;
+  float glint = (pow(sunAmt, 1200.0) * 90.0 + pow(sunAmt, 260.0) * 9.0) * uGlint;
   vec3 body = mix(uDeep, uHorizon * 0.32, 0.45) * (0.7 + 0.3 * max(dot(n, uSunDir), 0.0));
   vec3 col = mix(body, sky, fres) + uSunColor * glint;
   float f = 1.0 - exp(-uFogDensity * uFogDensity * dist * dist);
@@ -412,6 +415,7 @@ export function createWaterMaterial(sunDir: Vector3, variant: SceneVariant): Sha
       uFogColor: { value: HAZE.clone() },
       uFogDensity: { value: fogDensity(variant) },
       uChop: { value: variant === "zaitun" ? 1.3 : 1.0 },
+      uGlint: { value: 1 },
     },
     vertexShader: WATER_VERT,
     fragmentShader: WATER_FRAG,

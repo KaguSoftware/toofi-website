@@ -11,12 +11,13 @@ const fx = vi.hoisted(() => ({
   seen: [] as Seen[],
   composer: { setSize: () => {}, render: () => {} } as unknown,
   dof: { cocMaterial: { focusDistance: 0, focusRange: 0 }, bokehScale: 0 },
+  vignette: { darkness: 0 },
 }));
 vi.mock("@react-three/postprocessing", () => {
   const effect = (name: string) => {
     function Effect({ ref, ...props }: Record<string, unknown> & { ref?: Ref<unknown> }) {
       fx.seen.push({ name, props });
-      useImperativeHandle(ref, () => (name === "DepthOfField" ? fx.dof : {}));
+      useImperativeHandle(ref, () => (name === "DepthOfField" ? fx.dof : name === "Vignette" ? fx.vignette : {}));
       return null;
     }
     return Effect;
@@ -41,7 +42,8 @@ vi.mock("postprocessing", () => ({
   ToneMappingMode: { ACES_FILMIC: "aces" },
 }));
 
-import { MAX_BOKEH, PostFX, drawComposer } from "./PostFX";
+import { HANDOVER } from "./daylight";
+import { MAX_BOKEH, PostFX, VIGNETTE_DARKNESS, drawComposer, vignetteDarkness } from "./PostFX";
 import { QUALITY, type QualityLevel } from "./quality";
 import { initialRigState, type RigState } from "./types";
 
@@ -122,6 +124,28 @@ describe("PostFX", () => {
     rig.current = null;
     await renderer.advanceFrames(1, 1 / 60);
     expect(fx.dof.cocMaterial.focusDistance).toBe(2);
+    await renderer.unmount();
+  });
+});
+
+describe("the vignette at the poster handover", () => {
+  it("runs from the poster's light vignette to the live look", () => {
+    expect(vignetteDarkness(0)).toBe(HANDOVER.vignette);
+    expect(vignetteDarkness(1)).toBe(VIGNETTE_DARKNESS);
+    expect(vignetteDarkness(0.5)).toBeCloseTo((HANDOVER.vignette + VIGNETTE_DARKNESS) / 2, 9);
+    expect(vignetteDarkness(-2)).toBe(HANDOVER.vignette);
+    expect(vignetteDarkness(4)).toBe(VIGNETTE_DARKNESS);
+  });
+
+  it("follows the rig's handover every frame", async () => {
+    const rig = { current: { ...initialRigState(), handover: 0 } as RigState | null };
+    const { renderer } = await mount(0, rig);
+    expect(propsOf("Vignette")?.darkness).toBe(VIGNETTE_DARKNESS);
+    await renderer.advanceFrames(1, 1 / 60);
+    expect(fx.vignette.darkness).toBe(HANDOVER.vignette);
+    rig.current = { ...initialRigState() }; // settled
+    await renderer.advanceFrames(1, 1 / 60);
+    expect(fx.vignette.darkness).toBe(VIGNETTE_DARKNESS);
     await renderer.unmount();
   });
 });
