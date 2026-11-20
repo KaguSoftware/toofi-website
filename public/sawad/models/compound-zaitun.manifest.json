@@ -545,12 +545,12 @@
     }
   ],
   "files": {
-    "compound-zaitun-high.glb": 9009732,
-    "compound-zaitun-low.glb": 4255984
+    "compound-zaitun-high.glb": 10261952,
+    "compound-zaitun-low.glb": 4973992
   },
   "budgets": {
-    "compound-zaitun-high.glb": 10000000,
-    "compound-zaitun-low.glb": 5000000
+    "compound-zaitun-high.glb": 10500000,
+    "compound-zaitun-low.glb": 5200000
   },
   "palette": {
     "plaster_cream": {

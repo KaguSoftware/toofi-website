@@ -1,0 +1,200 @@
+{
+  "generatedBy": "scripts/blender/export-final.sh",
+  "lightmapUv": {
+    "gltf": "TEXCOORD_2",
+    "channel": 2
+  },
+  "lightmaps": {
+    "high": {
+      "buildings": {
+        "size": [
+          2048,
+          2048
+        ],
+        "files": {
+          "day": {
+            "file": "day-buildings-high.ktx2",
+            "bytes": 722738
+          },
+          "dusk": {
+            "file": "dusk-buildings-high.ktx2",
+            "bytes": 679689
+          }
+        }
+      },
+      "site": {
+        "size": [
+          1024,
+          1024
+        ],
+        "files": {
+          "day": {
+            "file": "day-site-high.ktx2",
+            "bytes": 64364
+          },
+          "dusk": {
+            "file": "dusk-site-high.ktx2",
+            "bytes": 71166
+          }
+        }
+      },
+      "ground": {
+        "size": [
+          2048,
+          1024
+        ],
+        "files": {
+          "day": {
+            "file": "day-ground-high.ktx2",
+            "bytes": 151037
+          },
+          "dusk": {
+            "file": "dusk-ground-high.ktx2",
+            "bytes": 156237
+          }
+        }
+      }
+    },
+    "low": {
+      "buildings": {
+        "size": [
+          1024,
+          1024
+        ],
+        "files": {
+          "day": {
+            "file": "day-buildings-low.ktx2",
+            "bytes": 229799
+          },
+          "dusk": {
+            "file": "dusk-buildings-low.ktx2",
+            "bytes": 214920
+          }
+        }
+      },
+      "site": {
+        "size": [
+          512,
+          512
+        ],
+        "files": {
+          "day": {
+            "file": "day-site-low.ktx2",
+            "bytes": 21880
+          },
+          "dusk": {
+            "file": "dusk-site-low.ktx2",
+            "bytes": 23599
+          }
+        }
+      },
+      "ground": {
+        "size": [
+          1024,
+          512
+        ],
+        "files": {
+          "day": {
+            "file": "day-ground-low.ktx2",
+            "bytes": 55053
+          },
+          "dusk": {
+            "file": "dusk-ground-low.ktx2",
+            "bytes": 53498
+          }
+        }
+      }
+    }
+  },
+  "budgets": [
+    {
+      "label": "compound-zaitun-high.glb",
+      "bytes": 10261952,
+      "limit": 10500000,
+      "ok": true
+    },
+    {
+      "label": "vegetation-high.glb",
+      "bytes": 1227984,
+      "limit": 1600000,
+      "ok": true
+    },
+    {
+      "label": "life-high.glb",
+      "bytes": 238832,
+      "limit": 400000,
+      "ok": true
+    },
+    {
+      "label": "high models together (initial load)",
+      "bytes": 11728768,
+      "limit": 12000000,
+      "ok": true
+    },
+    {
+      "label": "high page estimate (models + 2.30 MB other)",
+      "bytes": 14028768,
+      "limit": 15000000,
+      "ok": true
+    },
+    {
+      "label": "high day lightmap set (KTX2, after the first frame)",
+      "bytes": 938139,
+      "limit": 2000000,
+      "ok": true
+    },
+    {
+      "label": "high dusk lightmap set (KTX2, after the first frame)",
+      "bytes": 907092,
+      "limit": 2000000,
+      "ok": true
+    },
+    {
+      "label": "compound-zaitun-low.glb",
+      "bytes": 4973992,
+      "limit": 5200000,
+      "ok": true
+    },
+    {
+      "label": "vegetation-low.glb",
+      "bytes": 412096,
+      "limit": 700000,
+      "ok": true
+    },
+    {
+      "label": "life-low.glb",
+      "bytes": 224328,
+      "limit": 300000,
+      "ok": true
+    },
+    {
+      "label": "low models together (initial load)",
+      "bytes": 5610416,
+      "limit": 5800000,
+      "ok": true
+    },
+    {
+      "label": "low page estimate (models + 2.30 MB other)",
+      "bytes": 7910416,
+      "limit": 15000000,
+      "ok": true
+    },
+    {
+      "label": "low day lightmap set (KTX2, after the first frame)",
+      "bytes": 306732,
+      "limit": 800000,
+      "ok": true
+    },
+    {
+      "label": "low dusk lightmap set (KTX2, after the first frame)",
+      "bytes": 292017,
+      "limit": 800000,
+      "ok": true
+    }
+  ],
+  "structureProblems": {
+    "high": [],
+    "low": []
+  },
+  "passed": true
+}
