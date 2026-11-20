@@ -1,0 +1,356 @@
+{
+  "version": 1,
+  "note": "Written by scripts/blender/film/film.py; checked by film.test.ts.",
+  "look": {
+    "viewTransform": "AgX",
+    "look": "Medium High Contrast",
+    "exposureDay": -0.2,
+    "exposureDusk": 1.9,
+    "motionBlurShutter": 0.35,
+    "glare": {
+      "threshold": 6.0,
+      "strength": 0.12,
+      "size": 7
+    },
+    "dispersion": 0.006,
+    "samples": {
+      "shot": 64,
+      "still": 160,
+      "poster": 256,
+      "preview": 16
+    },
+    "adaptiveThreshold": 0.015
+  },
+  "haze": {
+    "color": "#e6ae86",
+    "density": 0.00072,
+    "dusk": "#3e4468"
+  },
+  "sun": {
+    "elevationDeg": 4.2,
+    "azimuthX": 0.97,
+    "azimuthZ": 0.16,
+    "liftDeg": 4.5,
+    "color": "#ffa65c",
+    "intensity": 4.2
+  },
+  "exposureWeb": {
+    "day": 0.5,
+    "dusk": 2.4
+  },
+  "vegetation": {
+    "olive-a": 9427,
+    "olive-b": 4112,
+    "palm": 1401,
+    "citrus": 165,
+    "hedge-low": 600,
+    "hedge-tall": 142,
+    "shrub-ball": 8,
+    "grass-green": 452,
+    "grass-dry": 2149
+  },
+  "life": {
+    "people": 28,
+    "cars": 40,
+    "birds": 44
+  },
+  "duskLights": {
+    "entrance": 68,
+    "carport": 60,
+    "street-lamp": 164,
+    "portico": 1,
+    "lantern": 1,
+    "floodlight": 12,
+    "gate-lintel": 2,
+    "pavilion-uplight": 16,
+    "mosque-uplight": 4,
+    "pool": 26,
+    "playground": 4
+  },
+  "cameras": {
+    "01": {
+      "lens": 24.0,
+      "fStop": 8.0,
+      "sensorWidth": 36.0
+    },
+    "02": {
+      "lens": 28.0,
+      "fStop": 5.599999904632568,
+      "sensorWidth": 36.0
+    },
+    "03": {
+      "lens": 35.0,
+      "fStop": 4.0,
+      "sensorWidth": 36.0
+    },
+    "04": {
+      "lens": 40.0,
+      "fStop": 5.599999904632568,
+      "sensorWidth": 36.0
+    },
+    "05a": {
+      "lens": 85.0,
+      "fStop": 2.0,
+      "sensorWidth": 36.0
+    },
+    "05b": {
+      "lens": 85.0,
+      "fStop": 2.799999952316284,
+      "sensorWidth": 36.0
+    },
+    "05c": {
+      "lens": 85.0,
+      "fStop": 2.799999952316284,
+      "sensorWidth": 36.0
+    },
+    "05d": {
+      "lens": 85.0,
+      "fStop": 2.0,
+      "sensorWidth": 36.0
+    },
+    "06a": {
+      "lens": 40.0,
+      "fStop": 5.599999904632568,
+      "sensorWidth": 36.0
+    },
+    "06b": {
+      "lens": 40.0,
+      "fStop": 5.599999904632568,
+      "sensorWidth": 36.0
+    },
+    "07": {
+      "lens": 35.0,
+      "fStop": 8.0,
+      "sensorWidth": 36.0
+    },
+    "08": {
+      "lens": 24.0,
+      "fStop": 8.0,
+      "sensorWidth": 36.0
+    }
+  },
+  "posters": [
+    {
+      "id": "aerial",
+      "file": "public/sawad/scene-zaitun-aerial.jpg",
+      "bytes": 266297,
+      "camera": {
+        "eye": [
+          -660.0,
+          300.0,
+          -600.0
+        ],
+        "forward": [
+          0.7439,
+          -0.3542,
+          0.5667
+        ],
+        "fovVerticalDeg": 40.0
+      }
+    },
+    {
+      "id": "flight",
+      "file": "public/sawad/scene-zaitun-flight.jpg",
+      "bytes": 175040,
+      "camera": {
+        "eye": [
+          -560.0,
+          22.0,
+          97.4784
+        ],
+        "forward": [
+          0.9329,
+          -0.0594,
+          -0.3551
+        ],
+        "fovVerticalDeg": 44.0
+      }
+    },
+    {
+      "id": "street",
+      "file": "public/sawad/scene-zaitun-street.jpg",
+      "bytes": 269238,
+      "camera": {
+        "eye": [
+          -320.0,
+          2.9,
+          -3.3722
+        ],
+        "forward": [
+          0.9982,
+          -0.0374,
+          0.0476
+        ],
+        "fovVerticalDeg": 56.0
+      }
+    },
+    {
+      "id": "terrace",
+      "file": "public/sawad/scene-zaitun-terrace.jpg",
+      "bytes": 257100,
+      "camera": {
+        "eye": [
+          -160.0,
+          13.65,
+          34.5779
+        ],
+        "forward": [
+          0.8816,
+          -0.0176,
+          0.4716
+        ],
+        "fovVerticalDeg": 52.0
+      }
+    }
+  ],
+  "stills": [
+    {
+      "id": "01-aerial-hero",
+      "frame": 231,
+      "seconds": 336.6
+    },
+    {
+      "id": "02-gate-lintel",
+      "frame": 407,
+      "seconds": 310.7
+    },
+    {
+      "id": "03-palm-allee",
+      "frame": 625,
+      "seconds": 213.1
+    },
+    {
+      "id": "04-hero-villa",
+      "frame": 984,
+      "seconds": 174.3
+    },
+    {
+      "id": "05a-mashrabiya",
+      "frame": 1021,
+      "seconds": 183.5
+    },
+    {
+      "id": "05b-brass-canopy",
+      "frame": 1128,
+      "seconds": 168.5
+    },
+    {
+      "id": "05d-olive-leaves",
+      "frame": 1237,
+      "seconds": 271.8
+    },
+    {
+      "id": "06a-courts",
+      "frame": 1333,
+      "seconds": 148.0
+    },
+    {
+      "id": "06b-playground",
+      "frame": 1453,
+      "seconds": 138.7
+    },
+    {
+      "id": "08-blue-hour",
+      "frame": 1870,
+      "seconds": 174.9
+    }
+  ],
+  "shots": [
+    {
+      "shot": "01",
+      "frames": [
+        1,
+        288
+      ],
+      "seconds": 1328.9
+    },
+    {
+      "shot": "02",
+      "frames": [
+        289,
+        504
+      ],
+      "seconds": 837.7
+    },
+    {
+      "shot": "03",
+      "frames": [
+        505,
+        744
+      ],
+      "seconds": 860.4
+    },
+    {
+      "shot": "04",
+      "frames": [
+        745,
+        984
+      ],
+      "seconds": 918.7
+    },
+    {
+      "shot": "05a",
+      "frames": [
+        985,
+        1056
+      ],
+      "seconds": 254.7
+    },
+    {
+      "shot": "05b",
+      "frames": [
+        1057,
+        1128
+      ],
+      "seconds": 267.4
+    },
+    {
+      "shot": "05c",
+      "frames": [
+        1129,
+        1200
+      ],
+      "seconds": 258.4
+    },
+    {
+      "shot": "05d",
+      "frames": [
+        1201,
+        1272
+      ],
+      "seconds": 355.8
+    },
+    {
+      "shot": "06a",
+      "frames": [
+        1273,
+        1392
+      ],
+      "seconds": 419.5
+    },
+    {
+      "shot": "06b",
+      "frames": [
+        1393,
+        1512
+      ],
+      "seconds": 413.8
+    },
+    {
+      "shot": "07",
+      "frames": [
+        1513,
+        1752
+      ],
+      "seconds": 919.7
+    },
+    {
+      "shot": "08",
+      "frames": [
+        1753,
+        2088
+      ],
+      "seconds": 1356.3
+    }
+  ]
+}
