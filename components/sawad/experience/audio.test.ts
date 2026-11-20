@@ -1,7 +1,7 @@
 import { statSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { audioSupported, createAmbience, layerLevels, MASTER_GAIN, MUSIC_BED, MUSIC_GAIN } from "./audio";
+import { AMBIENCE_FOLLOW_MS, AMBIENCE_VS_MUSIC, ambienceGain, audioSupported, createAmbience, layerLevels, MASTER_GAIN, MUSIC_BED, MUSIC_GAIN } from "./audio";
 
 class FakeParam {
   value = 0;
@@ -25,6 +25,10 @@ class FakeNode {
   buffer: unknown = null;
   loop = false;
   outputs: unknown[] = [];
+  fftSize = 0;
+  /** What an analyser reads: a constant signal of this amplitude (its RMS is the same). */
+  sample = 0;
+  getFloatTimeDomainData = (buffer: Float32Array) => void buffer.fill(this.sample);
   connect = <T>(target: T): T => {
     this.outputs.push(target);
     return target;
@@ -55,6 +59,13 @@ class FakeContext {
   createOscillator = () => this.make();
   createBufferSource = () => this.make();
   createStereoPanner = () => this.make();
+  /** In creation order: the ambience's tap first, then the music's. */
+  analysers: FakeNode[] = [];
+  createAnalyser = () => {
+    const node = this.make();
+    this.analysers.push(node);
+    return node;
+  };
   mediaSources: Array<{ element: unknown; node: FakeNode }> = [];
   createMediaElementSource = (element: unknown) => {
     const node = this.make();
@@ -129,6 +140,23 @@ describe("layerLevels", () => {
   });
 });
 
+describe("ambienceGain", () => {
+  it("sets the ambience at the given share of the music's loudness", () => {
+    expect(ambienceGain(0.04, 0.2, 0.5)).toBeCloseTo(0.1, 9);
+    expect(ambienceGain(0.1, 0.4, 0.5)).toBeCloseTo(0.125, 9);
+  });
+
+  it("never turns the ambience up past its own level", () => {
+    expect(ambienceGain(0.5, 0.05, 0.5)).toBe(1);
+  });
+
+  it("is silent when the music is, and safe when the ambience reads nothing", () => {
+    expect(ambienceGain(0, 0.2, 0.5)).toBe(0);
+    expect(ambienceGain(0.2, 0, 0.5)).toBe(1);
+    expect(ambienceGain(0, 0, 0.5)).toBe(0);
+  });
+});
+
 describe("audioSupported", () => {
   it("follows the presence of an AudioContext on window", () => {
     vi.stubGlobal("window", {});
@@ -155,6 +183,8 @@ describe("createAmbience", () => {
     expect(a.running).toBe(true);
     expect(ctx.master.gain.value).toBe(0);
     expect(ctx.master.gain.last("target")![1]).toBe(MASTER_GAIN);
+    // 20% below the first version's 0.5, for a softer, more relaxed sound overall.
+    expect(MASTER_GAIN).toBeCloseTo(0.5 * 0.8, 9);
     expect(ctx.master.gain.last("cancel")).toBeDefined();
     a.dispose();
   });
@@ -267,7 +297,8 @@ describe("createAmbience with a music bed", () => {
     expect(ctx.mediaSources[0].element).toBe(m.track);
     const gain = ctx.mediaSources[0].node.outputs[0] as FakeNode;
     expect(gain.gain.value).toBe(MUSIC_GAIN);
-    expect(gain.outputs).toEqual([ctx.master]);
+    // Into the master, and into the tap the ambience listens to the music with.
+    expect(gain.outputs).toEqual([ctx.master, ctx.analysers[1]]);
     expect(m.onError).not.toHaveBeenCalled();
     a.dispose();
   });
@@ -432,6 +463,137 @@ describe("createAmbience with a music bed", () => {
     expect(made).toHaveLength(1);
     expect(made[0].src).toBe("/bed.mp3");
     expect(made[0].play).toHaveBeenCalledTimes(1);
+    a.dispose();
+  });
+
+  /** The ambience's own volume control: the second node, after the master. */
+  const ambienceVolume = (ctx: FakeContext) => ctx.nodes[2];
+  const layersOf = (ctx: FakeContext) => ctx.nodes.filter((n) => n.gain.last("target") && n !== ctx.master && n !== ambienceVolume(ctx)).map((n) => n.gain.last("target")![1]);
+  const tick = (ticks: number) => vi.advanceTimersByTime(ticks * AMBIENCE_FOLLOW_MS);
+
+  it("keeps the ambience at half the music's loudness while the bed plays", async () => {
+    // The wind and the stream are filtered noise with slow swells: next to a quiet piano they
+    // read as surf, so they follow the music instead of sitting at a fixed level.
+    expect(AMBIENCE_VS_MUSIC).toBe(0.5);
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    const ctx = contexts[0];
+    const [ambienceTap, musicTap] = ctx.analysers;
+    const volume = ambienceVolume(ctx);
+    // Silent until it has heard the music, so it cannot burst in before the piece begins.
+    expect(volume.gain.value).toBe(0);
+    ambienceTap.sample = 0.1;
+    musicTap.sample = 0.04;
+    tick(40);
+    expect(volume.gain.last("target")![1]).toBeCloseTo((0.5 * 0.04) / 0.1, 3);
+    // The piece swells: the ambience follows it up, but never past its own level.
+    musicTap.sample = 0.12;
+    tick(40);
+    expect(volume.gain.last("target")![1]).toBeCloseTo((0.5 * 0.12) / 0.1, 3);
+    musicTap.sample = 0.5;
+    tick(40);
+    expect(volume.gain.last("target")![1]).toBe(1);
+    // And back down with the music.
+    musicTap.sample = 0.02;
+    tick(60);
+    expect(volume.gain.last("target")![1]).toBeCloseTo((0.5 * 0.02) / 0.1, 3);
+    a.dispose();
+  });
+
+  it("goes quiet with the music when it stalls, and comes back with it", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    const ctx = contexts[0];
+    const [ambienceTap, musicTap] = ctx.analysers;
+    ambienceTap.sample = 0.1;
+    musicTap.sample = 0.1;
+    tick(40);
+    expect(ambienceVolume(ctx).gain.last("target")![1]).toBeCloseTo(0.5, 3);
+    musicTap.sample = 0;
+    tick(60);
+    expect(ambienceVolume(ctx).gain.last("target")![1]).toBeLessThan(0.001);
+    musicTap.sample = 0.1;
+    tick(60);
+    expect(ambienceVolume(ctx).gain.last("target")![1]).toBeCloseTo(0.5, 3);
+    a.dispose();
+  });
+
+  it("still moves the layers with the dusk and the place while the music plays", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    const ctx = contexts[0];
+    a.setDusk(1);
+    a.setPlace({ water: 1, open: 0 });
+    const expected = layerLevels(1, { water: 1, open: 0 });
+    expect(layersOf(ctx)).toEqual([expected.wind, expected.stream, expected.crickets]);
+    a.dispose();
+  });
+
+  it("stops following the music when the sound goes off, and starts again with it", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    const ctx = contexts[0];
+    const [ambienceTap, musicTap] = ctx.analysers;
+    ambienceTap.sample = 0.1;
+    musicTap.sample = 0.1;
+    tick(10);
+    a.stop();
+    const calls = ambienceVolume(ctx).gain.calls.length;
+    tick(20);
+    expect(ambienceVolume(ctx).gain.calls.length).toBe(calls);
+    vi.advanceTimersByTime(2000);
+    await a.start();
+    tick(10);
+    expect(ambienceVolume(ctx).gain.calls.length).toBeGreaterThan(calls);
+    a.dispose();
+    const after = ambienceVolume(ctx).gain.calls.length;
+    tick(20);
+    expect(ambienceVolume(ctx).gain.calls.length).toBe(after);
+  });
+
+  it("plays the ambience in full at once when the bed cannot be loaded", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    const ctx = contexts[0];
+    const volume = ambienceVolume(ctx);
+    ctx.analysers[1].sample = 0.1;
+    ctx.analysers[0].sample = 0.1;
+    tick(10);
+    expect(volume.gain.last("target")![1]).toBeCloseTo(0.5, 3);
+    m.track.listeners.get("error")!();
+    expect(volume.gain.last("target")![1]).toBe(1);
+    // It stays in full: the music is no longer listened to.
+    ctx.analysers[1].sample = 0;
+    tick(40);
+    expect(volume.gain.last("target")![1]).toBe(1);
+    a.dispose();
+  });
+
+  it("plays the ambience in full when the audio element cannot be made", async () => {
+    const a = createAmbience(Ctor, () => 0.5, {
+      src: "/bed.mp3",
+      element: () => {
+        throw new Error("no media elements");
+      },
+    });
+    await a.start();
+    expect(ambienceVolume(contexts[0]).gain.value).toBe(1);
+    a.dispose();
+  });
+
+  it("leaves the ambience in full, with nothing to follow, when no bed is asked for", async () => {
+    const a = createAmbience(Ctor, () => 0.5);
+    await a.start();
+    const ctx = contexts[0];
+    expect(ambienceVolume(ctx).gain.value).toBe(1);
+    expect(ctx.analysers).toHaveLength(0);
+    tick(40);
+    expect(ambienceVolume(ctx).gain.calls.filter((c) => c[0] === "target")).toHaveLength(0);
     a.dispose();
   });
 

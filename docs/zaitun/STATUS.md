@@ -22,6 +22,34 @@ A track counts as done for its dependants only when it says **approved**, and on
 | 7D | Final wiring and performance | approved | zaitun/7D (merged into main at 10f0406, pushed) | 2026-11-20 | Review: https://claude.ai/artifact/8JAFRAFVqjUigBZpwiaJxu. Baked light wired (`scene/bakedLight.ts`): 6B's `buildings`/`site` KTX2 pages on TEXCOORD_2, per-copy tiles (single copies by node name, instanced copies by solving the export's quantization offset), day loaded with the model, dusk on first request and blended with the sky, real-time shadows from plants/people/cars kept. Poster handover: the opening holds still on the poster frame for 2 s (owner's ask), dressed as the Cycles poster (no sun disc, sky gain, light vignette, calm water), then moves and settles over 3.5 s; mean diff at the cut 11.3/255 (was ~29). Performance: per-copy culling (`scene/instanceCulling.ts`), people/cars draw and shadow distances; desktop level 2 A/B: opening 94→112 fps, villa 111→130, draw calls 1171→313; villa stop 2.58M→0.89M tris; phone tier villa 382k→150k. Scroll sync (owner's ask): the camera follows the scroll within a fraction of a second (HEAD_RATE 12, top speed 96; was 3.2 / 4.5, up to 16 s behind its captions), one caption at a time on fast scrolls (fastScrollEnd, preventOverlaps), the circuit at the top waits until the camera is back at the gate, the last stop holds the final aerial for almost half a screen and its caption leaves before the stage. Zaitun Hills is the finder default and leads the Compounds page (`lib/sawad/finder.ts`, `templates/compounds.tsx`, owner approved; also experience/ files). `npm run check` passes (1001 tests). Open: day lightmaps now in the initial load (+0.79 MB high, page estimate ~14.8 of 15 MB, owner's call); 300k visible tris not met in wide shots (needs 1B/6B distance LODs); dusk bake blotchy (track 4); posters lack the sun disc (5B, absorbed by the settle); real-phone fps and 4G load for QA; finder picker order still from data.ts (track 0) |
 | QA | Acceptance | approved | main (main checkout) | 2026-11-20 | Report: `docs/zaitun/QA.md`. Owner asked for the fixes and approved. `npm run check` passes (1,036 tests, 0 lint warnings); EN + AR end to end, homes panel (real clicks), reduced motion pass; desktop 65–120 fps; Lighthouse accessibility, best practices and SEO all 100 (SEO was 77/83). Fixed: robots.txt (`app/robots.ts`), absolute canonical/hreflang (`lib/site-url.ts`; **set `NEXT_PUBLIC_SITE_URL` in production**), brand link name, hero card past the fold, `builtDrives` rebuilt per lookup (layout.ts 433 → ~220 ms at 4×), WebGL2 probe asked once, lint warning. Open: mobile main thread waits 2–3 s on the GPU during three.js start-up (variable, not reduced; the first report's hydration diagnosis was wrong), so Lighthouse performance is likely under 80 and the official score was not obtained (`npx lighthouse` denied by the sandbox); live 3D lands at ~9.6 s on Fast 4G (content 0.65 s); real-phone fps/4G, walk mode and joystick not tested; dusk clouds and far-marker clumps left as art direction. |
 
+## Optimization tracks
+
+Plan: [OPTIMIZATION_PLAN.md](OPTIMIZATION_PLAN.md). Same rules as the table above.
+
+| ID | Track | Status | Branch / worktree | Last update | Notes |
+|---|---|---|---|---|---|
+| P0 | Measurement rig and baseline | not started | | | |
+| S1 | Search: page load and 3D start-up | not started | | | |
+| S2 | Search: JavaScript bundles | not started | | | |
+| S3 | Search: 3D assets and media | not started | | | |
+| S4 | Search: drawing each frame | not started | | | |
+| S5 | Search: work per frame and memory | not started | | | |
+| S6 | Search: delivery | not started | | | |
+| S7 | Search: server and data | not started | | | |
+| S8 | Search: the rest of the site | not started | | | |
+| S9 | Search: device tiers and gating | not started | | | |
+| F2A | Far set | not started | | | |
+| T | Triage | not started | | | |
+| F1 | Main thread and bundles | not started | | | |
+| F2B | Detail streaming and asset diet | not started | | | |
+| F4 | Work per frame and memory | not started | | | |
+| F6 | Server, data and the rest of the site | not started | | | |
+| F3 | Drawing each frame | not started | | | |
+| F5 | Delivery | not started | | | |
+| RS | Second search | not started | | | |
+| L1 | Budgets that fail the build | not started | | | |
+| QA2 | Final acceptance | not started | | | |
+
 ## Owner inputs
 
 | Input | Needed by | Status |
@@ -31,3 +59,9 @@ A track counts as done for its dependants only when it says **approved**, and on
 | Logo for the end card | 5B | missing |
 | Music | 5B | given 2026-11-20: "With These Hands" by Scott Buckley, 5:06, CC BY 4.0 (free for commercial use, credit required: `'With These Hands' by Scott Buckley - released under CC-BY 4.0. www.scottbuckley.com.au`; on YouTube the credit must be in the video description or the upload gets a claim). Source: https://www.scottbuckley.com.au/library/with-these-hands/. Masters for the film are in the main checkout's git-ignored `out/music/` (`with-these-hands.wav`, 48 kHz, and the original MP3). `edit.mjs` plays a bed from its first second: the piece is quiet until about 0:40 and first peaks at 1:49 to 2:00, so the 87 s film and the 15 s cut each need a start point chosen by ear. The web experience plays the whole piece (7C) |
 | Final names, prices, availability | QA | sample data in use |
+| Where the site is hosted | S6, F5 | missing |
+| Optimization targets confirmed (OPTIMIZATION_PLAN.md section 1) | P0 approval | missing |
+| A real mid-range Android phone session | P0, QA2 | missing |
+| Is the admin panel in scope for optimization | S8 | missing |
+| Does "loads under 5 s" mean the content or the live scene | T | missing |
+| May the look change (over 2/255 against the reference frames) | T | missing |

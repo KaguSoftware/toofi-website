@@ -4,6 +4,8 @@ The work is defined in [SHOWCASE_PROMPT.md](SHOWCASE_PROMPT.md) (phases 0–7). 
 
 Start a track in a new Claude Code session by saying **`masterplan phase <id>`**, for example `masterplan phase 0` or `masterplan phase 7A`. Saying just a number (`masterplan phase 1`) starts the first track of that phase whose prerequisites are met.
 
+The optimization work that follows QA has its own plan, [OPTIMIZATION_PLAN.md](OPTIMIZATION_PLAN.md), with its own tracks (`P0`, `S1`–`S9`, `T`, `F1`–`F6`, `RS`, `L1`, `QA2`), skills and session order. They start the same way, for example `masterplan phase P0`.
+
 ## Tracks
 
 | ID | Track | Prompt phase | Needs approved first | Owns (only this track edits these) |
