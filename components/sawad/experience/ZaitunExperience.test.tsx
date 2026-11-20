@@ -39,8 +39,9 @@ const amb = vi.hoisted(() => ({
 }));
 vi.mock("./audio", () => ({
   audioSupported: () => amb.supported,
-  createAmbience: () => {
-    amb.create();
+  MUSIC_BED: { src: "/sawad/audio/bed.mp3", url: "https://music.example" },
+  createAmbience: (...args: unknown[]) => {
+    amb.create(...args);
     return { start: amb.start, stop: amb.stop, setDusk: amb.setDusk, setPlace: amb.setPlace, dispose: amb.dispose, running: false };
   },
 }));
@@ -97,6 +98,7 @@ const labels: ExperienceLabels = {
   toDay: "Show day",
   soundOn: "Sound on",
   soundOff: "Sound off",
+  musicCredit: "Music: the piece, by its composer",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
   reset: "Reset view",
@@ -418,6 +420,23 @@ describe("ZaitunExperience sound", () => {
     expect(amb.stop).toHaveBeenCalled();
     click("Sound on");
     expect(amb.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks for the music bed, credits it, and reports a bed that fails without stopping the sound", async () => {
+    await running();
+    expect(screen.queryByRole("link", { name: /Music/ })).toBeNull();
+    click("Sound on");
+    const [ctor, random, music] = amb.create.mock.calls[0] as [unknown, unknown, { src: string; onError: (err: unknown) => void }];
+    expect(ctor).toBeUndefined();
+    expect(random).toBeUndefined();
+    expect(music.src).toBe("/sawad/audio/bed.mp3");
+    expect(screen.getByRole("link", { name: "Music: the piece, by its composer" }).getAttribute("href")).toBe("https://music.example");
+    const err = new Error("404");
+    music.onError(err);
+    expect(mon.reportError).toHaveBeenCalledWith("ZaitunExperience", err, { stage: "music" });
+    expect(screen.getByRole("button", { name: "Sound off" }).getAttribute("aria-pressed")).toBe("true");
+    click("Sound off");
+    expect(screen.queryByRole("link", { name: /Music/ })).toBeNull();
   });
 
   it("reports a failing start and turns the button back off", async () => {

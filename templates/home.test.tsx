@@ -47,6 +47,13 @@ describe("home template", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
+  it("hands the experience the music credit in the page's language", () => {
+    renderHome();
+    expect(m.exp!.labels.musicCredit).toBe("Music: “With These Hands” by Scott Buckley, released under CC-BY 4.0. www.scottbuckley.com.au");
+    renderHome("/ar");
+    expect(m.exp!.labels.musicCredit).toContain("الموسيقى: «With These Hands»");
+  });
+
   it("uses the Zaitun poster for the start view, with the Zaitun caption", () => {
     renderHome();
     expect(m.exp!.poster).toEqual({ src: "/sawad/scene-zaitun-flight.jpg", alt: "Zaitun Hills at golden hour. Illustrative render." });

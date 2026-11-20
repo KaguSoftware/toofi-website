@@ -22,6 +22,7 @@ const labels: ExperienceLabels = {
   toDay: "Show day",
   soundOn: "Sound on",
   soundOff: "Sound off",
+  musicCredit: "Music: the piece, by its composer",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
   reset: "Reset view",
@@ -99,6 +100,29 @@ describe("ExperienceHud in the story", () => {
   it("hides the sound button where sound is unavailable", () => {
     setup({ soundAvailable: false });
     expect(screen.queryByRole("button", { name: /Sound/ })).toBeNull();
+  });
+
+  it("credits the music while the sound is on, and only then", () => {
+    const h = setup();
+    expect(screen.queryByRole("link", { name: /Music/ })).toBeNull();
+    h.rerender(<ExperienceHud {...h.props} sound />);
+    const credit = screen.getByRole("link", { name: "Music: the piece, by its composer" });
+    expect(credit.getAttribute("href")).toBe("https://www.scottbuckley.com.au");
+    expect(credit.getAttribute("target")).toBe("_blank");
+    expect(credit.getAttribute("rel")).toBe("noreferrer");
+    h.rerender(<ExperienceHud {...h.props} sound soundAvailable={false} />);
+    expect(screen.queryByRole("link", { name: /Music/ })).toBeNull();
+  });
+
+  it("keeps the credit on screen while exploring", () => {
+    setup({ mode: "orbit", sound: true });
+    expect(screen.getByRole("link", { name: "Music: the piece, by its composer" })).toBeTruthy();
+    cleanup();
+    setup({ mode: "walk", sound: true });
+    expect(screen.getByRole("link", { name: "Music: the piece, by its composer" })).toBeTruthy();
+    cleanup();
+    setup({ mode: "walk" });
+    expect(screen.queryByRole("link", { name: /Music/ })).toBeNull();
   });
 
   it("shows the skip prompt before the intro ends and the scroll hint after", () => {
