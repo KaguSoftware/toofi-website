@@ -9,7 +9,7 @@ import { reportError } from "@/lib/monitoring";
 import { residencesIn, sceneImage } from "@/lib/sawad/data";
 import { canRender3D, qualityTier, readCapabilityEnv } from "../scene/capability";
 import type { QualityTier, SceneMarker, ViewId } from "../scene/types";
-import { audioSupported, createAmbience, type Ambience } from "./audio";
+import { audioSupported, createAmbience, MUSIC_BED, type Ambience } from "./audio";
 import type { Daylight } from "./daylight";
 import { ExperienceHud } from "./ExperienceHud";
 import { Joystick } from "./Joystick";
@@ -243,7 +243,11 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
       ambience.current?.stop();
       return;
     }
-    ambience.current ??= createAmbience();
+    // The bed is an extra: if its file fails, that is reported and the ambience plays on.
+    ambience.current ??= createAmbience(undefined, undefined, {
+      src: MUSIC_BED.src,
+      onError: (err) => reportError("ZaitunExperience", err, { stage: "music" }),
+    });
     ambience.current.start().catch((err) => {
       reportError("ZaitunExperience", err, { stage: "audio" });
       setSound(false);

@@ -1,8 +1,9 @@
 /**
- * Ambient sound for the experience, synthesised with the Web Audio API so nothing is
- * downloaded: wind through the olive leaves and the stream (Zaitun's two signature sounds),
- * birds by day and crickets at dusk. Off until the visitor turns it on; the audio context is
- * only created then, inside their click. The music bed is the owner's to supply (track 5B).
+ * Sound for the experience. The ambience is synthesised with the Web Audio API: wind through
+ * the olive leaves and the stream (Zaitun's two signature sounds), birds by day and crickets at
+ * dusk. Over it plays the music bed, the one file that is downloaded, streamed by an <audio>
+ * element. Everything is off until the visitor turns the sound on; the audio context and the
+ * element are only created then, inside their click.
  */
 export type Ambience = {
   /** Fades the sound in. Call from a user gesture. */
@@ -19,6 +20,30 @@ export type Ambience = {
 
 export const MASTER_GAIN = 0.5;
 const FADE_SECONDS = 1.2;
+
+/**
+ * The music bed: "With These Hands" by Scott Buckley, the whole piece, looped. It is licensed
+ * CC BY 4.0, so the credit (`showcase.musicCredit`, shown by the controls while the sound is on)
+ * has to stay wherever the piece plays.
+ */
+export const MUSIC_BED = {
+  src: "/sawad/audio/with-these-hands.mp3",
+  title: "With These Hands",
+  artist: "Scott Buckley",
+  licence: "CC-BY 4.0",
+  url: "https://www.scottbuckley.com.au",
+} as const;
+
+/** The bed's level under the master gain. The file is the piece as released, not re-levelled. */
+export const MUSIC_GAIN = 0.8;
+
+export type MusicOptions = {
+  src: string;
+  /** Called once if the bed cannot be loaded or played. The ambience carries on without it. */
+  onError?: (error: unknown) => void;
+  /** Makes the element (tests pass a stand-in). */
+  element?: () => HTMLAudioElement;
+};
 
 type ContextCtor = new () => AudioContext;
 
@@ -66,9 +91,13 @@ export function layerLevels(dusk: number, place: { water: number; open: number }
 
 /**
  * Builds the sound. `Ctor` is the AudioContext to use (tests pass a stand-in); `random` drives
- * when the birds call.
+ * when the birds call; `music` adds a bed from a file.
  */
-export function createAmbience(Ctor: ContextCtor | null = contextCtor(), random: () => number = Math.random): Ambience {
+export function createAmbience(
+  Ctor: ContextCtor | null = contextCtor(),
+  random: () => number = Math.random,
+  music: MusicOptions | null = null,
+): Ambience {
   let ctx: AudioContext | null = null;
   let master: GainNode | null = null;
   let layers: { wind: GainNode; stream: GainNode; crickets: GainNode } | null = null;
@@ -77,6 +106,27 @@ export function createAmbience(Ctor: ContextCtor | null = contextCtor(), random:
   let running = false;
   let dusk = 0;
   let place = { water: 0.3, open: 0.6 };
+  let track: HTMLAudioElement | null = null;
+  /** The file could not be loaded: it is not asked for again. */
+  let musicDead = false;
+  let musicReported = false;
+
+  const musicFailed = (error: unknown) => {
+    if (musicReported) return;
+    musicReported = true;
+    music?.onError?.(error);
+  };
+  const onTrackError = () => {
+    musicDead = true;
+    musicFailed(new Error(`The music bed could not be loaded (media error ${track?.error?.code ?? "unknown"})`));
+  };
+  const playMusic = () => {
+    if (!track || musicDead) return;
+    track.play().catch((error: unknown) => {
+      // A start cut short by a pause (sound switched off again straight away) is not a failure.
+      if ((error as { name?: string } | null)?.name !== "AbortError") musicFailed(error);
+    });
+  };
 
   const apply = () => {
     if (!ctx || !layers) return;
@@ -155,6 +205,26 @@ export function createAmbience(Ctor: ContextCtor | null = contextCtor(), random:
 
     layers = { wind, stream, crickets };
     for (const g of [wind, stream, crickets]) g.gain.value = 0;
+
+    // The music bed: streamed, never decoded whole (five minutes of PCM would be 100 MB), and
+    // routed through the graph so the master fade and the level also hold on iOS, where an
+    // element's own volume cannot be set.
+    if (music) {
+      try {
+        const el = music.element ? music.element() : new Audio();
+        el.loop = true;
+        el.preload = "none";
+        el.src = music.src;
+        el.addEventListener("error", onTrackError);
+        const bed = c.createGain();
+        bed.gain.value = MUSIC_GAIN;
+        c.createMediaElementSource(el).connect(bed).connect(master);
+        track = el;
+      } catch (error) {
+        musicDead = true;
+        musicFailed(error);
+      }
+    }
   };
 
   /** One bird call: two or three quick downward chirps, panned somewhere in the trees. */
@@ -196,7 +266,14 @@ export function createAmbience(Ctor: ContextCtor | null = contextCtor(), random:
         ctx = new Ctor();
         build(ctx);
       }
-      await ctx.resume();
+      // Media may only start from inside the visitor's click, so before the first await.
+      playMusic();
+      try {
+        await ctx.resume();
+      } catch (error) {
+        track?.pause();
+        throw error;
+      }
       running = true;
       apply();
       master!.gain.cancelScheduledValues(ctx.currentTime);
@@ -213,7 +290,10 @@ export function createAmbience(Ctor: ContextCtor | null = contextCtor(), random:
       const closing = ctx;
       // Let the fade finish before the context sleeps.
       setTimeout(() => {
-        if (!running) void closing.suspend();
+        if (running) return;
+        // Paused, not rewound: the piece picks up where it left off.
+        track?.pause();
+        void closing.suspend();
       }, FADE_SECONDS * 1000);
     },
     setDusk(k) {
@@ -228,6 +308,14 @@ export function createAmbience(Ctor: ContextCtor | null = contextCtor(), random:
       running = false;
       if (birdTimer !== null) clearTimeout(birdTimer);
       birdTimer = null;
+      if (track) {
+        track.removeEventListener("error", onTrackError);
+        track.pause();
+        // Dropping the source ends the download; an empty `src` would raise an error instead.
+        track.removeAttribute("src");
+        track.load();
+        track = null;
+      }
       // Closing the context ends every source on it.
       sources = [];
       void ctx?.close();

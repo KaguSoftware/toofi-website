@@ -1,6 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
+import { MUSIC_BED } from "./audio";
 import type { Daylight } from "./daylight";
 import type { ExperienceLabels, ExperienceMode, ExploreMode } from "./types";
 
@@ -37,7 +38,8 @@ const EXPLORE_MODES: ExploreMode[] = ["orbit", "walk"];
  * The controls over the scene. In the story: pause, day or dusk, sound, and the way into free
  * exploring. While exploring: the way back, orbit or walk, zoom and reset, day or dusk, sound.
  * Every control is a real button with a text label or an accessible name; pressed states are
- * announced with aria-pressed.
+ * announced with aria-pressed. While the sound is on, the music's credit shows under the
+ * controls: its licence (CC BY) asks for that.
  */
 export function ExperienceHud({
   labels,
@@ -74,6 +76,14 @@ export function ExperienceHud({
       ) : null}
     </div>
   );
+  const credit =
+    sound && soundAvailable ? (
+      <p className="xp__credit">
+        <a href={MUSIC_BED.url} target="_blank" rel="noreferrer">
+          {labels.musicCredit}
+        </a>
+      </p>
+    ) : null;
 
   if (exploring) {
     return (
@@ -104,6 +114,7 @@ export function ExperienceHud({
             </div>
           ) : null}
           {ambience}
+          {credit}
         </div>
         {hint ? (
           <p className="xp__hint" aria-hidden="true">
@@ -127,6 +138,7 @@ export function ExperienceHud({
           <CompassIcon />
           <span>{labels.explore}</span>
         </button>
+        {credit}
       </div>
       {prompt ? (
         <button type="button" className="xp__prompt" onClick={onBegin}>

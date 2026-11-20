@@ -53,6 +53,14 @@ describe("dictionary", () => {
     }
   });
 
+  it("credits the music the way its licence asks, in both languages", () => {
+    for (const locale of ["en", "ar"] as const) {
+      const credit = DICTIONARY[locale].showcase.musicCredit;
+      for (const part of ["With These Hands", "Scott Buckley", "CC-BY 4.0", "www.scottbuckley.com.au"]) expect(credit, locale).toContain(part);
+    }
+    expect(DICTIONARY.ar.showcase.musicCredit).toMatch(/^الموسيقى: /);
+  });
+
   it("returns the right language", () => {
     expect(t("ar").nav.contact).toBe("تواصل معنا");
     expect(t("en").nav.residences).toBe("Find a residence");

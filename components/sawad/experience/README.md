@@ -46,7 +46,7 @@ Plain modules:
 | `godrays.ts` | Light-shaft planes through the palms. |
 | `walk.ts` | Walk mode: movement, collisions, where a walk starts. |
 | `units.ts` | The homes as boxes for clicking and highlighting. |
-| `audio.ts` | Ambient sound, synthesised with Web Audio (nothing is downloaded). |
+| `audio.ts` | The sound: ambience synthesised with Web Audio, and the music bed (one streamed file). |
 | `links.ts` | The link from a home to the residence finder. |
 
 ## The story
@@ -91,6 +91,18 @@ To check a handover: `?story=0&view=<flight|street|terrace|aerial>` (development
 ## Day and dusk
 
 The day look is the scene's own, lit by the baked day lightmaps that load with the model. The first request for dusk captures the day values from the live scene and blends over five seconds: the sun sinks five degrees under the horizon, sky, haze, lights, water and exposure follow, then windows and lamps come on. The model's baked dusk pages (lamp pools, window spill, the dusk sky on every wall) and the terrain's dusk ground page are fetched on that first request only and blend in with the sky.
+
+## Sound and music
+
+The sound button starts two things. The ambience (wind, the stream, birds by day, crickets at dusk) is synthesised, follows where the camera is, and downloads nothing. The music bed is one file, `public/sawad/audio/with-these-hands.mp3` (4.5 MB), streamed by an `<audio>` element and looped. Nothing is fetched until the visitor turns the sound on; switching it off pauses the piece, and it picks up from the same place.
+
+The piece is "With These Hands" by Scott Buckley, from https://www.scottbuckley.com.au/library/with-these-hands/, licensed CC BY 4.0: free to use, commercially too, as long as he is credited. So:
+
+- The credit shows under the controls whenever the sound is on (`showcase.musicCredit` in `lib/sawad/i18n.ts`, English and Arabic). Do not remove it while this piece plays.
+- The file is the whole piece as released, only re-encoded (`ffmpeg -i WithTheseHands.mp3 -c:a libmp3lame -q:a 5`), not cut or re-levelled. If you edit it, the licence asks you to say so in the credit.
+- A film that uses it on YouTube must carry the credit in the video description.
+
+To change the music, replace the file, then update `MUSIC_BED` in `audio.ts` and the credit text. `MUSIC_GAIN` sets its level against the ambience. If the file fails to load, the error is reported as `ZaitunExperience` (stage `music`) and the ambience plays on without it.
 
 ## Quality
 

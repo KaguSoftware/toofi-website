@@ -1,5 +1,7 @@
+import { statSync } from "node:fs";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { audioSupported, createAmbience, layerLevels, MASTER_GAIN } from "./audio";
+import { audioSupported, createAmbience, layerLevels, MASTER_GAIN, MUSIC_BED, MUSIC_GAIN } from "./audio";
 
 class FakeParam {
   value = 0;
@@ -22,7 +24,11 @@ class FakeNode {
   type = "";
   buffer: unknown = null;
   loop = false;
-  connect = <T>(target: T): T => target;
+  outputs: unknown[] = [];
+  connect = <T>(target: T): T => {
+    this.outputs.push(target);
+    return target;
+  };
   start = vi.fn();
   stop = vi.fn();
 }
@@ -49,6 +55,12 @@ class FakeContext {
   createOscillator = () => this.make();
   createBufferSource = () => this.make();
   createStereoPanner = () => this.make();
+  mediaSources: Array<{ element: unknown; node: FakeNode }> = [];
+  createMediaElementSource = (element: unknown) => {
+    const node = this.make();
+    this.mediaSources.push({ element, node });
+    return node;
+  };
   createBuffer = (_channels: number, length: number) => ({ getChannelData: () => new Float32Array(length) });
   /** The master gain is the first node that connects to the destination: created first. */
   get master() {
@@ -56,6 +68,32 @@ class FakeContext {
   }
 }
 const Ctor = FakeContext as unknown as new () => AudioContext;
+
+/** A stand-in for the <audio> element that streams the music bed. */
+class FakeTrack {
+  loop = false;
+  preload = "";
+  src = "";
+  error: { code: number } | null = null;
+  listeners = new Map<string, () => void>();
+  play = vi.fn(async () => undefined);
+  pause = vi.fn();
+  load = vi.fn();
+  removeAttribute = vi.fn((name: string) => {
+    if (name === "src") this.src = "";
+  });
+  addEventListener = vi.fn((type: string, fn: () => void) => void this.listeners.set(type, fn));
+  removeEventListener = vi.fn((type: string) => void this.listeners.delete(type));
+}
+function bed(track = new FakeTrack()) {
+  const onError = vi.fn();
+  const element = vi.fn(() => track as unknown as HTMLAudioElement);
+  return { track, onError, element, options: { src: "/bed.mp3", onError, element } };
+}
+const settle = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 beforeEach(() => {
   contexts.length = 0;
@@ -204,5 +242,216 @@ describe("createAmbience", () => {
     vi.advanceTimersByTime(20000);
     expect(ctx.nodes.length).toBe(nodes);
     expect(() => a.setDusk(0.5)).not.toThrow();
+  });
+});
+
+describe("createAmbience with a music bed", () => {
+  it("asks for no element and no file before the sound is turned on", () => {
+    const m = bed();
+    createAmbience(Ctor, () => 0.5, m.options);
+    expect(m.element).not.toHaveBeenCalled();
+    expect(contexts).toHaveLength(0);
+  });
+
+  it("streams the file on a loop, through its own gain into the master", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    const ctx = contexts[0];
+    expect(m.element).toHaveBeenCalledTimes(1);
+    expect(m.track.src).toBe("/bed.mp3");
+    expect(m.track.loop).toBe(true);
+    expect(m.track.preload).toBe("none");
+    expect(m.track.play).toHaveBeenCalledTimes(1);
+    expect(ctx.mediaSources).toHaveLength(1);
+    expect(ctx.mediaSources[0].element).toBe(m.track);
+    const gain = ctx.mediaSources[0].node.outputs[0] as FakeNode;
+    expect(gain.gain.value).toBe(MUSIC_GAIN);
+    expect(gain.outputs).toEqual([ctx.master]);
+    expect(m.onError).not.toHaveBeenCalled();
+    a.dispose();
+  });
+
+  it("starts the piece inside the click, before the context has resumed", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    const starting = a.start();
+    expect(m.track.play).toHaveBeenCalledTimes(1);
+    expect(a.running).toBe(false);
+    await starting;
+    a.dispose();
+  });
+
+  it("pauses it once the fade is over and picks it up again on the next start", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    a.stop();
+    vi.advanceTimersByTime(1199);
+    expect(m.track.pause).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(2);
+    expect(m.track.pause).toHaveBeenCalledTimes(1);
+    expect(m.track.removeAttribute).not.toHaveBeenCalled();
+    await a.start();
+    expect(m.track.play).toHaveBeenCalledTimes(2);
+    expect(m.element).toHaveBeenCalledTimes(1);
+    a.dispose();
+  });
+
+  it("keeps playing when the sound comes back during the fade", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    a.stop();
+    await a.start();
+    vi.advanceTimersByTime(2000);
+    expect(m.track.pause).not.toHaveBeenCalled();
+    a.dispose();
+  });
+
+  it("reports a file that will not load once, and plays the ambience without it", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    m.track.error = { code: 4 };
+    m.track.listeners.get("error")!();
+    m.track.listeners.get("error")!();
+    expect(m.onError).toHaveBeenCalledTimes(1);
+    expect(m.onError.mock.calls[0][0]).toBeInstanceOf(Error);
+    expect((m.onError.mock.calls[0][0] as Error).message).toContain("media error 4");
+    expect(a.running).toBe(true);
+    a.stop();
+    vi.advanceTimersByTime(2000);
+    await a.start();
+    expect(m.track.play).toHaveBeenCalledTimes(1);
+    expect(contexts[0].master.gain.last("target")![1]).toBe(MASTER_GAIN);
+    a.dispose();
+  });
+
+  it("names an unknown media error as such", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    m.track.listeners.get("error")!();
+    expect((m.onError.mock.calls[0][0] as Error).message).toContain("media error unknown");
+    a.dispose();
+  });
+
+  it("treats a start cut short by a pause as no failure", async () => {
+    const m = bed();
+    m.track.play.mockRejectedValueOnce(Object.assign(new Error("interrupted"), { name: "AbortError" }));
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    await settle();
+    expect(m.onError).not.toHaveBeenCalled();
+    a.dispose();
+  });
+
+  it("reports a refused start once and still tries again next time", async () => {
+    const m = bed();
+    const refused = Object.assign(new Error("not allowed"), { name: "NotAllowedError" });
+    m.track.play.mockRejectedValueOnce(refused).mockRejectedValueOnce(refused);
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    await settle();
+    expect(m.onError).toHaveBeenCalledTimes(1);
+    expect(m.onError).toHaveBeenCalledWith(refused);
+    expect(a.running).toBe(true);
+    a.stop();
+    vi.advanceTimersByTime(2000);
+    await a.start();
+    await settle();
+    expect(m.track.play).toHaveBeenCalledTimes(2);
+    expect(m.onError).toHaveBeenCalledTimes(1);
+    a.dispose();
+  });
+
+  it("reports an element that cannot be made and starts the ambience anyway", async () => {
+    const failure = new Error("no media elements");
+    const onError = vi.fn();
+    const a = createAmbience(Ctor, () => 0.5, {
+      src: "/bed.mp3",
+      onError,
+      element: () => {
+        throw failure;
+      },
+    });
+    await a.start();
+    expect(onError).toHaveBeenCalledWith(failure);
+    expect(a.running).toBe(true);
+    expect(contexts[0].mediaSources).toHaveLength(0);
+    expect(() => a.dispose()).not.toThrow();
+  });
+
+  it("works without an error handler", async () => {
+    const track = new FakeTrack();
+    const a = createAmbience(Ctor, () => 0.5, { src: "/bed.mp3", element: () => track as unknown as HTMLAudioElement });
+    await a.start();
+    expect(() => track.listeners.get("error")!()).not.toThrow();
+    a.dispose();
+  });
+
+  it("pauses the piece and rejects when the context will not resume", async () => {
+    const m = bed();
+    const blocked = new Error("blocked");
+    class Blocked extends FakeContext {
+      resume = vi.fn(async () => {
+        throw blocked;
+      });
+    }
+    const a = createAmbience(Blocked as unknown as new () => AudioContext, () => 0.5, m.options);
+    await expect(a.start()).rejects.toBe(blocked);
+    expect(m.track.pause).toHaveBeenCalledTimes(1);
+    expect(a.running).toBe(false);
+  });
+
+  it("lets go of the file on dispose", async () => {
+    const m = bed();
+    const a = createAmbience(Ctor, () => 0.5, m.options);
+    await a.start();
+    a.dispose();
+    expect(m.track.pause).toHaveBeenCalledTimes(1);
+    expect(m.track.removeAttribute).toHaveBeenCalledWith("src");
+    expect(m.track.load).toHaveBeenCalledTimes(1);
+    expect(m.track.listeners.has("error")).toBe(false);
+  });
+
+  it("makes its own audio element when none is supplied", async () => {
+    const made: FakeTrack[] = [];
+    vi.stubGlobal(
+      "Audio",
+      class extends FakeTrack {
+        constructor() {
+          super();
+          made.push(this);
+        }
+      },
+    );
+    const a = createAmbience(Ctor, () => 0.5, { src: "/bed.mp3" });
+    await a.start();
+    expect(made).toHaveLength(1);
+    expect(made[0].src).toBe("/bed.mp3");
+    expect(made[0].play).toHaveBeenCalledTimes(1);
+    a.dispose();
+  });
+
+  it("adds no media element when no bed is asked for", async () => {
+    const a = createAmbience(Ctor, () => 0.5);
+    await a.start();
+    expect(contexts[0].mediaSources).toHaveLength(0);
+    a.dispose();
+  });
+});
+
+describe("MUSIC_BED", () => {
+  it("points at a file that ships with the site, small enough to stream on demand", () => {
+    expect(MUSIC_BED.src).toMatch(/^\/sawad\/audio\/[a-z0-9-]+\.mp3$/);
+    const file = statSync(join(process.cwd(), "public", MUSIC_BED.src));
+    expect(file.size).toBeGreaterThan(500_000);
+    expect(file.size).toBeLessThan(6_000_000);
+  });
+
+  it("names the piece, its composer, the licence and where it comes from", () => {
+    expect(MUSIC_BED).toMatchObject({ title: "With These Hands", artist: "Scott Buckley", licence: "CC-BY 4.0", url: "https://www.scottbuckley.com.au" });
   });
 });

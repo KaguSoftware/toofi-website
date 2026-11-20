@@ -83,6 +83,7 @@ function experienceLabels(d: Dict): ExperienceLabels {
     toDay: s.toDay,
     soundOn: s.soundOn,
     soundOff: s.soundOff,
+    musicCredit: s.musicCredit,
     zoomIn: scene.zoomIn,
     zoomOut: scene.zoomOut,
     reset: scene.reset,

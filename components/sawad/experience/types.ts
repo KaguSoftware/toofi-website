@@ -68,6 +68,8 @@ export type ExperienceLabels = {
   toDay: string;
   soundOn: string;
   soundOff: string;
+  /** The credit the music's licence asks for, shown while the sound is on. */
+  musicCredit: string;
   zoomIn: string;
   zoomOut: string;
   reset: string;
