@@ -46,7 +46,7 @@ export function HomeSearch({ locale }: { locale: Locale }) {
             ))}
           </select>
         </label>
-        <button type="submit" className={buttonClass({ variant: "primary" })}>
+        <button type="submit" className={buttonClass({ variant: "inverse" })}>
           {d.submit}
         </button>
       </fieldset>

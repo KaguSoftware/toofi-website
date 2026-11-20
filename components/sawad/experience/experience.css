@@ -99,20 +99,20 @@
   position: relative;
   min-height: var(--xp-h);
 }
-/* The first screen is mostly picture: the hero slab starts low on it and carries on below the
-   fold, then rides up over the stage as the page scrolls. */
+/* The first screen is all picture: the small hero card sits in the bottom corner and rides up
+   over the stage as the page scrolls. */
 .xp__panel--hero {
-  padding-block: calc(var(--xp-h) * 0.6) var(--space-8);
+  padding-block: calc(var(--xp-h) * 0.74) var(--space-8);
 }
 @media (min-width: 64rem) {
   .xp__panel--hero {
-    padding-block-start: calc(var(--xp-h) - 15rem);
+    padding-block-start: calc(var(--xp-h) - 14rem);
   }
 }
 .xp__panel--hero > * {
   pointer-events: auto;
 }
-/* The hero slab sits at the foot of the first screen instead of hanging off a fixed-height stage. */
+/* The hero card sits at the foot of the first screen instead of hanging off a fixed-height stage. */
 .xp__panel--hero .home-hero__panel {
   margin-block-start: 0;
 }

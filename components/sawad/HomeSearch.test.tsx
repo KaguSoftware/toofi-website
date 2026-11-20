@@ -21,4 +21,9 @@ describe("HomeSearch", () => {
     expect(screen.getByRole("option", { name: "٤" })).toBeDefined();
     expect(screen.getByRole("option", { name: "بستان دجلة، بغداد" })).toBeDefined();
   });
+
+  it("uses the light button so it reads on the dark strip", () => {
+    render(<HomeSearch locale="en" />);
+    expect(screen.getByRole("button", { name: "Find a residence" }).className).toContain("btn-inverse");
+  });
 });
