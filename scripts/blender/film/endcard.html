@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  The film's end card (track 5B), English and Arabic, on a transparent background. edit.mjs renders it
+  with headless Chrome (which shapes and orders Arabic correctly; ffmpeg's drawtext reverses it) and
+  lays it over the blue-hour pull-back.
+
+    endcard.html?layout=wide   3840 x 2160, the film
+    endcard.html?layout=tall   1080 x 1920, the vertical cut
+    &logo=../out/film/logo.png the owner's logo, when it arrives (a placeholder wordmark until then)
+
+  Fonts are the site's own (app/layout.tsx): Young Serif and Manrope for English, Amiri for Arabic.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Zaitun Hills end card</title>
+    <style>
+      @font-face { font-family: "Young Serif"; src: url("../out/film/fonts/YoungSerif-Regular.ttf"); }
+      @font-face { font-family: "Amiri"; src: url("../out/film/fonts/Amiri-Regular.ttf"); }
+      @font-face { font-family: "Manrope"; src: url("../out/film/fonts/Manrope.ttf"); font-weight: 200 800; }
+      :root { --cream: #f3e9d6; --brass: #c9a24a; --u: 1px; }
+      html, body { margin: 0; background: transparent; }
+      body {
+        width: 100vw; height: 100vh; display: grid; place-items: center;
+        color: var(--cream); text-shadow: 0 0 calc(var(--u) * 40) rgba(10, 14, 32, 0.55);
+      }
+      .card { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 28); text-align: center; }
+      .rule { width: calc(var(--u) * 120); height: calc(var(--u) * 2); background: var(--brass); opacity: 0.9; }
+      .en { font: 400 calc(var(--u) * 120) / 1 "Young Serif", serif; letter-spacing: 0.01em; }
+      .ar { font: 400 calc(var(--u) * 124) / 1.25 "Amiri", serif; }
+      .by { display: flex; gap: calc(var(--u) * 36); align-items: baseline; margin-top: calc(var(--u) * 26); color: var(--brass); }
+      .by .en-sm { font: 500 calc(var(--u) * 34) / 1 "Manrope", sans-serif; letter-spacing: 0.32em; text-transform: uppercase; }
+      .by .ar-sm { font: 400 calc(var(--u) * 44) / 1 "Amiri", serif; }
+      .logo { max-width: calc(var(--u) * 520); max-height: calc(var(--u) * 180); margin-top: calc(var(--u) * 20); }
+      body.tall .card { gap: calc(var(--u) * 18); }
+      body.tall .en { font-size: calc(var(--u) * 96); }
+      body.tall .ar { font-size: calc(var(--u) * 100); }
+      body.tall .by { flex-direction: column; align-items: center; gap: calc(var(--u) * 16); }
+      body.tall .by .en-sm { font-size: calc(var(--u) * 24); }
+      body.tall .by .ar-sm { font-size: calc(var(--u) * 32); }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="rule"></div>
+      <div class="en">Zaitun Hills</div>
+      <div class="ar" lang="ar" dir="rtl">تلال الزيتون</div>
+      <div class="rule"></div>
+      <div class="by" id="by">
+        <span class="en-sm">Sawad Holding</span>
+        <span class="ar-sm" lang="ar" dir="rtl">السواد القابضة</span>
+      </div>
+    </div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const tall = q.get("layout") === "tall";
+      document.body.classList.toggle("tall", tall);
+      // Sizes are authored for 1920 px wide (wide) or 1080 px wide (tall); scale to the window.
+      document.documentElement.style.setProperty("--u", `${window.innerWidth / (tall ? 1080 : 1920)}px`);
+      const logo = q.get("logo");
+      if (logo) {
+        const img = new Image();
+        img.className = "logo";
+        img.alt = "Sawad Holding";
+        img.src = logo;
+        document.getElementById("by").replaceWith(img);
+      }
+    </script>
+  </body>
+</html>
