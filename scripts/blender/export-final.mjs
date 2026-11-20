@@ -214,7 +214,7 @@ function run() {
   const structure = {};
   for (const tier of TIERS) {
     structure[tier] = checkModel(describeGlb(readGlbJson(readFileSync(MODELS_DIR + COMPOUND_FILES[tier]))), { lightmaps: lightmaps.tiers[tier] });
-    for (const [pageName, page] of Object.entries(lightmaps.tiers[tier].pages)) {
+    for (const page of Object.values(lightmaps.tiers[tier].pages)) {
       for (const state of STATES) {
         const file = page.files[state].replace(/\.png$/, ".ktx2");
         structure[tier].push(...checkKtx2(readKtx2Header(readFileSync(LIGHTMAPS_DIR + file)), file, page.size));

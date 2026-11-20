@@ -16,6 +16,14 @@ describe("SiteHeader", () => {
     expect(within(nav).getByRole("link", { name: "Contact" }).getAttribute("aria-current")).toBeNull();
   });
 
+  it("keeps the brand's visible words inside its accessible name", () => {
+    render(<SiteHeader g={globalEditables()} locale="en" path="/" />);
+    const brand = screen.getByRole("link", { name: "Sawad Holding, home" });
+    // "Sawad" and "Holding" are separate elements: without a space between them the visible text reads "SawadHolding".
+    expect(brand.textContent).toBe("Sawad Holding");
+    expect("sawad holding, home").toContain(brand.textContent!.toLowerCase());
+  });
+
   it("makes Find a residence the one primary action", () => {
     render(<SiteHeader g={globalEditables()} locale="en" path="/residences" />);
     const cta = screen.getByRole("link", { name: "Find a residence" });

@@ -20,6 +20,17 @@ describe("root layout", () => {
     expect(html).toContain("<p>hi</p>");
   });
 
+  it("sets the base for absolute canonical links only when the site address is configured", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "");
+    vi.resetModules();
+    expect((await import("./layout")).metadata.metadataBase).toBeUndefined();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://www.example.com");
+    vi.resetModules();
+    expect(String((await import("./layout")).metadata.metadataBase)).toBe("https://www.example.com/");
+    vi.unstubAllEnvs();
+  });
+
   it("names the site Sawad Holding", () => {
     expect(metadata.applicationName).toBe("Sawad Holding");
     expect(metadata.title).toEqual({ default: "Sawad Holding", template: "%s · Sawad Holding" });

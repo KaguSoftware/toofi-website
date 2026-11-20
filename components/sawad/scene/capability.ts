@@ -36,13 +36,28 @@ type NavigatorExtras = Navigator & {
   connection?: { saveData?: boolean; effectiveType?: string };
 };
 
+let webgl2Probe: boolean | undefined;
+
+/** Forgets the probe result (tests only). */
+export function resetWebGL2Probe(): void {
+  webgl2Probe = undefined;
+}
+
+/**
+ * Whether the browser gives out a WebGL2 context. The answer cannot change within a page, and
+ * making a context is a round trip to the GPU process that blocked the main thread for about
+ * 60 ms on a mid-range phone each time it ran, so it is asked once and the probe is released.
+ */
 function detectWebGL2(): boolean {
+  if (webgl2Probe !== undefined) return webgl2Probe;
   try {
-    const canvas = document.createElement("canvas");
-    return !!canvas.getContext("webgl2");
+    const gl = document.createElement("canvas").getContext("webgl2") as WebGL2RenderingContext | null;
+    webgl2Probe = !!gl;
+    gl?.getExtension?.("WEBGL_lose_context")?.loseContext();
   } catch {
-    return false;
+    webgl2Probe = false;
   }
+  return webgl2Probe;
 }
 
 /** Reads the capability inputs from the browser. Safe to call during SSR (returns a "no" env). */

@@ -597,6 +597,15 @@ describe("28 ha masterplan", () => {
     expect(share(["road", "paving", "parking"])).toBeLessThan(16);
   });
 
+  it("builds the list of drives once, not on every land-use lookup", () => {
+    const clearOf = () => planTreeZones().find((z) => z.id === "allee-a")?.clear;
+    expect(clearOf()).toBeDefined();
+    expect(clearOf()).toBe(clearOf());
+    // Same answer as before, for a point inside a drive and one well clear of every drive.
+    const drive = clearOf()![0];
+    expect(planLandUseAt((drive.minX + drive.maxX) / 2, (drive.minZ + drive.maxZ) / 2)).toBe("road");
+  });
+
   it("zones the planting: palms on the valley floor and the boulevards, olives on every slope, citrus in the back gardens", () => {
     const zones = planTreeZones();
     const areas = planAreas(2);

@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { canRender3D, qualityTier, readCapabilityEnv, type CapabilityEnv } from "./capability";
+import { canRender3D, qualityTier, readCapabilityEnv, resetWebGL2Probe, type CapabilityEnv } from "./capability";
 
 const ok: CapabilityEnv = { webgl2: true, reducedMotion: false, mode: "explorer", deviceMemory: 8, hardwareConcurrency: 8 };
 
 afterEach(() => {
+  resetWebGL2Probe();
   vi.restoreAllMocks();
   delete (window as { matchMedia?: unknown }).matchMedia;
 });
@@ -52,6 +53,26 @@ describe("readCapabilityEnv", () => {
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({} as RenderingContext);
     const env = readCapabilityEnv("film");
     expect(env).toMatchObject({ webgl2: true, reducedMotion: true, mode: "film" });
+  });
+
+  it("makes the WebGL2 probe once, however often the environment is read, and releases it", () => {
+    const loseContext = vi.fn();
+    const getExtension = vi.fn((name: string) => (name === "WEBGL_lose_context" ? { loseContext } : null));
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ getExtension } as unknown as RenderingContext);
+    expect(readCapabilityEnv("explorer").webgl2).toBe(true);
+    expect(readCapabilityEnv("explorer").webgl2).toBe(true);
+    expect(readCapabilityEnv("film").webgl2).toBe(true);
+    expect(getContext).toHaveBeenCalledTimes(1);
+    expect(loseContext).toHaveBeenCalledTimes(1);
+  });
+
+  it("remembers a failed probe too, and treats a throwing context as no WebGL2", () => {
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    expect(readCapabilityEnv("explorer").webgl2).toBe(false);
+    expect(readCapabilityEnv("explorer").webgl2).toBe(false);
+    expect(getContext).toHaveBeenCalledTimes(1);
   });
 
   it("reports no WebGL2 when the context is unavailable", () => {

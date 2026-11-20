@@ -20,6 +20,7 @@ export function SiteHeader({ g, locale = "en", path = "/" }: { g: Editables; loc
   const brandInner = (
     <>
       <g.Text k={nameKey} fallback={d.site.name} className="site-brand__name" />
+      {/* The space keeps the visible words ("Sawad Holding") inside the link's accessible name; the flex gap sets the look. */}{" "}
       <span className="site-brand__holding">{d.site.holding}</span>
     </>
   );

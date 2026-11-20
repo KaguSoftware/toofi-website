@@ -918,10 +918,12 @@ const PALM_SPACING = 13;
 const PALM_FIRST_X = 6.5;
 const lampXs = (fromX: number, toX: number) => series(LAMP_FIRST_X - LAMP_SPACING * 20, LAMP_SPACING, 41).filter((x) => x >= fromX + 8 && x <= toX - 8);
 
-/** Every drive that crosses a verge: one per villa and one per parking court. */
-function builtDrives(): Rect[] {
-  return [...builtVillas().map((v) => v.driveway), ...builtParking().map((p) => p.driveway)];
-}
+/**
+ * Every drive that crosses a verge: one per villa and one per parking court. Built once:
+ * `planLandUseAt` asks for it for every point the landscape scatter tests (tens of thousands
+ * of times on load), and rebuilding the list each time cost about 50 ms of the main thread.
+ */
+const builtDrives = once((): Rect[] => [...builtVillas().map((v) => v.driveway), ...builtParking().map((p) => p.driveway)]);
 
 /** Street lamps: both sides of the boulevards, one side of the link streets and the promenade. The arm points at local +z. */
 export function planLamps(): PlanFixture[] {

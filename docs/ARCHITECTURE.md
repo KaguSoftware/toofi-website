@@ -33,6 +33,13 @@ Public website + admin panel + **inline on-page content editing**.
 
 Reset local data: delete `.data/`.
 
+## Public site address
+
+Set `NEXT_PUBLIC_SITE_URL` (for example `https://www.example.com`) in production. It is the base for the
+absolute canonical and hreflang links and for `robots.txt` (`app/robots.ts`, `lib/site-url.ts`). On Vercel the
+production domain is used when it is not set. With neither, those links stay relative, and search-engine
+audits will flag them.
+
 Switching is **only** env vars — app code talks to `getData()` (`lib/data/index.ts`) and
 `getAuth()` (`lib/auth/index.ts`), never to a backend directly.
 

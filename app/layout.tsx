@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Amiri, IBM_Plex_Sans_Arabic, Manrope, Young_Serif } from "next/font/google";
 import "./globals.css";
+import { siteUrl } from "@/lib/site-url";
 
 // Display: Young Serif (sturdy, warm old-style). Body: Manrope.
 // Arabic: Amiri (Naskh) for headings, IBM Plex Sans Arabic for text.
@@ -16,6 +17,8 @@ const plexArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
+  // Absolute canonical and hreflang links need a base; see lib/site-url.ts (NEXT_PUBLIC_SITE_URL).
+  metadataBase: siteUrl(),
   title: { default: "Sawad Holding", template: "%s · Sawad Holding" },
   description: "Gated garden compounds in Baghdad, Erbil and Basra. Villas and apartments among date palms and moving water.",
   applicationName: "Sawad Holding",

@@ -102,12 +102,14 @@
 /* The first screen is all picture: the small hero card sits in the bottom corner and rides up
    over the stage as the page scrolls. */
 .xp__panel--hero {
-  padding-block: calc(var(--xp-h) * 0.74) var(--space-8);
+  /* The card gets a row that ends one gap above the stage's bottom edge and sits at the end of it,
+     so it grows upward and never runs past the fold, whatever its height (language, title length). */
+  display: grid;
+  grid-template-rows: calc(var(--xp-h) - var(--space-8)) auto;
+  padding-block: 0 var(--space-8);
 }
-@media (min-width: 64rem) {
-  .xp__panel--hero {
-    padding-block-start: calc(var(--xp-h) - 14rem);
-  }
+.xp__panel--hero .home-hero__panel {
+  align-self: end;
 }
 .xp__panel--hero > * {
   pointer-events: auto;
