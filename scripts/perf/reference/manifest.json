@@ -1,0 +1,191 @@
+{
+  "takenAt": "2026-11-21T18:58:58.144Z",
+  "level": {
+    "high": 3,
+    "low": 1
+  },
+  "width": 960,
+  "shots": {
+    "poster-hold": "The first frames: the poster frame held still for 2 s before the opening plays",
+    "opening": "The opening shot playing by the clock under the letterbox (2 s hold, then about 12 s)",
+    "stop-1": "Tour stop 1, held: the stop's panel scrolled to the top of the screen",
+    "stop-2": "Tour stop 2, held: the stop's panel scrolled to the top of the screen",
+    "stop-3": "Tour stop 3, held: the stop's panel scrolled to the top of the screen",
+    "stop-4": "Tour stop 4, held: the stop's panel scrolled to the top of the screen",
+    "stop-5": "Tour stop 5, held: the stop's panel scrolled to the top of the screen",
+    "aerial": "Explore, then Reset: the explorer's aerial over the whole plan (the widest shot)",
+    "orbit": "The aerial, then a drag across 30% of the screen and the controls settling",
+    "walk": "Explore, Walk, then W held for 2 s along the path the walk starts on",
+    "dusk": "Tour stop 2 (the boulevard) at dusk, after the 5 s blend"
+  },
+  "handover": {
+    "high": {
+      "mean": 13.176017892892894,
+      "changedShare": 0.4222316066066066,
+      "worst": 199,
+      "poster": "http://127.0.0.1:52584/_next/image?url=%2Fsawad%2Fscene-zaitun-flight.jpg&w=3840&q=75"
+    },
+    "low": {
+      "mean": 12.180045315085033,
+      "changedShare": 0.4412747446728029,
+      "worst": 200,
+      "poster": "http://127.0.0.1:52584/_next/image?url=%2Fsawad%2Fscene-zaitun-flight.jpg&w=1200&q=75"
+    }
+  },
+  "noise": [
+    {
+      "tier": "high",
+      "shot": "poster-hold",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "opening",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "stop-1",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "stop-2",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "stop-3",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "stop-4",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "stop-5",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "aerial",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "orbit",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "walk",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "high",
+      "shot": "dusk",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "poster-hold",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "opening",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "stop-1",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "stop-2",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "stop-3",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "stop-4",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "stop-5",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "aerial",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "orbit",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "walk",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    },
+    {
+      "tier": "low",
+      "shot": "dusk",
+      "mean": 0,
+      "changedShare": 0,
+      "worst": 0
+    }
+  ]
+}

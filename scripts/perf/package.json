@@ -1,0 +1,15 @@
+{
+  "name": "sawad-perf-rig",
+  "private": true,
+  "type": "module",
+  "description": "The measurement rig (optimization track P0). Its own tools, kept out of the app's dependencies. Install with: pnpm install --dir scripts/perf",
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "chrome-launcher": "1.2.3",
+    "lighthouse": "13.6.0",
+    "meshoptimizer": "1.3.0",
+    "playwright-core": "1.65.1",
+    "pngjs": "7.0.0"
+  }
+}
