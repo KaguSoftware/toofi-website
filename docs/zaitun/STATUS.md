@@ -33,7 +33,7 @@ Plan: [OPTIMIZATION_PLAN.md](OPTIMIZATION_PLAN.md). Same rules as the table abov
 | S2 | Search: JavaScript bundles | not started | | | |
 | S3 | Search: 3D assets and media | not started | | | |
 | S4 | Search: drawing each frame | not started | | | |
-| S5 | Search: work per frame and memory | not started | | | |
+| S5 | Search: work per frame and memory | approved | zaitun/S5 (worktree `.claude/worktrees/zaitun-S5`, from 09684f0, uncommitted) | 2026-11-22 | Findings: `docs/zaitun/perf/findings/S5.md` (13 rows + ruled out); scripts `scripts/perf/S5/` (README, tests). JS per frame is not the limit (2–3 ms desktop, 2.5–5 ms phone at 4× CPU; 75–90% is the draw). Biggest: returning to Home rebuilds the whole scene and shows the site without buildings meanwhile, +46 MB kept (S5-13); hidden Home keeps drawing on other pages, cause found: Activity cleanup + R3F root survives, needs an imperative pause (S5-1, P1); sound silently off after a round trip while the button says on (S5-2); drei monitor steps every fast device down a level after ~11 s and stops adapting (S5-3); each level change drops a frame (S5-4); plant re-sort uploads 4.07 / 1.47 MB per sort, ~200 MB/s while dragging (S5-5); P8 is compiled code, not a leak. Ownership gaps for T: `landscape.ts`, `lifeMotion.ts`, `useTimedAsset.ts`, `useCompoundModel.ts`. `npm run check` passes (1,121 tests) |
 | S6 | Search: delivery | not started | | | |
 | S7 | Search: server and data | not started | | | |
 | S8 | Search: the rest of the site | not started | | | |
