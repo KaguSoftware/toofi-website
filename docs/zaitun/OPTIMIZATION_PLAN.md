@@ -1,6 +1,6 @@
 # Zaitun Hills and the Sawad site: optimization plan
 
-Written 2026-11-20, after tracks 7D and QA. It covers the whole site, not only the 3D hero.
+Written 2026-11-20, after tracks 7D and QA. It covers the whole site, not only the 3D hero. Amended 2026-11-22 with the owner's answers at triage (track T): the amended targets, file ownership, F3's early start and the rig pass. The ranked work list is [perf/FINDINGS.md](perf/FINDINGS.md).
 
 The plan has four stages. **Measure** builds one repeatable rig. **Search** audits every layer and logs each finding with a number. **Fix** works through the ranked list in parallel tracks. **Lock** repeats the search once, then turns the results into budgets that fail the build. The work is finished when every target below is met and no remaining finding is worth more than 5% on any of them.
 
@@ -8,22 +8,24 @@ Start a track in a new Claude Code session by saying **`masterplan phase <id>`**
 
 ## 1. Finish line
 
-Targets are proposals until the owner confirms them (section 8).
+The owner amended the targets on 2026-11-22 (decisions D2 and D3 of the ledger); the other lines stand as proposed. "Now" is the state before any optimization; current numbers are in section 1 of [perf/FINDINGS.md](perf/FINDINGS.md).
+
+The stall and the live scene are measured on the rig's **standard load**, where the system already has the scene's shaders compiled. A **first-ever visit**, when the device compiles them once, is tracked beside them and is not a gate: live scene 7.5 s, no task over 1 s. Revisit both after a real phone has been measured.
 
 | Measure | Now | Target |
 |---|---|---|
 | Lighthouse performance, mobile, `/` and `/ar` | not measured, likely under 80 | 80 or more on an official run |
-| Main-thread stall while the 3D starts, phone profile (4× CPU) | 2–3 s, variable | under 0.3 s, no task over 200 ms |
+| Main-thread stall while the 3D starts, phone profile (4× CPU), standard load | 2–3 s, variable | under 0.3 s, no task over 200 ms |
 | First content on 4G, phone profile | 0.65 s | no worse |
-| Live scene on 4G, phone profile | about 9.6 s | 5 s |
+| Live scene on 4G, phone profile, standard load (this is what "loads under 5 s" means) | about 9.6 s | 5 s |
 | Transfer before the live scene, desktop high tier | 8.65 MB | 5 MB |
 | Transfer before the live scene, phone tier | 5.06 MB | 3 MB |
-| Visible triangles, every tour stop and the aerial | about 794k in wide shots | 300k |
+| Visible triangles, every tour stop and the aerial, phone tier only (no target on the high tier) | about 794k in wide shots | 300k |
 | Desktop frame rate, top quality level | opening 65–70 fps, stops 91–120 | 60 held, no frame over 20 ms |
 | Real mid-range Android phone | not measured | 30 fps or more, no frame over 50 ms |
 | Response to taps and clicks (finder, explore controls) | not measured | under 200 ms |
 | Memory after five open and close cycles of the scene | not measured | no growth |
-| The look | reference frames from P0 | mean difference of 2/255 or less per frame, unless the owner approves a change |
+| The look | reference frames from P0 | mean difference of 2/255 or less per frame, except the changes the owner approved at triage (ledger D5, D6, D7, D11, D12); new reference frames are taken after each |
 | Poster-to-scene handover | 11.3/255 | no worse |
 | `npm run check` | passes (1,036 tests) | passes, no threshold lowered |
 
@@ -55,17 +57,21 @@ Targets are proposals until the owner confirms them (section 8).
 | **S9** | Search: device tiers and gating | Search | P0 | `findings/S9.md`, `scripts/perf/S9/` |
 | **F2A** | Far set: the whole site at far-view detail before the first frame | Fix | P0 | `scripts/blender/**`, `public/sawad/models/**`, `components/sawad/scene/compoundModel.ts` (+ tests) |
 | **T** | Triage: merge and rank the findings, review page | Search | S1–S9 | `docs/zaitun/perf/FINDINGS.md` |
-| **F1** | Main thread and bundles | Fix | T | `components/sawad/experience/ZaitunExperience.tsx`, `ExperienceRoot.tsx`, `StoryScroll.tsx`, `ExperienceHud.tsx`, `storySheet.ts`, `story.ts`, `templates/home.tsx`, `package.json`, lockfiles |
-| **F2B** | Detail streaming and asset diet | Fix | T, F2A | everything F2A owns, plus `public/sawad/lightmaps/**`, `scene/instanceCulling.ts`, `scene/bakedLight.ts`, `experience/lightmaps.ts`, versioned asset names in `finalize-manifest.mjs` |
-| **F4** | Work per frame and memory | Fix | T | `scene/SceneLife.tsx`, `SceneMarkers.tsx`, `experience/StoryRig.tsx`, `walk.ts`, `audio.ts`, `UnitTargets.tsx`, `ExperienceCanvas.tsx` |
-| **F6** | Server, data and the rest of the site | Fix | T | `app/**`, `lib/**`, `templates/**` except `home.tsx`, `components/sawad/finder/**`, `scene/SceneViewport.tsx`, `SceneCanvas.tsx`, `public/sawad/audio/**`, posters and story stills |
-| **F3** | Drawing each frame | Fix | T, F2B | `scene/world.ts`, `SceneWorld.tsx`, `SceneVegetation.tsx`, `vegetation.ts`, `experience/PostFX.tsx`, `quality.ts`, `godrays.ts`, `daylight.ts` |
-| **F5** | Delivery | Fix | T, F2B | `next.config.ts`, `proxy.ts`, host settings |
+| **F1** | Main thread and bundles | Fix | T | `components/sawad/experience/ZaitunExperience.tsx`, `ExperienceRoot.tsx`, `StoryScroll.tsx`, `ExperienceHud.tsx`, `storySheet.ts`, `story.ts`, `types.ts`, `components/sawad/scene/capability.ts`, `components/editable/**`, `templates/home.tsx`, `package.json`, lockfiles |
+| **F2B** | Detail streaming and asset diet | Fix | T, F2A | everything F2A owns, plus `public/sawad/lightmaps/**`, `scene/instanceCulling.ts`, `scene/bakedLight.ts`, `scene/useTimedAsset.ts`, `scene/useCompoundModel.ts`, `scene/SceneRoot.tsx`, `experience/lightmaps.ts`, versioned asset names in `finalize-manifest.mjs` |
+| **F4** | Work per frame and memory | Fix | T | `scene/SceneLife.tsx`, `SceneMarkers.tsx`, `scene/landscape.ts`, `scene/lifeMotion.ts`, `experience/StoryRig.tsx`, `walk.ts`, `audio.ts`, `UnitTargets.tsx`, `ExperienceCanvas.tsx`, `public/sawad/audio/**` |
+| **F6** | Server, data and the rest of the site | Fix | T | `app/**`, `lib/**`, `templates/**` except `home.tsx`, `components/sawad/finder/**`, `scene/SceneViewport.tsx`, `SceneCanvas.tsx`, posters and story stills |
+| **F3** | Drawing each frame | Fix | First part (ledger rows T9, T10, T11, T18, T25, T34, T35): T. The rest: T, F2B | `scene/world.ts`, `SceneWorld.tsx`, `SceneVegetation.tsx`, `vegetation.ts`, `scene/planWorld.ts`, `experience/PostFX.tsx`, `quality.ts`, `godrays.ts`, `daylight.ts` |
+| **F5** | Delivery | Fix | T, F2B | `next.config.ts`, `proxy.ts`, Vercel settings |
 | **RS** | Second search on the fixed site | Lock | F1, F2B, F3, F4, F5, F6 | `docs/zaitun/perf/findings/RS.md`, `BASELINE.md` (new column) |
 | **L1** | Budgets that fail the build | Lock | RS | new budget tests under `scripts/perf/`, budget constants in `finalize-manifest.mjs` |
 | **QA2** | Final acceptance | Lock | L1 | reports only (`QA.md`, review page) |
 
-A track that needs a file it does not own stops and says so. F3 and F5 wait for F2B because frame cost should be tuned on the final geometry, and long cache lifetimes are only safe once F2B's file names carry a version.
+A track that needs a file it does not own stops and says so. F5 waits for F2B because long cache lifetimes are only safe once F2B's file names carry a version. F3's tuning rows wait for F2B because frame cost should be tuned on the final geometry; its first part does not depend on the geometry and touches no file F2B owns, so it starts with wave 4 (the owner's decision D15). `scene/layout.ts` stays with track 0: no optimization track edits it.
+
+Each fix track's work is its queue in section 4 of [perf/FINDINGS.md](perf/FINDINGS.md), in that order; section 5 there lists the hand-offs where a row crosses two tracks.
+
+**The rig pass.** P0 is reopened once, after T, for rig notes R1–R4 of the ledger (section 8 there): reference frames that repeat exactly, frame times drawn back to back, a first-ever-visit load, and a worktree install. It is complete when P0's row in STATUS.md says so. Fix tracks may start their code work before that, but take no measurement and run no look gate until it is (the owner's decision D16).
 
 ## 4. Stage 1: measure (P0)
 
@@ -131,12 +137,12 @@ One short session merges the nine findings files into `FINDINGS.md`, ranks them 
 
 | ID | Main work |
 |---|---|
-| **F1** | Remove the start-up stall S1 found (spread or defer the work, move what can go to a worker); server-render what does not need client code; split the app chunk; drop or bake the tour library if S2 supports it; keep admin code out of public routes |
+| **F1** | Compile the shaders ahead of the first frame, behind the poster (the stall S1 found; moved here from F3 because F1 owns the file that draws the first frame); ask for the model early; keep the admin editor out of public pages; pause the hidden scene; the quality monitor's logic; the device and network checks; split the 3D chunk |
 | **F2B** | Mid and near detail per template, fetched one tour stop ahead; per-copy distance levels in the culling code, with a fade and no swaps during the poster hold; small lightmap first; versioned file names; then every S3 saving. Each step passes the reference frames before the next |
 | **F4** | Remove per-frame allocation and re-renders; fix leaks and dispose paths; handle a lost GPU context |
 | **F6** | Catch-all route and data caching; media and images; finder response; the older scene viewport; the music file |
-| **F3** | Shadow updates only when something moves and from the lowest level; half-resolution occlusion; depth of field only where used; cards for far trees; compile shaders before the first frame |
-| **F5** | Compression and long cache lifetimes on versioned files; fetch order and preload hints; decoder fetched alongside the model; repeat-visit caching |
+| **F3** | First part: depth of field only where used, occlusion's wasted redraws, draw order, plant buffer uploads, and the ground, plant placement and reflection map made ahead. After F2B: the shadow map at 2048² with a fitted box, even level steps with occlusion kept at the top level, the pixel budget, a lower floor for weak GPUs, each level's effects compiled ahead with F1's helper |
+| **F5** | On Vercel: check that the models are compressed on a preview (ledger row T57); long cache lifetimes on versioned files through `headers()`; AVIF for images; `proxy.ts` kept off asset files |
 
 ## 7. Stage 4: lock (RS, L1, QA2)
 
@@ -204,9 +210,17 @@ Timing runs queue on the rig lock, so ten sessions at once gain little over two 
 |---|---|---|
 | `T` Triage | Fable 5.2 · high | Ranking trade-offs between speed and the look |
 
-**Wait:** approve the ranked list and settle the look decisions. Approve F2A and have it merged into main.
+**Wait:** approve the ranked list and settle the look decisions. Approve F2A and have it merged into main. (Done 2026-11-22.)
 
-### Wave 4: when T and F2A are done (4 sessions)
+### Before wave 4: the rig pass (1 short session)
+
+| Track | Model · effort | Why |
+|---|---|---|
+| `P0` reopened, rig notes R1–R4 | Opus 5.5 · medium | Every fix is judged by the rig, and the search found faults in it |
+
+Say `masterplan phase P0` and name the rig pass. **Wait:** approve it before any fix track measures or runs a look gate. Wave 4's sessions may be opened meanwhile.
+
+### Wave 4: when T and F2A are done (5 sessions)
 
 | Track | Model · effort | Why |
 |---|---|---|
@@ -214,14 +228,15 @@ Timing runs queue on the rig lock, so ten sessions at once gain little over two 
 | `F2B` Detail streaming and asset diet | Opus 5.5 · xhigh | The largest change, and the one most able to break the look |
 | `F4` Work per frame and memory | Opus 5.5 · high | Careful edits in frame loops |
 | `F6` Server, data, rest of site | Sonnet 5.5 · medium | Well-defined caching and media work |
+| `F3` Drawing each frame, first part | Opus 5.5 · high | Seven rows that do not depend on the final geometry, three of them stall fixes |
 
-**Wait:** approve F2B and have it merged into main. That alone opens wave 5; F1, F4 and F6 may still be running.
+**Wait:** approve F2B and have it merged into main. That alone opens wave 5; F1, F4 and F6 may still be running. F3's first part is shown for review and merged before its second part starts, so F3 is approved once, at the end of wave 5.
 
 ### Wave 5: when F2B is done (2 sessions)
 
 | Track | Model · effort | Why |
 |---|---|---|
-| `F3` Drawing each frame | Opus 5.5 · high | Shader and pass work tuned on the final geometry |
+| `F3` Drawing each frame, the rest | Opus 5.5 · high | Shader and pass work tuned on the final geometry |
 | `F5` Delivery | Sonnet 5.5 · medium | Headers and fetch order on the final file names |
 
 **Wait:** approve all six fix tracks and have them merged into main.
@@ -256,11 +271,13 @@ If budget matters more than speed, Opus 5.5 can stand in for Fable 5.2 on any tr
 
 ## 8. Owner decisions
 
-| Decision | Why it matters | Needed by |
+Answered at triage on 2026-11-22. All 18 decisions and what follows from each are in section 2 of [perf/FINDINGS.md](perf/FINDINGS.md).
+
+| Decision | Why it matters | Answer |
 |---|---|---|
-| Where the site is hosted | S6 and F5 depend on what the host compresses and caches | wave 2 |
-| The targets in section 1 | They define when the work stops | P0 approval |
-| A real mid-range Android phone, on a 4G connection in Iraq if possible | Every phone number so far is emulated | P0 and QA2 |
-| Is the admin panel in scope? | It is left out unless it is slow to use | wave 2 |
-| Does "loads under 5 s" mean the content or the live scene? | Content already passes; if that is the bar, F2B drops below F3 | T |
-| May the look change at all? | Dropping per-template AO or using cards for far trees may differ by more than 2/255 | T |
+| Where the site is hosted | S6 and F5 depend on what the host compresses and caches | Vercel. Whether it compresses the models is still to be checked (ledger row T57) |
+| The targets in section 1 | They define when the work stops | Amended: the standard load, the first-ever visit tracked, triangles for the phone tier only |
+| A real mid-range Android phone, on a 4G connection in Iraq if possible | Every phone number so far is emulated | Postponed: continue on the rig. Rows that need it stay deferred |
+| Is the admin panel in scope? | It is left out unless it is slow to use | No. S8 measured it: nothing slow |
+| Does "loads under 5 s" mean the content or the live scene? | Content already passes; if that is the bar, F2B drops below F3 | The live scene, on the standard load. F2B stays ahead of F3 |
+| May the look change at all? | Dropping per-template AO or using cards for far trees may differ by more than 2/255 | Nothing over 2/255, except the softer shadow edges, the half-size vegetation atlas, the pixel budget on large screens, the fonts and the finder's model |
