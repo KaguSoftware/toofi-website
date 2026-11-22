@@ -1,0 +1,39 @@
+diff --git a/components/editable/client.ts b/components/editable/client.ts
+index 3461c2c..c7574c0 100644
+--- a/components/editable/client.ts
++++ b/components/editable/client.ts
+@@ -1,9 +1,8 @@
+-// Barrel for edit-mode client islands. Imported by lib/content/editables.tsx.
+-// Client chunks are only sent to the browser when one of these is actually rendered
+-// (i.e. edit mode), so visitors never download editor code.
+-export { EditableTextClient } from "./EditableText";
+-export { EditableRichTextClient } from "./EditableRichText";
+-export { EditableImageClient } from "./EditableImage";
+-export { EditableLinkClient } from "./EditableLink";
+-export { EditableListClient } from "./EditableList";
+-export { EditorRoot } from "./EditorRoot";
++export {
++  EditableTextClient,
++  EditableRichTextClient,
++  EditableImageClient,
++  EditableLinkClient,
++  EditableListClient,
++  EditorRoot,
++} from "./lazy";
+diff --git a/components/editable/lazy.tsx b/components/editable/lazy.tsx
+new file mode 100644
+index 0000000..a49f1b3
+--- /dev/null
++++ b/components/editable/lazy.tsx
+@@ -0,0 +1,11 @@
++"use client";
++
++import dynamic from "next/dynamic";
++
++// Experiment (S2): the editor islands load only when one is rendered, i.e. in edit mode.
++export const EditableTextClient = dynamic(() => import("./EditableText").then((m) => m.EditableTextClient));
++export const EditableRichTextClient = dynamic(() => import("./EditableRichText").then((m) => m.EditableRichTextClient));
++export const EditableImageClient = dynamic(() => import("./EditableImage").then((m) => m.EditableImageClient));
++export const EditableLinkClient = dynamic(() => import("./EditableLink").then((m) => m.EditableLinkClient));
++export const EditableListClient = dynamic(() => import("./EditableList").then((m) => m.EditableListClient));
++export const EditorRoot = dynamic(() => import("./EditorRoot").then((m) => m.EditorRoot));

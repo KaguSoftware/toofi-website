@@ -1,0 +1,104 @@
+diff --git a/app/(site)/[[...slug]]/page.tsx b/app/(site)/[[...slug]]/page.tsx
+index 10ef5c3..2ba1308 100644
+--- a/app/(site)/[[...slug]]/page.tsx
++++ b/app/(site)/[[...slug]]/page.tsx
+@@ -8,7 +8,6 @@ import { createEditables } from "@/lib/content/editables";
+ import { getPublishedContent, getPublishedPageBySlug, listPublishedPages } from "@/lib/content/get";
+ import { getEditor } from "@/lib/content/render-context";
+ import { GLOBAL_SCOPE, slugSchema, type ContentMap } from "@/lib/content/schemas";
+-import { EditorRoot } from "@/components/editable/client";
+ import { SiteShell } from "@/components/site/SiteShell";
+ import { PageSkeleton } from "@/components/site/PageSkeleton";
+ import { getTemplate } from "@/templates/registry";
+@@ -77,6 +76,7 @@ async function EditablePage({
+   path: string;
+   editor: NonNullable<Awaited<ReturnType<typeof getEditor>>>;
+ }) {
++  const { EditorRoot } = await import("@/components/editable/client");
+   const data = getData();
+   // Editors can see draft (unpublished) pages too.
+   const page = await data.getPageBySlug(path);
+diff --git a/lib/content/editables.tsx b/lib/content/editables.tsx
+index f8e17a4..b14c565 100644
+--- a/lib/content/editables.tsx
++++ b/lib/content/editables.tsx
+@@ -11,13 +11,6 @@ import {
+   type Scope,
+ } from "./schemas";
+ import { RichTextView } from "./render-rich";
+-import {
+-  EditableImageClient,
+-  EditableLinkClient,
+-  EditableListClient,
+-  EditableRichTextClient,
+-  EditableTextClient,
+-} from "@/components/editable/client";
+ import type { TextTag } from "@/components/editable/types";
+ 
+ /**
+@@ -116,9 +109,10 @@ export function createEditables(ctx: RenderContext): Editables {
+ 
+   const text = (k: string, fallback = "") => get(k, "text")?.text ?? fallback;
+ 
+-  function Text({ k, as = "span", fallback = "", className, placeholder, multiline }: TextProps) {
++  async function Text({ k, as = "span", fallback = "", className, placeholder, multiline }: TextProps) {
+     const value = text(k, fallback);
+     if (ctx.editing) {
++      const { EditableTextClient } = await import("@/components/editable/client");
+       return (
+         <EditableTextClient
+           scope={ctx.scope}
+@@ -139,10 +133,11 @@ export function createEditables(ctx: RenderContext): Editables {
+     );
+   }
+ 
+-  function RichText({ k, fallback, className, placeholder }: RichTextProps) {
++  async function RichText({ k, fallback, className, placeholder }: RichTextProps) {
+     const stored = get(k, "richtext");
+     const value = stored ?? (typeof fallback === "string" ? textToRich(fallback) : (fallback ?? null));
+     if (ctx.editing) {
++      const { EditableRichTextClient } = await import("@/components/editable/client");
+       return (
+         <EditableRichTextClient
+           scope={ctx.scope}
+@@ -156,9 +151,10 @@ export function createEditables(ctx: RenderContext): Editables {
+     return <RichTextView value={value} className={className} />;
+   }
+ 
+-  function EditableImage({ k, fallback, className, sizes, priority }: ImageProps) {
++  async function EditableImage({ k, fallback, className, sizes, priority }: ImageProps) {
+     const value = get(k, "image") ?? fallback;
+     if (ctx.editing) {
++      const { EditableImageClient } = await import("@/components/editable/client");
+       return (
+         <EditableImageClient
+           scope={ctx.scope}
+@@ -183,9 +179,10 @@ export function createEditables(ctx: RenderContext): Editables {
+     );
+   }
+ 
+-  function EditableLink({ k, fallback, className }: LinkProps) {
++  async function EditableLink({ k, fallback, className }: LinkProps) {
+     const value = get(k, "link") ?? fallback;
+     if (ctx.editing) {
++      const { EditableLinkClient } = await import("@/components/editable/client");
+       return <EditableLinkClient scope={ctx.scope} blockKey={fullKey(k)} initial={value} className={className} />;
+     }
+     const external = /^https?:\/\//i.test(value.href);
+@@ -207,7 +204,7 @@ export function createEditables(ctx: RenderContext): Editables {
+     );
+   }
+ 
+-  function List({
++  async function List({
+     k,
+     fallbackItems = [],
+     render,
+@@ -223,6 +220,7 @@ export function createEditables(ctx: RenderContext): Editables {
+       <Fragment key={id}>{render(createEditables({ ...ctx, prefix: `${fullKey(k)}.${id}` }), i)}</Fragment>
+     ));
+     if (ctx.editing) {
++      const { EditableListClient } = await import("@/components/editable/client");
+       return (
+         <EditableListClient
+           scope={ctx.scope}
