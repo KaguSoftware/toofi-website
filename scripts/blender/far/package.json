@@ -1,0 +1,13 @@
+{
+  "name": "sawad-far-set",
+  "private": true,
+  "type": "module",
+  "description": "Builds the Zaitun far set (optimization track F2A). Its own tools, kept out of the app's dependencies. Install with: pnpm install --dir scripts/blender/far --ignore-workspace",
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "meshoptimizer": "1.3.0",
+    "pngjs": "7.0.0"
+  }
+}

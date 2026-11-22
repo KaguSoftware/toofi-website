@@ -1,0 +1,769 @@
+{
+  "generatedBy": "scripts/blender/export-far.sh",
+  "tiers": [
+    {
+      "tier": "high",
+      "file": "compound-zaitun-far-high.glb",
+      "bytes": 4687324,
+      "fullBytes": 10261952,
+      "budget": 4800000,
+      "settings": {
+        "error": 0.05,
+        "permissive": false,
+        "weights": {},
+        "precision": {
+          "TEXCOORD_0": 0.0005,
+          "TEXCOORD_2": 0.00025,
+          "flatBakedAoUv": true
+        },
+        "byMesh": [
+          [
+            "^amenity-(parking|playground|tennis)",
+            {
+              "permissive": true,
+              "weights": {
+                "TEXCOORD_2": 1,
+                "NORMAL": 0.02
+              }
+            }
+          ]
+        ]
+      },
+      "triangles": {
+        "file": {
+          "full": 222941,
+          "far": 180455
+        },
+        "placed": {
+          "full": 1184159,
+          "far": 1088542
+        }
+      },
+      "meshes": [
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 19834,
+            "far": 19286
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 372,
+            "far": 372
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 48,
+            "far": 48
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 300,
+            "far": 300
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 1968,
+            "far": 1968
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "bench",
+          "triangles": {
+            "full": 448,
+            "far": 416
+          }
+        },
+        {
+          "mesh": "amenity-carport",
+          "triangles": {
+            "full": 1788,
+            "far": 1732
+          }
+        },
+        {
+          "mesh": "amenity-carport",
+          "triangles": {
+            "full": 20,
+            "far": 20
+          }
+        },
+        {
+          "mesh": "amenity-carport",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 14866,
+            "far": 14130
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 240,
+            "far": 240
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 1224,
+            "far": 1224
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "villa-courtyard-screens",
+          "triangles": {
+            "full": 112,
+            "far": 112
+          }
+        },
+        {
+          "mesh": "garden",
+          "triangles": {
+            "full": 18754,
+            "far": 18140
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 12686,
+            "far": 8577
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 360,
+            "far": 242
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 1272,
+            "far": 1023
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 2628,
+            "far": 2205
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 112,
+            "far": 86
+          }
+        },
+        {
+          "mesh": "amenity-gym-screens",
+          "triangles": {
+            "full": 786,
+            "far": 660
+          }
+        },
+        {
+          "mesh": "lamp",
+          "triangles": {
+            "full": 80,
+            "far": 80
+          }
+        },
+        {
+          "mesh": "lamp",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "amenity-mosque",
+          "triangles": {
+            "full": 18111,
+            "far": 16385
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 1640,
+            "far": 1540
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 760,
+            "far": 756
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 120,
+            "far": 120
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 784,
+            "far": 741
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 48,
+            "far": 48
+          }
+        },
+        {
+          "mesh": "amenity-parking-8",
+          "triangles": {
+            "full": 7364,
+            "far": 2670
+          }
+        },
+        {
+          "mesh": "amenity-parking-8",
+          "triangles": {
+            "full": 120,
+            "far": 120
+          }
+        },
+        {
+          "mesh": "amenity-parking-6",
+          "triangles": {
+            "full": 5884,
+            "far": 2034
+          }
+        },
+        {
+          "mesh": "amenity-parking",
+          "triangles": {
+            "full": 8796,
+            "far": 3517
+          }
+        },
+        {
+          "mesh": "amenity-playground",
+          "triangles": {
+            "full": 5642,
+            "far": 1778
+          }
+        },
+        {
+          "mesh": "site",
+          "triangles": {
+            "full": 69444,
+            "far": 60235
+          }
+        },
+        {
+          "mesh": "amenity-tennis",
+          "triangles": {
+            "full": 4128,
+            "far": 353
+          }
+        },
+        {
+          "mesh": "amenity-tennis",
+          "triangles": {
+            "full": 2244,
+            "far": 50
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 9702,
+            "far": 9256
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 144,
+            "far": 144
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 792,
+            "far": 792
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "villa-garden-4-screens",
+          "triangles": {
+            "full": 32,
+            "far": 32
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 8384,
+            "far": 8120
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 108,
+            "far": 108
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 612,
+            "far": 612
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "villa-garden-3-screens",
+          "triangles": {
+            "full": 40,
+            "far": 39
+          }
+        }
+      ],
+      "problems": []
+    },
+    {
+      "tier": "low",
+      "file": "compound-zaitun-far-low.glb",
+      "bytes": 2689404,
+      "fullBytes": 4973992,
+      "budget": 2800000,
+      "settings": {
+        "error": 0.08,
+        "permissive": false,
+        "weights": {},
+        "precision": {
+          "TEXCOORD_0": 0.0005,
+          "TEXCOORD_2": 0.00025,
+          "flatBakedAoUv": true
+        },
+        "byMesh": [
+          [
+            "^amenity-(parking|playground|tennis)",
+            {
+              "permissive": true,
+              "weights": {
+                "TEXCOORD_2": 1,
+                "NORMAL": 0.02
+              }
+            }
+          ]
+        ]
+      },
+      "triangles": {
+        "file": {
+          "full": 124423,
+          "far": 104529
+        },
+        "placed": {
+          "full": 417865,
+          "far": 382308
+        }
+      },
+      "meshes": [
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 7096,
+            "far": 7092
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 372,
+            "far": 372
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 48,
+            "far": 48
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 60,
+            "far": 60
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 36,
+            "far": 36
+          }
+        },
+        {
+          "mesh": "apartment",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "amenity-carport",
+          "triangles": {
+            "full": 204,
+            "far": 204
+          }
+        },
+        {
+          "mesh": "amenity-carport",
+          "triangles": {
+            "full": 20,
+            "far": 20
+          }
+        },
+        {
+          "mesh": "amenity-carport",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 3632,
+            "far": 3632
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 240,
+            "far": 240
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-courtyard",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "garden",
+          "triangles": {
+            "full": 9642,
+            "far": 9642
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 3938,
+            "far": 3938
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 217,
+            "far": 217
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 440,
+            "far": 440
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 1512,
+            "far": 1512
+          }
+        },
+        {
+          "mesh": "amenity-gym",
+          "triangles": {
+            "full": 90,
+            "far": 90
+          }
+        },
+        {
+          "mesh": "lamp",
+          "triangles": {
+            "full": 80,
+            "far": 80
+          }
+        },
+        {
+          "mesh": "lamp",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "amenity-mosque",
+          "triangles": {
+            "full": 7648,
+            "far": 6717
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 1552,
+            "far": 1552
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 760,
+            "far": 756
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 120,
+            "far": 120
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 768,
+            "far": 741
+          }
+        },
+        {
+          "mesh": "amenity-padel",
+          "triangles": {
+            "full": 48,
+            "far": 48
+          }
+        },
+        {
+          "mesh": "amenity-parking-8",
+          "triangles": {
+            "full": 4756,
+            "far": 875
+          }
+        },
+        {
+          "mesh": "amenity-parking-8",
+          "triangles": {
+            "full": 120,
+            "far": 98
+          }
+        },
+        {
+          "mesh": "amenity-parking-6",
+          "triangles": {
+            "full": 3708,
+            "far": 968
+          }
+        },
+        {
+          "mesh": "amenity-parking",
+          "triangles": {
+            "full": 5688,
+            "far": 1365
+          }
+        },
+        {
+          "mesh": "amenity-playground",
+          "triangles": {
+            "full": 3008,
+            "far": 1012
+          }
+        },
+        {
+          "mesh": "site",
+          "triangles": {
+            "full": 55768,
+            "far": 55768
+          }
+        },
+        {
+          "mesh": "amenity-tennis",
+          "triangles": {
+            "full": 4012,
+            "far": 241
+          }
+        },
+        {
+          "mesh": "amenity-tennis",
+          "triangles": {
+            "full": 2244,
+            "far": 49
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 3326,
+            "far": 3326
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 144,
+            "far": 144
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 72,
+            "far": 72
+          }
+        },
+        {
+          "mesh": "villa-garden-4",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 2706,
+            "far": 2706
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 108,
+            "far": 108
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 24,
+            "far": 24
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 72,
+            "far": 72
+          }
+        },
+        {
+          "mesh": "villa-garden-3",
+          "triangles": {
+            "full": 12,
+            "far": 12
+          }
+        }
+      ],
+      "problems": []
+    }
+  ],
+  "passed": true
+}
