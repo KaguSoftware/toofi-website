@@ -7,6 +7,7 @@ import { TweaksPanel } from "@/components/sawad/TweaksPanel";
 import { BEAT_IDS, type BeatId } from "@/components/sawad/experience/beats";
 import { HERO_HOME_ID } from "@/components/sawad/experience/story";
 import type { BeatContent, ExperienceLabels } from "@/components/sawad/experience/types";
+import { LIVE_DOWNLOAD_MB } from "@/components/sawad/experience/early";
 import { finderHref } from "@/components/sawad/experience/links";
 import { ZaitunExperience } from "@/components/sawad/experience/ZaitunExperience";
 import { planAmenities } from "@/components/sawad/scene/layout";
@@ -62,14 +63,65 @@ function beatFigures(id: BeatId, locale: Locale, d: Dict): BeatContent["figures"
   }
 }
 
-function experienceLabels(d: Dict): ExperienceLabels {
+/**
+ * Wording for visitors the 3D tour is held back from until they ask: a slow link or a small
+ * device, and a 3D view the browser has closed (a lost GPU context). The button names the
+ * download, so the choice is an informed one.
+ */
+const OFFER: Record<Locale, { heldBack: string; sized: (megabytes: string) => string; lost: string }> = {
+  en: {
+    heldBack: "The 3D tour is a larger download, so it is shown as stills here.",
+    sized: (mb) => `Load the 3D tour (about ${mb} MB)`,
+    lost: "The browser closed the 3D view. The tour continues as stills.",
+  },
+  ar: {
+    heldBack: "الجولة ثلاثية الأبعاد أكبر حجمًا في التنزيل، لذا نعرضها هنا صورًا ثابتة.",
+    sized: (mb) => `حمّل الجولة ثلاثية الأبعاد (نحو ${mb} ميغابايت)`,
+    lost: "أغلق المتصفّح العرض ثلاثي الأبعاد، والجولة مستمرة بالصور الثابتة.",
+  },
+};
+
+/**
+ * "al-Sawad" set in Amiri Bold and traced as one path (the shaped word, 1,000 units to the em).
+ * The band's word was the only Amiri text on the English page, which downloaded the 100 KB font
+ * for it at the highest priority (S1-9). The box is the line the text stood on: 1.972 em wide
+ * and 0.9 em tall (the band's line height), with the baseline 695 units down, so the word sits
+ * where the text sat; the tall letters reach above the box, as they reached above the line.
+ */
+const SAWAD_WORD = {
+  width: 1972,
+  height: 900,
+  baseline: 695,
+  d: "M180 -285Q160 -294 172 -329Q178 -346 184 -360Q191 -375 197 -387Q209 -411 229 -400Q352 -328 379 -193Q386 -157 386 -126Q385 -94 375 -67Q365 -34 345 -26Q239 17 165 21Q54 29 86 -99Q92 -124 105 -124Q115 -124 122 -112Q130 -100 213 -110Q296 -120 343 -143Q328 -219 180 -285ZM549 -692Q569 -735 575 -672L599 -428Q629 -100 585 -15Q575 3 566 0Q556 -3 557 -48Q558 -86 549 -174Q540 -261 522 -396L501 -562Q498 -583 507 -603ZM997 15Q961 205 809 273Q764 293 728 293Q676 293 593 223Q578 211 583 201Q588 191 608 199Q697 230 809 162Q921 94 954 10Q879 7 847 -13Q808 -37 821 -100Q844 -199 889 -227Q938 -256 971 -214Q995 -183 1004 -106Q1040 -108 1045 -70Q1048 -44 1041 -16Q1034 13 1014 15ZM944 -101Q924 -143 896 -142Q880 -139 872 -130Q864 -120 871 -112Q887 -91 940 -93Q946 -93 944 -101ZM1139 -167Q1147 -189 1166 -182Q1184 -174 1171 -145L1162 -127Q1270 -88 1317 -187Q1326 -209 1344 -201Q1361 -193 1352 -170Q1343 -146 1343 -138Q1345 -116 1382 -112Q1419 -108 1431 -124Q1444 -142 1454 -192Q1457 -206 1471 -206Q1485 -206 1489 -194Q1520 -111 1581 -105Q1604 -102 1611 -69Q1618 -38 1610 -11Q1602 15 1581 15Q1491 15 1459 -87Q1452 -65 1444 -46Q1436 -26 1428 -10Q1413 19 1383 21Q1313 24 1275 -23Q1235 14 1180 14Q1125 14 1093 -18Q1074 -2 1054 6Q1033 15 1012 15Q985 15 977 -34Q976 -40 975 -48Q974 -57 973 -68Q971 -93 996 -102Q1005 -105 1012 -105Q1119 -112 1139 -167ZM1665 -573Q1705 -278 1695 -168Q1679 -2 1580 15Q1555 19 1552 -16Q1551 -27 1550 -40Q1550 -54 1551 -70Q1553 -102 1580 -105Q1636 -111 1651 -139Q1650 -151 1636 -260Q1623 -370 1595 -577Q1592 -596 1590 -608Q1587 -621 1585 -628Q1575 -652 1586 -674L1611 -724Q1625 -753 1640 -711Q1648 -691 1658 -674Q1669 -657 1685 -644Q1706 -627 1689 -605ZM1854 -692Q1874 -735 1880 -672L1904 -428Q1934 -100 1890 -15Q1880 3 1871 0Q1861 -3 1862 -48Q1863 -86 1854 -174Q1845 -261 1827 -396L1806 -562Q1803 -583 1812 -603Z",
+} as const;
+
+export function SawadWord() {
+  const { width, height, baseline, d: path } = SAWAD_WORD;
+  return (
+    <svg
+      viewBox={`0 ${-baseline} ${width} ${height}`}
+      style={{ display: "block", width: `${width / 1000}em`, height: `${height / 1000}em`, overflow: "visible" }}
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
+function experienceLabels(d: Dict, locale: Locale): ExperienceLabels {
   const { scene, close } = d.finder;
   const s = d.showcase;
+  const offer = OFFER[locale];
   return {
     region: s.region,
     loading: scene.loading,
     stills: s.stills,
     load3d: s.load3d,
+    heldBack: offer.heldBack,
+    load3dSized: { low: offer.sized(formatNumber(LIVE_DOWNLOAD_MB.low, locale)), high: offer.sized(formatNumber(LIVE_DOWNLOAD_MB.high, locale)) },
+    lost: offer.lost,
     pause: scene.pause,
     play: scene.play,
     skipIntro: s.skipIntro,
@@ -144,7 +196,7 @@ export const homeTemplate: TemplateDefinition = {
           view={startView}
           live={showsFilm(experience) && !c.editing}
           poster={poster}
-          labels={experienceLabels(d)}
+          labels={experienceLabels(d, locale)}
           beats={beats}
           hero={
             <div className="home-hero__panel">
@@ -166,7 +218,7 @@ export const homeTemplate: TemplateDefinition = {
           <Container className="name-band__grid">
             <div>
               <p className="name-band__word" lang="ar" aria-hidden="true">
-                السواد
+                <SawadWord />
               </p>
               {locale === "en" && <p className="name-band__translit">al-Sawad, “the dark land”</p>}
             </div>

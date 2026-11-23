@@ -14,7 +14,7 @@ describe("TweaksPanel", () => {
     expect(render(<TweaksPanel locale="en" />).container.innerHTML).toBe("");
   });
 
-  it("shows both settings with their allowed values in edit mode", () => {
+  it("shows both settings with their allowed values in edit mode", async () => {
     render(
       <EditorHarness>
         <TweaksPanel g={globalEditables({ "tweaks.startView": "terrace" }, true)} locale="en" />
@@ -23,6 +23,7 @@ describe("TweaksPanel", () => {
     expect(screen.getByRole("complementary", { name: "Site settings" })).toBeDefined();
     expect(screen.getByText(/both, film or explorer/)).toBeDefined();
     expect(screen.getByText(/flight, street, terrace or aerial/)).toBeDefined();
-    expect(screen.getByText("terrace").getAttribute("contenteditable")).toBe("plaintext-only");
+    // The edit-mode fields are loaded on demand (components/editable/lazy.tsx), so they arrive a moment later.
+    expect((await screen.findByText("terrace")).getAttribute("contenteditable")).toBe("plaintext-only");
   });
 });

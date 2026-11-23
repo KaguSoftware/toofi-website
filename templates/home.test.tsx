@@ -129,4 +129,38 @@ describe("home template", () => {
     expect(beat("villa").figures.map((f) => f.value).join(" ")).toMatch(/٥٢٠/);
     expect(beat("villa").figures.some((f) => /[0-9]/.test(f.value))).toBe(false);
   });
+
+  it("names the download in the offer for held-back visitors, per tier and in the page's language", () => {
+    renderHome();
+    expect(m.exp!.labels.heldBack).toBe("The 3D tour is a larger download, so it is shown as stills here.");
+    expect(m.exp!.labels.load3dSized).toEqual({ low: "Load the 3D tour (about 3.6 MB)", high: "Load the 3D tour (about 6.1 MB)" });
+    expect(m.exp!.labels.lost).toBe("The browser closed the 3D view. The tour continues as stills.");
+    renderHome("/ar");
+    expect(m.exp!.labels.heldBack).toContain("صورًا ثابتة");
+    expect(m.exp!.labels.load3dSized.low).toBe("حمّل الجولة ثلاثية الأبعاد (نحو ٣٫٦ ميغابايت)");
+    expect(m.exp!.labels.load3dSized.high).toContain("٦٫١");
+    expect(m.exp!.labels.lost).toContain("المتصفّح");
+  });
+
+  it("draws the Arabic name as a picture, so the English page needs no Arabic display font", () => {
+    const { container } = renderHome();
+    const word = container.querySelector<HTMLElement>(".name-band__word")!;
+    // No text is left to ask for the font; the word is decoration (the heading beside it names it).
+    expect(word.textContent).toBe("");
+    expect(word.getAttribute("aria-hidden")).toBe("true");
+    const svg = word.querySelector("svg")!;
+    expect(svg.getAttribute("viewBox")).toBe("0 -695 1972 900");
+    expect(svg.getAttribute("fill")).toBe("currentColor");
+    expect(svg.getAttribute("aria-hidden")).toBe("true");
+    // Sized in ems, so the band's font size still sets how large the word is.
+    expect(svg.style.width).toBe("1.972em");
+    expect(svg.style.height).toBe("0.9em");
+    expect(svg.querySelector("path")!.getAttribute("d")).toMatch(/^M180 -285/);
+    expect(screen.getByText("al-Sawad, “the dark land”")).toBeDefined();
+  });
+
+  it("draws the same word on the Arabic page", () => {
+    const { container } = renderHome("/ar");
+    expect(container.querySelector(".name-band__word svg path")).not.toBeNull();
+  });
 });

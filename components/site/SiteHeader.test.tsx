@@ -40,7 +40,7 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: "السواد القابضة، الصفحة الرئيسية" }).getAttribute("href")).toBe("/ar");
   });
 
-  it("uses the per-locale saved site name, and never wraps the editable brand in a link", () => {
+  it("uses the per-locale saved site name, and never wraps the editable brand in a link", async () => {
     render(<SiteHeader g={globalEditables({ "ar.site.name": "سواد" })} locale="ar" path="/ar" />);
     expect(screen.getByText("سواد")).toBeDefined();
     render(
@@ -48,7 +48,9 @@ describe("SiteHeader", () => {
         <SiteHeader g={globalEditables({}, true)} locale="en" path="/" />
       </EditorHarness>,
     );
-    const editable = screen.getAllByText("Sawad").find((el) => el.getAttribute("contenteditable"));
+    // The edit-mode fields are loaded on demand (components/editable/lazy.tsx), so they arrive a moment later.
+    const editable = (await screen.findAllByText("Sawad")).find((el) => el.getAttribute("contenteditable"));
+    expect(editable).toBeDefined();
     expect(editable?.closest("a")).toBeNull();
   });
 });

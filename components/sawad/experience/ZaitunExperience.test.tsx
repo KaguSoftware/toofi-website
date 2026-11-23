@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { Activity } from "react";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,8 +8,10 @@ import type { StoryScrollProps } from "./StoryScroll";
 import type { BeatContent, ExperienceLabels, ZaitunExperienceProps } from "./types";
 
 vi.mock("next/image", () => ({
-  // eslint-disable-next-line @next/next/no-img-element
-  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => <img src={src} alt={alt} className={className} />,
+  default: ({ src, alt, className, preload, fetchPriority }: { src: string; alt: string; className?: string; preload?: boolean; fetchPriority?: "high" | "low" | "auto" }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={alt} className={className} data-preload={preload ? "true" : undefined} fetchPriority={fetchPriority} />
+  ),
 }));
 vi.mock("next/link", () => ({
   default: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
@@ -18,12 +21,15 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-const cap = { ok: true, reducedMotion: false, tier: "high" as "low" | "high" };
-vi.mock("../scene/capability", () => ({
-  canRender3D: () => cap.ok,
+const cap = { ok: true, offer: false, reducedMotion: false, tier: "high" as "low" | "high" };
+vi.mock("../scene/capability", async (original) => ({
+  ...(await original<typeof import("../scene/capability")>()),
+  render3D: () => (!cap.ok ? "no" : cap.offer ? "offer" : "yes"),
   readCapabilityEnv: () => ({ webgl2: cap.ok, reducedMotion: cap.reducedMotion, mode: "explorer" }),
   qualityTier: () => cap.tier,
 }));
+// The canvas chunk asks for three.js first; the stub below needs none of it.
+vi.mock("three", () => ({}));
 
 const mon = vi.hoisted(() => ({ reportError: vi.fn() }));
 vi.mock("@/lib/monitoring", () => ({ reportError: mon.reportError }));
@@ -36,30 +42,48 @@ const amb = vi.hoisted(() => ({
   dispose: vi.fn(),
   create: vi.fn(),
   supported: true,
+  running: false,
 }));
 vi.mock("./audio", () => ({
   audioSupported: () => amb.supported,
   MUSIC_BED: { src: "/sawad/audio/bed.mp3", url: "https://music.example" },
   createAmbience: (...args: unknown[]) => {
     amb.create(...args);
-    return { start: amb.start, stop: amb.stop, setDusk: amb.setDusk, setPlace: amb.setPlace, dispose: amb.dispose, running: false };
+    return {
+      start: amb.start,
+      stop: amb.stop,
+      setDusk: amb.setDusk,
+      setPlace: amb.setPlace,
+      dispose: amb.dispose,
+      get running() {
+        return amb.running;
+      },
+    };
   },
 }));
 
-const canvas = vi.hoisted(() => ({ props: [] as unknown[], mounts: 0, unmounts: 0, fail: false, api: { zoom: vi.fn(), reset: vi.fn(), wake: vi.fn() } }));
+const canvas = vi.hoisted(() => ({
+  props: [] as unknown[],
+  mounts: 0,
+  unmounts: 0,
+  fail: false,
+  api: { zoom: vi.fn(), reset: vi.fn(), wake: vi.fn() },
+  control: { pause: vi.fn(), resume: vi.fn() },
+}));
 vi.mock("./ExperienceCanvas", async () => {
   const { useEffect } = await import("react");
   function CanvasStub(props: ExperienceCanvasProps) {
     if (canvas.fail) throw new Error("no gl");
     canvas.props.push(props);
-    const { apiRef } = props;
+    const { apiRef, controlRef } = props;
     useEffect(() => {
       canvas.mounts++;
       if (apiRef) apiRef.current = canvas.api;
+      if (controlRef) controlRef.current = canvas.control;
       return () => {
         canvas.unmounts++;
       };
-    }, [apiRef]);
+    }, [apiRef, controlRef]);
     return <div data-testid="experience-canvas" />;
   }
   return { default: CanvasStub };
@@ -85,6 +109,9 @@ const labels: ExperienceLabels = {
   loading: "Loading the 3D view",
   stills: "Motion is reduced, so the tour is shown as stills.",
   load3d: "Explore in 3D",
+  heldBack: "The 3D tour is a larger download, so it is shown as stills here.",
+  load3dSized: { low: "Load the 3D tour (about 3.6 MB)", high: "Load the 3D tour (about 6.1 MB)" },
+  lost: "The browser closed the 3D view.",
   pause: "Pause",
   play: "Play",
   skipIntro: "Skip the intro",
@@ -160,6 +187,7 @@ const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("butto
 
 beforeEach(() => {
   cap.ok = true;
+  cap.offer = false;
   cap.reducedMotion = false;
   cap.tier = "high";
   canvas.props.length = 0;
@@ -169,9 +197,16 @@ beforeEach(() => {
   story.props.length = 0;
   story.mounts = 0;
   amb.supported = true;
-  amb.start.mockReset().mockResolvedValue(undefined);
+  amb.running = false;
+  amb.start.mockReset().mockImplementation(async () => {
+    amb.running = true;
+  });
+  amb.stop.mockReset().mockImplementation(() => {
+    amb.running = false;
+  });
+  document.head.innerHTML = "";
   amb.create.mockClear();
-  for (const f of [amb.stop, amb.setDusk, amb.setPlace, amb.dispose, mon.reportError, canvas.api.zoom, canvas.api.reset, canvas.api.wake]) f.mockClear();
+  for (const f of [amb.setDusk, amb.setPlace, amb.dispose, mon.reportError, canvas.api.zoom, canvas.api.reset, canvas.api.wake, canvas.control.pause, canvas.control.resume]) f.mockClear();
   resetDeviceCache();
   window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
   Element.prototype.scrollIntoView = vi.fn();
@@ -457,9 +492,14 @@ describe("ZaitunExperience sound", () => {
     amb.supported = true;
     resetDeviceCache();
     const again = await running();
+    // Earlier pages close their sound a moment after they leave; let those settle first.
+    await act(async () => new Promise((r) => setTimeout(r, 5)));
+    amb.dispose.mockClear();
     click("Sound on");
+    expect(amb.dispose).not.toHaveBeenCalled();
     again.unmount();
-    expect(amb.dispose).toHaveBeenCalled();
+    // Closed once the page has really left the document, a moment after the cleanup.
+    await vi.waitFor(() => expect(amb.dispose).toHaveBeenCalledOnce());
   });
 });
 
@@ -564,5 +604,267 @@ describe("ZaitunExperience capture mode", () => {
     expect(last()).toMatchObject({ holdAt: null, tier: "low", daylight: "day" });
     expect(last().onFrame).toBeUndefined();
     expect(container.querySelector(".xp")!.getAttribute("data-capture")).toBeNull();
+  });
+});
+
+describe("ZaitunExperience before its code arrives", () => {
+  const html = (over: Partial<ZaitunExperienceProps> = {}) => renderToString(<ZaitunExperience {...base} {...over} />);
+
+  it("puts the early script first in the server's HTML, so it runs before the stills are reached", () => {
+    const page = html();
+    const section = page.indexOf("<section");
+    const script = page.indexOf("<script>");
+    expect(script).toBeGreaterThan(section);
+    expect(script).toBeLessThan(page.indexOf("xp__stage"));
+    expect(page).toContain("document.currentScript");
+    expect(page).toContain("/sawad/models/compound-zaitun-far-low.glb");
+  });
+
+  it("leaves the script out where the owner has switched the live scene off", () => {
+    expect(html({ live: false })).not.toContain("<script");
+  });
+
+  it("never renders the script in the browser: React does not run scripts it creates", async () => {
+    const { container } = await mount();
+    expect(container.querySelector("script")).toBeNull();
+  });
+
+  it("takes over from the script's mark once the device is known", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = html();
+    const root = container.querySelector(".xp")!;
+    // What the early script does on a capable device.
+    root.setAttribute("data-early", "story");
+    render(<ZaitunExperience {...base} />, { container, hydrate: true });
+    await loaded();
+    expect(root.getAttribute("data-early")).toBeNull();
+    expect(root.getAttribute("data-state")).toBe("story");
+    expect(container.querySelector("script")).toBeNull();
+  });
+
+  it("clears the mark too where the page decides on the stills after all", async () => {
+    cap.ok = false;
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    container.innerHTML = html();
+    const root = container.querySelector(".xp")!;
+    root.setAttribute("data-early", "story");
+    render(<ZaitunExperience {...base} />, { container, hydrate: true });
+    await vi.waitFor(() => expect(root.getAttribute("data-early")).toBeNull());
+    expect(root.getAttribute("data-state")).toBe("stills");
+  });
+
+  it("fetches the poster first: preloaded from the head, at high priority", async () => {
+    const { container } = await mount();
+    const poster = container.querySelector(".xp__poster img")!;
+    expect(poster.getAttribute("data-preload")).toBe("true");
+    expect(poster.getAttribute("fetchpriority")).toBe("high");
+    // The stills are ordinary lazy images.
+    expect(container.querySelector(".xp__still")!.getAttribute("fetchpriority")).toBeNull();
+  });
+
+  it("asks for the tier's first model and the decoder as soon as the scene is wanted", async () => {
+    cap.tier = "low";
+    await mount();
+    const hints = Array.from(document.head.querySelectorAll("link[rel=preload]"), (l) => l.getAttribute("href"));
+    expect(hints).toEqual(["/sawad/models/compound-zaitun-far-low.glb", "/sawad/basis/basis_transcoder.js", "/sawad/basis/basis_transcoder.wasm"]);
+  });
+
+  it("asks for nothing where the scene is not coming", async () => {
+    cap.ok = false;
+    render(<ZaitunExperience {...base} />);
+    await act(async () => {});
+    expect(document.head.querySelectorAll("link[rel=preload]")).toHaveLength(0);
+  });
+});
+
+describe("ZaitunExperience held back until asked", () => {
+  beforeEach(() => {
+    cap.offer = true;
+  });
+
+  it("shows the stills with an offer that names the download for the device's tier", async () => {
+    const { container } = render(<ZaitunExperience {...base} />);
+    await act(async () => {});
+    expect(state(container)).toBe("stills");
+    expect(screen.getByText("The 3D tour is a larger download, so it is shown as stills here.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Load the 3D tour (about 6.1 MB)" })).toBeTruthy();
+    expect(screen.queryByTestId("experience-canvas")).toBeNull();
+    expect(screen.queryByTestId("story-scroll")).toBeNull();
+    expect(document.head.querySelectorAll("link[rel=preload]")).toHaveLength(0);
+  });
+
+  it("names the smaller download on the low tier", async () => {
+    cap.tier = "low";
+    render(<ZaitunExperience {...base} />);
+    await act(async () => {});
+    expect(screen.getByRole("button", { name: "Load the 3D tour (about 3.6 MB)" })).toBeTruthy();
+  });
+
+  it("starts the live story when asked, saying so until the first frame", async () => {
+    const { container } = render(<ZaitunExperience {...base} />);
+    await act(async () => {});
+    click("Load the 3D tour (about 6.1 MB)");
+    await loaded();
+    expect(state(container)).toBe("story");
+    expect(last()).toMatchObject({ mode: "story", tier: "high" });
+    expect(screen.getByRole("status").textContent).toBe("Loading the 3D view");
+    expect(screen.queryByRole("button", { name: /Load the 3D tour/ })).toBeNull();
+    expect(screen.getByTestId("story-scroll")).toBeTruthy();
+    await act(async () => last().onFirstFrame?.());
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByRole("button", { name: "Explore the compound" })).toBeTruthy();
+  });
+
+  it("opens the explorer instead where motion is reduced, with the same offer", async () => {
+    cap.reducedMotion = true;
+    render(<ZaitunExperience {...base} />);
+    await act(async () => {});
+    expect(screen.getByText("The 3D tour is a larger download, so it is shown as stills here.")).toBeTruthy();
+    click("Load the 3D tour (about 6.1 MB)");
+    await loaded();
+    expect(last().mode).toBe("orbit");
+    expect(screen.queryByTestId("story-scroll")).toBeNull();
+  });
+});
+
+describe("ZaitunExperience when the browser takes the 3D view away", () => {
+  it("goes back to the stills, reports it as a warning, and offers the scene again", async () => {
+    const { container } = await running();
+    await act(async () => last().onContextLost?.());
+    expect(state(container)).toBe("stills");
+    expect(screen.queryByTestId("experience-canvas")).toBeNull();
+    expect(mon.reportError).toHaveBeenCalledExactlyOnceWith("ZaitunExperience", expect.objectContaining({ message: "WebGL context lost" }), {
+      view: "flight",
+      severity: "warning",
+      recoverable: true,
+    });
+    expect(screen.getByText("The browser closed the 3D view.")).toBeTruthy();
+
+    const mounts = canvas.mounts;
+    click("Explore in 3D");
+    await vi.waitFor(() => expect(canvas.mounts).toBe(mounts + 1));
+    expect(state(container)).toBe("story");
+    expect(screen.getByRole("status").textContent).toBe("Loading the 3D view");
+    await act(async () => last().onFirstFrame?.());
+    expect(container.querySelector(".xp")!.getAttribute("data-running")).toBe("true");
+    expect(screen.queryByText("The browser closed the 3D view.")).toBeNull();
+  });
+
+  it("leaves the explorer and gives the page its scroll back", async () => {
+    const { container } = await running();
+    click("Explore the compound");
+    act(() => last().onSelect?.("ZH-V05"));
+    expect(document.documentElement.style.overflow).toBe("hidden");
+    await act(async () => last().onContextLost?.());
+    expect(document.documentElement.style.overflow).toBe("");
+    expect(container.querySelector(".xp")!.getAttribute("data-mode")).toBe("story");
+    // Asked for again, it opens on the story, not in the explorer it was lost in.
+    click("Explore in 3D");
+    await vi.waitFor(() => expect(last().mode).toBe("story"));
+    expect(last().selectedId).toBeNull();
+  });
+
+  it("offers the explorer again where motion is reduced", async () => {
+    cap.reducedMotion = true;
+    render(<ZaitunExperience {...base} />);
+    await act(async () => {});
+    click("Explore in 3D");
+    await loaded();
+    await act(async () => last().onFirstFrame?.());
+    await act(async () => last().onContextLost?.());
+    expect(screen.queryByTestId("experience-canvas")).toBeNull();
+    expect(screen.getByText("The browser closed the 3D view.")).toBeTruthy();
+    click("Explore in 3D");
+    await vi.waitFor(() => expect(screen.getByTestId("experience-canvas")).toBeTruthy());
+    expect(last().mode).toBe("orbit");
+  });
+});
+
+describe("ZaitunExperience on a device too slow for the scene", () => {
+  it("gives way to the stills, with a warning and no offer to try again", async () => {
+    const { container } = await running();
+    await act(async () => last().onStarved?.());
+    expect(state(container)).toBe("stills");
+    expect(screen.queryByTestId("experience-canvas")).toBeNull();
+    expect(screen.queryByRole("button", { name: /3D/ })).toBeNull();
+    expect(mon.reportError).toHaveBeenCalledExactlyOnceWith("ZaitunExperience", expect.objectContaining({ message: expect.stringContaining("frame rate stayed too low") }), {
+      view: "flight",
+      severity: "warning",
+      stage: "starved",
+    });
+  });
+});
+
+describe("ZaitunExperience on a page Next keeps hidden", () => {
+  // Next hides the page it navigates away from in React Activity and shows it again on the way back.
+  const page = (mode: "visible" | "hidden") => (
+    <Activity mode={mode}>
+      <ZaitunExperience {...base} />
+    </Activity>
+  );
+  async function shown() {
+    const view = render(page("visible"));
+    await loaded();
+    await act(async () => last().onFirstFrame?.());
+    canvas.control.pause.mockClear();
+    canvas.control.resume.mockClear();
+    return { ...view, hide: () => view.rerender(page("hidden")), show: () => view.rerender(page("visible")) };
+  }
+
+  it("stops the scene's drawing while hidden and starts it again when shown", async () => {
+    const view = await shown();
+    view.hide();
+    expect(canvas.control.pause).toHaveBeenCalledOnce();
+    expect(canvas.control.resume).not.toHaveBeenCalled();
+    view.show();
+    expect(canvas.control.resume).toHaveBeenCalledOnce();
+    expect(canvas.control.pause).toHaveBeenCalledOnce();
+  });
+
+  it("stops the sound without closing it, and picks it up again where it was", async () => {
+    const view = await shown();
+    click("Sound on");
+    await vi.waitFor(() => expect(amb.running).toBe(true));
+    amb.stop.mockClear();
+    amb.start.mockClear();
+    view.hide();
+    expect(amb.stop).toHaveBeenCalledOnce();
+    // Still in the document: nothing is closed, however long it stays hidden.
+    await act(async () => new Promise((r) => setTimeout(r, 5)));
+    expect(amb.dispose).not.toHaveBeenCalled();
+    view.show();
+    expect(amb.start).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(amb.running).toBe(true));
+    // The button tells the truth: the sound is on.
+    expect(screen.getByRole("button", { name: "Sound off" }).getAttribute("aria-pressed")).toBe("true");
+    expect(amb.create).toHaveBeenCalledOnce();
+  });
+
+  it("leaves a sound that was off alone", async () => {
+    const view = await shown();
+    view.hide();
+    view.show();
+    expect(amb.stop).not.toHaveBeenCalled();
+    expect(amb.start).not.toHaveBeenCalled();
+  });
+
+  it("turns the button off if the sound cannot start again", async () => {
+    const view = await shown();
+    click("Sound on");
+    await vi.waitFor(() => expect(amb.running).toBe(true));
+    view.hide();
+    const err = new Error("not allowed");
+    amb.start.mockRejectedValueOnce(err);
+    view.show();
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Sound on" })).toBeTruthy());
+    expect(mon.reportError).toHaveBeenCalledWith("ZaitunExperience", err, { stage: "audio" });
+  });
+
+  it("works before the scene has given its handle", async () => {
+    const view = render(page("visible"));
+    expect(() => view.rerender(page("hidden"))).not.toThrow();
+    expect(() => view.rerender(page("visible"))).not.toThrow();
   });
 });

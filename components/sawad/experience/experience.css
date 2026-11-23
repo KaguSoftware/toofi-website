@@ -143,8 +143,10 @@
   z-index: 0;
   background: linear-gradient(to top, oklch(0.16 0.012 70 / 0.7), oklch(0.16 0.012 70 / 0.22) 36%, transparent 60%);
 }
-/* Live story: the stage shows through; the stills are never fetched. */
+/* Live story: the stage shows through; the stills are never fetched. `data-early` is set by the
+   inline script (early.ts) while the page is parsed, before lazy loading can ask for them. */
 .xp[data-state="story"] .xp__still,
+.xp[data-early="story"] .xp__still,
 .xp[data-state="story"] .xp__beat::after {
   display: none;
 }

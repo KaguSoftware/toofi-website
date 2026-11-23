@@ -34,7 +34,6 @@
   "components/editable/EditorRoot.tsx",
   "components/editable/HistoryPanel.tsx",
   "components/editable/Popover.tsx",
-  "components/editable/client.ts",
   "components/editable/context.tsx",
   "components/editable/paths.ts",
   "components/editable/store.ts",

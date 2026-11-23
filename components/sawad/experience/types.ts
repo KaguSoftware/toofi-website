@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { BeatId } from "./beats";
 import type { Daylight } from "./daylight";
-import type { ViewId } from "../scene/types";
+import type { QualityTier, ViewId } from "../scene/types";
 
 /** Free exploring: an orbiting camera, or a walk at eye height. */
 export type ExploreMode = "orbit" | "walk";
@@ -37,6 +37,18 @@ export type ExperienceApi = {
   wake: () => void;
 };
 
+/**
+ * Stops and restarts the scene's drawing from outside React. Next keeps a page it navigates away
+ * from, hidden; React Three Fiber's loop runs outside React and no prop change reaches a hidden
+ * canvas, so the hidden Home kept drawing 60 frames a second on every other page (S5-1).
+ */
+export type ExperienceControl = {
+  /** No more frames until `resume`. */
+  pause: () => void;
+  /** Draws again, as it did before `pause`. */
+  resume: () => void;
+};
+
 /** One caption: the template renders the (editable) text on the server and hands it over. */
 export type BeatContent = {
   id: BeatId;
@@ -55,6 +67,12 @@ export type ExperienceLabels = {
   loading: string;
   stills: string;
   load3d: string;
+  /** Shown with the stills where the 3D is held back (a slow link, a small device) until asked for. */
+  heldBack: string;
+  /** The button that asks for it, naming the download for the device's tier. */
+  load3dSized: Record<QualityTier, string>;
+  /** Shown with the stills after the browser has taken the 3D view away (a lost GPU context). */
+  lost: string;
   pause: string;
   play: string;
   skipIntro: string;

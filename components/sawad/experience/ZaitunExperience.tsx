@@ -1,30 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { ErrorBoundary } from "@/components/monitoring/ErrorBoundary";
 import { reportError } from "@/lib/monitoring";
 import { residencesIn, sceneImage } from "@/lib/sawad/data";
-import { canRender3D, qualityTier, readCapabilityEnv } from "../scene/capability";
+import { qualityTier, readCapabilityEnv, render3D, type Render3D } from "../scene/capability";
 import type { QualityTier, SceneMarker, ViewId } from "../scene/types";
 import { audioSupported, createAmbience, MUSIC_BED, type Ambience } from "./audio";
 import type { Daylight } from "./daylight";
+import { EARLY_ATTR, EARLY_SCRIPT, preloadFirstAssets } from "./early";
 import { ExperienceHud } from "./ExperienceHud";
 import { Joystick } from "./Joystick";
-import { initialRigState, type ExperienceApi, type ExperienceMode, type RigState, type ScrollState, type ZaitunExperienceProps } from "./types";
+import { initialRigState, type ExperienceApi, type ExperienceControl, type ExperienceMode, type RigState, type ScrollState, type ZaitunExperienceProps } from "./types";
 import { UnitPanel } from "./UnitPanel";
 import type { WalkInput } from "./walk";
 import "./experience.css";
 
-// Two lazy chunks, fetched in the browser only when the live story runs: the WebGL scene
-// (three.js, React Three Fiber, Theatre.js, the effect chain) and the scroll driver (GSAP).
-const ExperienceCanvas = dynamic(() => import("./ExperienceCanvas"), { ssr: false });
+// Lazy chunks, fetched in the browser only when the live story runs: the WebGL scene (three.js,
+// React Three Fiber, Theatre.js) and the scroll driver (GSAP). three.js is asked for first and by
+// itself, so that it is evaluated in a task of its own: together the 3D code was one 146 ms task
+// on a phone (S1-6). The effect chain follows as a third chunk (ExperienceRoot, `loadPostFX`).
+const ExperienceCanvas = dynamic(() => import("three").then(() => import("./ExperienceCanvas")), { ssr: false });
 const StoryScroll = dynamic(() => import("./StoryScroll"), { ssr: false });
 
-/** What this device gets, once the browser has been asked. */
-type Device = { capable: boolean; reducedMotion: boolean };
+/** What this device gets, once the browser has been asked: the 3D by itself, on request or not at all, and at which tier. */
+type Device = { verdict: Render3D; reducedMotion: boolean; tier: QualityTier };
 type Setup = { tier: QualityTier; holdAt: number | null; view: ViewId | null };
 
 const CAPTURE_FRAMES = 30;
@@ -36,7 +39,7 @@ function deviceSnapshot(): Device {
   // 3D on the same terms as the explorer; reduced motion is handled here, not refused.
   deviceCache ??= (() => {
     const env = readCapabilityEnv("explorer");
-    return { capable: canRender3D(env), reducedMotion: env.reducedMotion };
+    return { verdict: render3D(env), reducedMotion: env.reducedMotion, tier: qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 }) };
   })();
   return deviceCache;
 }
@@ -78,6 +81,12 @@ const newInput = (): WalkInput => ({ move: { x: 0, y: 0 }, run: false, look: { d
  *   and "Explore" hands the camera over (orbit, walk, the homes, day and dusk, sound).
  * - With reduced motion nothing moves unasked: the stills stay, and a button opens the
  *   explorer, where only the visitor moves the camera.
+ * - A slow link or a small device gets the stills too, with a button that names the download
+ *   and starts the live story. Only what cannot work is refused (capability.ts `render3D`).
+ *
+ * Before any of this code has arrived, a small inline script (early.ts) has made the same
+ * decision: it starts the first model's download and keeps the stills from loading where the
+ * live story is coming.
  *
  * The canvas is hidden from assistive technology; the captions, in document order, are the story.
  */
@@ -89,6 +98,7 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
   const exploreButton = useRef<HTMLButtonElement>(null);
   const backButton = useRef<HTMLButtonElement>(null);
   const apiRef = useRef<ExperienceApi | null>(null);
+  const control = useRef<ExperienceControl | null>(null);
   const scroll = useRef<ScrollState>({ progress: 0 });
   const input = useRef<WalkInput>(newInput());
   const rig = useRef<RigState>(initialRigState());
@@ -101,7 +111,8 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
   // A capture may play another start view; everyone else gets the owner's.
   const view = setup?.view ?? ownerView;
   const poster = setup?.view ? { src: sceneImage("zaitun", setup.view), alt: ownerPoster.alt } : ownerPoster;
-  const [status, setStatus] = useState<"off" | "running" | "failed">("off");
+  // "lost": the browser took the GPU context away; the scene can be asked for again.
+  const [status, setStatus] = useState<"off" | "running" | "failed" | "lost">("off");
   const [captureReady, setCaptureReady] = useState(false);
   const [asked, setAsked] = useState(false);
   const [mode, setMode] = useState<ExperienceMode>("story");
@@ -117,9 +128,15 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // What this visitor gets: the live story, the stills with an explorer on request, or the stills alone.
-  const kind = !live || !device?.capable || status === "failed" ? "stills" : device.reducedMotion ? "reduced" : "story";
+  const possible = live && !!device && device.verdict !== "no" && status !== "failed";
+  const reduced = possible && device.reducedMotion;
+  // Held back until asked for: a slow link or a small device, and a scene the browser closed.
+  const held = possible && (device.verdict === "offer" || status === "lost");
+  const kind = !possible ? "stills" : reduced ? "reduced" : held && !asked ? "stills" : "story";
   const loads = kind === "story" || (kind === "reduced" && asked);
   const running = loads && status === "running";
+  // The stills carry a button wherever the 3D waits for the visitor's word.
+  const offer = possible && !running && (reduced || held || asked);
   const capture = setup?.holdAt != null;
   // Reduced motion has no story to return to: its explorer is the whole live scene.
   const activeMode: ExperienceMode = kind === "reduced" && mode === "story" ? "orbit" : mode;
@@ -134,6 +151,24 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
     [view],
   );
   const onBoundaryError = useCallback(() => setStatus("failed"), []);
+  // Browsers take GPU contexts away, mostly from tabs in the background. The stills come back,
+  // and the visitor can ask for the scene again (S5-10). `severity` marks it for the error sink.
+  const onContextLost = useCallback(() => {
+    reportError("ZaitunExperience", new Error("WebGL context lost"), { view, severity: "warning", recoverable: true });
+    setAsked(false);
+    setMode("story");
+    setSelectedId(null);
+    setStatus("lost");
+  }, [view]);
+  // Too slow to watch at the lowest quality level: the stills serve this device better.
+  const onStarved = useCallback(() => {
+    reportError("ZaitunExperience", new Error("The frame rate stayed too low at the lowest quality level; showing the stills"), { view, severity: "warning", stage: "starved" });
+    setStatus("failed");
+  }, [view]);
+  const ask = useCallback(() => {
+    setAsked(true);
+    setStatus((s) => (s === "lost" ? "off" : s));
+  }, []);
   const onFirstFrame = useCallback(() => setStatus((s) => (s === "failed" ? s : "running")), []);
   const onFrame = useCallback((n: number) => {
     if (n === CAPTURE_FRAMES) setCaptureReady(true);
@@ -149,9 +184,18 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
     if (!el) return;
     const hold = captureAt();
     const env = readCapabilityEnv("explorer");
-    setSetup({ holdAt: hold?.at ?? null, view: hold?.view ?? null, tier: hold ? "high" : qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 }) });
+    const tier = hold ? "high" : qualityTier({ ...env, width: window.innerWidth, dpr: window.devicePixelRatio || 1 });
+    // The first files start now, not when the 3D code has arrived (the early script has usually
+    // asked already; this covers a page reached by a link, and a scene opened on request).
+    preloadFirstAssets(tier);
+    setSetup({ holdAt: hold?.at ?? null, view: hold?.view ?? null, tier });
     if (hold?.dusk) setDaylight("dusk");
   }, []);
+
+  // The early script's mark has done its work once React knows the device: `data-state` takes over.
+  useEffect(() => {
+    if (device) rootRef.current?.removeAttribute(EARLY_ATTR);
+  }, [device]);
 
   // No frames while the story is off screen or the tab is hidden.
   useEffect(() => {
@@ -273,13 +317,45 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
       void ambience.current?.start().catch((err) => reportError("ZaitunExperience", err, { stage: "audio" }));
     }
   }, [tabVisible, sound]);
-  useEffect(
-    () => () => {
-      ambience.current?.dispose();
-      ambience.current = null;
-    },
-    [],
-  );
+
+  // Next keeps a page it navigates away from, hidden, and shows it again on the way back (React
+  // Activity). Hiding runs the effect cleanups and reveals run the effects again, layout effects
+  // at once. The scene's loop runs outside React and kept drawing behind every other page
+  // (S5-1), so it is stopped here; and the sound is stopped, not closed, so that it picks up
+  // where it was instead of staying silent under a button that says it is on (S5-2).
+  const pauseScene = useCallback(() => control.current?.pause(), []);
+  const resumeScene = useCallback(() => control.current?.resume(), []);
+  const parkedSound = useRef(false);
+  const parkSound = useCallback(() => {
+    if (!ambience.current?.running) return;
+    ambience.current.stop();
+    parkedSound.current = true;
+  }, []);
+  const unparkSound = useCallback(() => {
+    if (!parkedSound.current) return;
+    parkedSound.current = false;
+    ambience.current?.start().catch((err) => {
+      reportError("ZaitunExperience", err, { stage: "audio" });
+      setSound(false);
+    });
+  }, []);
+  const closeSound = useCallback(() => {
+    ambience.current?.dispose();
+    ambience.current = null;
+  }, []);
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    resumeScene();
+    unparkSound();
+    return () => {
+      pauseScene();
+      parkSound();
+      // A hidden page stays in the document; one that has left it is gone for good.
+      setTimeout(() => {
+        if (!el?.isConnected) closeSound();
+      }, 0);
+    };
+  }, [pauseScene, resumeScene, parkSound, unparkSound, closeSound]);
 
   const markers: SceneMarker[] = useMemo(() => HOMES.map((r) => ({ id: r.id, kind: r.kind, slot: r.slot, status: r.status, label: r.id })), []);
   const selected = exploring && selectedId ? HOMES.find((r) => r.id === selectedId) : undefined;
@@ -304,10 +380,15 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
       data-capture={capture ? "true" : undefined}
       data-scene-ready={ready ? "true" : undefined}
       aria-label={labels.region}
+      // The early script marks this element before React arrives.
+      suppressHydrationWarning
     >
+      {/* Only in the server's HTML, where it runs as the page is parsed; React never runs it. */}
+      {live && device === null && <script dangerouslySetInnerHTML={{ __html: EARLY_SCRIPT }} />}
       <div className="xp__stage">
         <div className="xp__poster">
-          <Image src={poster.src} alt={poster.alt} fill priority sizes="100vw" />
+          {/* Home's largest paint: found in the head and fetched ahead of the fonts. */}
+          <Image src={poster.src} alt={poster.alt} fill preload fetchPriority="high" sizes="100vw" />
         </div>
         {loads && (
           <div ref={stageRef} className="xp__canvas" data-visible={running} aria-hidden="true" onPointerDown={() => setHint(false)}>
@@ -328,10 +409,13 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
                   input={input}
                   rig={rig}
                   apiRef={apiRef}
+                  controlRef={control}
                   onSelect={setSelectedId}
                   onFirstFrame={onFirstFrame}
                   onFrame={setup.holdAt !== null ? onFrame : undefined}
                   onError={fail}
+                  onContextLost={onContextLost}
+                  onStarved={onStarved}
                   onIntroEnd={onIntroEnd}
                 />
               </ErrorBoundary>
@@ -366,12 +450,12 @@ export function ZaitunExperience({ locale, view: ownerView, live, poster: ownerP
         {ui && exploring && activeMode === "walk" && <Joystick input={input} label={labels.joystick} />}
         {ui && selected && <UnitPanel residence={selected} locale={locale} labels={labels} onClose={() => setSelectedId(null)} />}
 
-        {kind === "reduced" && !running && (
+        {offer && (
           <div className="xp__offer">
-            <p role={asked ? "status" : undefined}>{asked ? labels.loading : labels.stills}</p>
+            <p role={asked ? "status" : undefined}>{asked ? labels.loading : status === "lost" ? labels.lost : device.verdict === "offer" ? labels.heldBack : labels.stills}</p>
             {!asked && (
-              <button type="button" className="xp__btn xp__btn--text xp__offer-btn" onClick={() => setAsked(true)}>
-                {labels.load3d}
+              <button type="button" className="xp__btn xp__btn--text xp__offer-btn" onClick={ask}>
+                {device.verdict === "offer" ? labels.load3dSized[device.tier] : labels.load3d}
               </button>
             )}
           </div>

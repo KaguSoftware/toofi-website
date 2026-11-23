@@ -2,15 +2,18 @@
 
 The showcase on Home: an opening shot that plays by itself, a scroll-driven tour of five stops with bilingual captions, then free exploring (orbit, walk, clickable homes, day and dusk, sound). It is built on the scene in [`../scene/`](../scene/README.md) and adds nothing to it: the world, the model loading and the capability rules are imported from there unchanged.
 
-Stack, all pinned in `package.json`: React Three Fiber 9.8, `@react-three/postprocessing` 3.2 on `postprocessing` 6.39, `@react-three/drei` 10.7 (the performance monitor only), Theatre.js core 0.7 (camera keyframes; Studio is a dev dependency), GSAP 3.15 with ScrollTrigger and `@gsap/react` 2.1.
+Stack, all pinned in `package.json`: React Three Fiber 9.8, `@react-three/postprocessing` 3.2 on `postprocessing` 6.39, Theatre.js core 0.7 (camera keyframes; Studio is a dev dependency), GSAP 3.15 with ScrollTrigger and `@gsap/react` 2.1.
 
 ## What a visitor gets
 
 | Visitor | What they see |
 | --- | --- |
-| No JavaScript, a weak device, Save-Data, a slow connection, or the owner setting `tweaks.experience = explorer` | The stills: the poster behind the hero, then one full-screen still per stop with its caption. This is also what the server renders, so nothing shifts when the page hydrates. |
+| No JavaScript, no WebGL2 or a software renderer, Save-Data, a 2g link, or the owner setting `tweaks.experience = explorer` | The stills: the poster behind the hero, then one full-screen still per stop with its caption. This is also what the server renders, so nothing shifts when the page hydrates. |
 | A capable device | The live story on top of the same markup: the stage stays put while the page scrolls. |
 | A capable device with reduced motion | The stills, plus an "Explore in 3D" button. Nothing moves unasked: the explorer opens on request and only the visitor moves the camera (flights become cuts). |
+| A link the browser reports as 3g, under 4 GB of memory, or under 4 threads | The stills, plus a button that names the download ("Load the 3D tour (about 3.6 MB)"). Asked for, the live story starts. |
+| Anyone whose browser takes the GPU context away (it happens to tabs in the background) | The stills come back with an "Explore in 3D" button; the scene starts again on request. Reported once, with `severity: "warning"`. |
+| A device that stays under 20 frames a second at its tier's lowest level for ten seconds (high tier only, see `monitor.ts`) | The stills, for the rest of the visit. |
 | An editor in edit mode | The stills, so every caption is on the page and can be edited. |
 
 The canvas is hidden from assistive technology. The captions, in document order, are the story; the link under the last caption leads to the residence finder, which stays the accessible way through the homes.
@@ -23,13 +26,15 @@ ZaitunExperience.tsx   the only component a page uses: stills, capability, the s
 ├─ UnitPanel.tsx       the home that was clicked: type, size, status, price, links
 ├─ Joystick.tsx        touch stick for walk mode
 ├─ StoryScroll.tsx     GSAP ScrollTrigger: scroll progress and caption fades        (lazy chunk)
-└─ ExperienceCanvas.tsx   the <Canvas> and the quality level                        (lazy chunk)
-   └─ ExperienceRoot.tsx  everything inside the canvas, and the render pass
+└─ ExperienceCanvas.tsx   the <Canvas> and the quality level                        (lazy chunk, after three.js)
+   └─ ExperienceRoot.tsx  everything inside the canvas, the frame-rate monitor and the render pass
       ├─ ExperienceWorld.tsx  the scene's world + day and dusk + light shafts
       ├─ StoryRig.tsx         the camera: story, orbit, walk, flights between them
       ├─ UnitTargets.tsx      the homes as click targets, hover and selection veils
-      └─ PostFX.tsx           the effect chain
+      └─ PostFX.tsx           the effect chain                                      (lazy chunk)
 ```
+
+The 3D code arrives as three chunks that are evaluated one after another, so no single task is long: three.js, then the canvas with the scene, then the effect chain (`loadPostFX` in `ExperienceRoot.tsx`). The first frame waits for all three.
 
 Plain modules:
 
@@ -39,6 +44,9 @@ Plain modules:
 | `story.ts` | The camera keys, placed from `layout.ts`: four openings (one per start view) and the scroll path. |
 | `storySheet.ts` | The keys as a Theatre.js sheet; `storyPose(view, position)` is what the rig plays. |
 | `story.theatre.json` | `null`, or a state exported from Theatre Studio (see below). |
+| `early.ts` | What runs before any of this code has arrived: an inline script at the top of the experience that decides as `capability.ts` does, preloads the tier's first model and the texture decoder, and keeps the stills from being fetched where the live story is coming. Also the download sizes named in the offer. |
+| `compileAhead.ts` | Shader programs made ready before the frame that needs them: `compileAhead` (a dry frame handed to `compileAsync`) and `warmUp` (first uses spread over hidden frames). Both take a `draw` function, so they work for any effect chain. |
+| `monitor.ts` | The frame-rate monitor behind the quality levels: when to step down or up, cooldowns for a level that failed, and when to give up. |
 | `quality.ts` | The four quality levels and which effects each runs. |
 | `daylight.ts` | The dusk look and the control that blends the live scene toward it. |
 | `lightmaps.ts` | The baked ground page from track 4, projected top-down onto the terrain at dusk (the model's own `buildings` and `site` pages are in `../scene/bakedLight.ts`). |
@@ -117,7 +125,17 @@ To change the music, replace the file, then update `MUSIC_BED` in `audio.ts` and
 
 `?level=0..3` (development only) pins the level, to measure frame times without the monitor moving it.
 
-The render pass in `ExperienceRoot.tsx` owns the draw call (the composer is built with `enabled={false}`), so a failed frame or a lost context is caught, reported as `ZaitunExperience`, and the page falls back to the stills.
+The monitor (`monitor.ts`) judges 2.5 s windows of frame-rate samples against `fpsBounds` in `quality.ts`. Mostly under the lower bound steps down; mostly over the upper bound steps up, unless that level failed recently: a failed level waits a minute before it is tried again, and twice as long each time it fails again (up to ten minutes). It never stops watching, so a device that heats up minutes in is stepped down and comes back when it cools. Frame rates are measured over whole frame intervals, so the bounds mean what they say (drei's monitor read 60 fps as 64).
+
+The render pass in `ExperienceRoot.tsx` owns the draw call (the composer is built with `enabled={false}`), so a failed frame is caught, reported as `ZaitunExperience`, and the page falls back to the stills. A lost context is not a failure: see the table at the top.
+
+### Before the first frame
+
+Nothing is drawn to the screen until the scene's shaders are ready. While the poster is up and the model downloads, `ExperienceRoot` compiles whatever has arrived in the background (`compileAhead`), then spreads each program's first use over a few hidden frames (`warmUp`), and only then lets the frame loop start. Both run one frame of the real loop at a standstill (`advance(0)`), so the scene is in the state its own code keeps it in. Left alone, every program was linked inside the first frame, on the main thread: 0.3 s when the system had the shaders cached and over 4 s on a first-ever visit. A change of effect chain (a quality step) can use the same two helpers with its own `draw`.
+
+### A page Next keeps hidden
+
+Next keeps the page it navigates away from, hidden in React Activity, and shows it again on the way back. React Three Fiber's loop runs outside React and no prop reaches a hidden canvas, so `ZaitunExperience` pauses the scene from a layout effect's cleanup (`ExperienceControl`, implemented by `sceneControl` in `ExperienceRoot.tsx`) and resumes it when the page is shown again. The sound is stopped the same way and picks up where it was; it is closed only once the page has left the document.
 
 ## Stills
 
