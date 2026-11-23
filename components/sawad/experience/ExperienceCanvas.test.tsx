@@ -129,6 +129,28 @@ describe("ExperienceCanvas", () => {
     expect(root().level).toBe(1);
   });
 
+  it("renders at the current level's pixel ratio, also after the canvas re-renders", () => {
+    // The Canvas re-applies its `dpr` on every render, so a fixed start ratio would undo each level change.
+    const { rerender } = render(<ExperienceCanvas {...base} />);
+    expect(canvas().dpr).toBe(1.5);
+    act(() => root().onQuality?.(1));
+    expect(canvas().dpr).toBe(1.75);
+    rerender(<ExperienceCanvas {...base} playing={false} />);
+    expect(canvas().dpr).toBe(1.75);
+    act(() => root().onQuality?.(-1));
+    act(() => root().onQuality?.(-1));
+    expect(canvas().dpr).toBe(1.25);
+    rerender(<ExperienceCanvas {...base} />);
+    expect(canvas().dpr).toBe(1.25);
+  });
+
+  it("never renders above the screen's own pixel ratio", () => {
+    vi.stubGlobal("devicePixelRatio", 1);
+    render(<ExperienceCanvas {...base} />);
+    act(() => root().onQuality?.(1));
+    expect(canvas().dpr).toBe(1);
+  });
+
   it("holds the level while a capture holds the story", () => {
     render(<ExperienceCanvas {...base} tier="low" holdAt={20} />);
     expect(root().level).toBe(0);

@@ -555,11 +555,46 @@ export function routeLength(route: LifeRoute): number {
   return len;
 }
 
-/** Position and heading (radians about +y, 0 facing +z) `distance` metres along a route. Open routes bounce, closed ones wrap. */
-export function samplePath(route: LifeRoute, distance: number): { x: number; y: number; z: number; heading: number } {
-  const pts = route.closed ? [...route.points, route.points[0]] : route.points;
-  const total = routeLength(route);
-  if (pts.length < 2 || total === 0) return { x: pts[0][0], y: pts[0][1], z: pts[0][2], heading: 0 };
+/** A place and a heading (radians about +y, 0 facing +z). */
+export type PathPose = { x: number; y: number; z: number; heading: number };
+
+/** A route measured once: its points with the way back for closed routes, each segment's length, and the total. */
+type MeasuredRoute = { pts: PathPoint[]; segs: number[]; total: number };
+
+/**
+ * Routes are planned once and never edited afterwards, so each is measured once. samplePath runs
+ * per walker and car on every frame, and copying and re-measuring the route there was the steadiest
+ * garbage in the frame (ledger T22).
+ */
+const measured = new WeakMap<LifeRoute, MeasuredRoute>();
+
+function measure(route: LifeRoute): MeasuredRoute {
+  let m = measured.get(route);
+  if (m) return m;
+  const pts = route.closed && route.points.length > 0 ? [...route.points, route.points[0]] : route.points;
+  const segs: number[] = [];
+  for (let i = 0; i < pts.length - 1; i++) segs.push(Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][2] - pts[i][2]));
+  m = { pts, segs, total: routeLength(route) };
+  measured.set(route, m);
+  return m;
+}
+
+function setPose(out: PathPose | undefined, x: number, y: number, z: number, heading: number): PathPose {
+  if (!out) return { x, y, z, heading };
+  out.x = x;
+  out.y = y;
+  out.z = z;
+  out.heading = heading;
+  return out;
+}
+
+/**
+ * Position and heading `distance` metres along a route. Open routes bounce, closed ones wrap.
+ * Pass `out` to have the pose written into it (no garbage per frame); without it a new object is returned.
+ */
+export function samplePath(route: LifeRoute, distance: number, out?: PathPose): PathPose {
+  const { pts, segs, total } = measure(route);
+  if (pts.length < 2 || total === 0) return setPose(out, pts[0][0], pts[0][1], pts[0][2], 0);
   let d: number;
   let reverse = false;
   if (route.closed) d = ((distance % total) + total) % total;
@@ -569,22 +604,25 @@ export function samplePath(route: LifeRoute, distance: number): { x: number; y: 
     d = reverse ? 2 * total - m : m;
   }
   for (let i = 0; i < pts.length - 1; i++) {
-    const [x0, y0, z0] = pts[i];
-    const [x1, y1, z1] = pts[i + 1];
-    const seg = Math.hypot(x1 - x0, z1 - z0);
+    const a = pts[i];
+    const b = pts[i + 1];
+    const seg = segs[i];
     if (d <= seg || i === pts.length - 2) {
       const t = seg === 0 ? 0 : Math.min(1, d / seg);
-      const heading = Math.atan2(x1 - x0, z1 - z0) + (reverse ? Math.PI : 0);
-      return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, z: z0 + (z1 - z0) * t, heading };
+      const heading = Math.atan2(b[0] - a[0], b[2] - a[2]) + (reverse ? Math.PI : 0);
+      return setPose(out, a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, heading);
     }
     d -= seg;
   }
   const last = pts[pts.length - 1];
-  return { x: last[0], y: last[1], z: last[2], heading: 0 };
+  return setPose(out, last[0], last[1], last[2], 0);
 }
 
-/** A bird of a flock at time t (seconds): position and heading, deterministic so a flock never needs a stored state. */
-export function birdPosition(flock: BirdFlock, index: number, t: number): { x: number; y: number; z: number; heading: number } {
+/**
+ * A bird of a flock at time t (seconds): position and heading, deterministic so a flock never needs a stored state.
+ * Pass `out` to have the pose written into it; without it a new object is returned.
+ */
+export function birdPosition(flock: BirdFlock, index: number, t: number, out?: PathPose): PathPose {
   const dir = flock.clockwise ? -1 : 1;
   const mean = (flock.rx + flock.rz) / 2;
   const w = (dir * flock.speed) / mean;
@@ -600,7 +638,7 @@ export function birdPosition(flock: BirdFlock, index: number, t: number): { x: n
   const z = flock.cz + Math.sin(a) * rz;
   const y = Math.max(ground(x, z), 0) + flock.altitude + (r2 - 0.5) * 9 + Math.sin(a * 3 + index) * 2.2;
   const heading = Math.atan2(-Math.sin(a) * rx * dir, Math.cos(a) * rz * dir);
-  return { x, y, z, heading };
+  return setPose(out, x, y, z, heading);
 }
 
 const outfits = {

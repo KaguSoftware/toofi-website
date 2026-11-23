@@ -42,7 +42,9 @@ export default function ExperienceCanvas({ playing, moving = true, tier, view, m
     const start = mode === "story" ? storyPose(view, holdAt ?? 0) : viewpoints("zaitun").aerial;
     return { fov: start.fov, near: CAMERA_NEAR, far: CAMERA_FAR, position: start.position };
   });
-  const [dpr] = useState(() => pixelRatio(pinnedLevel() ?? startQuality(tier), window.devicePixelRatio));
+  // The Canvas re-applies `dpr` whenever it re-renders, so it must follow the level: a fixed start
+  // ratio would undo every level change on the next state change around it (ledger T17).
+  const dpr = pixelRatio(level, window.devicePixelRatio);
   // Development only: `?studio=1` opens Theatre Studio on the story sheet (see README.md).
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;

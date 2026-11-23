@@ -19,7 +19,7 @@ import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js
 import { reportError } from "@/lib/monitoring";
 import { MAX_FRAME_SECONDS } from "./flight";
 import { birdPosition, planLife, type CarKind, type MovingCar, type ParkedCar, type Walker } from "./landscape";
-import { birdSlots, birdWings, carPose, clipTimeScale, walkerPose, wheelAngle, wheelRadius } from "./lifeMotion";
+import { birdSlots, birdWings, carPose, clipTimeScale, walkerPose, wheelAngle, wheelRadius, type CarPose, type Pose } from "./lifeMotion";
 import type { QualityTier } from "./types";
 
 /** A loaded GLB: the scene graph and its clips (public/sawad/models/life-<tier>.glb). */
@@ -111,15 +111,17 @@ function buildPeople(life: LifeScene, walkers: Walker[], library: GltfLibrary, s
       // People never step in unison: each starts at its own point of the loop.
       offset: (walker.phase * 0.37) % Math.max(clip.duration, 1e-3),
     });
-    life.movers.push((t) => placeFigure(figure, walker, t));
+    const pose: Pose = { x: 0, y: 0, z: 0, heading: 0 };
+    life.movers.push((t) => placeFigure(figure, walker, t, pose));
     life.release.push(() => {
       for (const m of kept) m.skeleton?.dispose();
     });
   }
 }
 
-function placeFigure(figure: Object3D, walker: Walker, t: number): void {
-  const p = walkerPose(walker, t);
+/** `pose` is this figure's own, reused every frame so moving makes no garbage. */
+function placeFigure(figure: Object3D, walker: Walker, t: number, pose: Pose): void {
+  const p = walkerPose(walker, t, pose);
   figure.position.set(p.x, p.y, p.z);
   figure.rotation.y = p.heading;
 }
@@ -230,12 +232,14 @@ function buildCars(life: LifeScene, moving: MovingCar[], parked: ParkedCar[], li
     const spinning = wheels.length === LIFE_NODES.wheels.length ? wheels : [];
     life.root.add(car);
     addActor(life, car, "car", shadows);
-    life.movers.push((t) => driveCar(car, spinning, spec, template.radius, t));
+    const pose: CarPose = { x: 0, y: 0, z: 0, heading: 0, distance: 0 };
+    life.movers.push((t) => driveCar(car, spinning, spec, template.radius, t, pose));
   }
 }
 
-function driveCar(car: Object3D, wheels: Object3D[], spec: MovingCar, radius: number, t: number): void {
-  const p = carPose(spec, t);
+/** `pose` is this car's own, reused every frame so driving makes no garbage. */
+function driveCar(car: Object3D, wheels: Object3D[], spec: MovingCar, radius: number, t: number, pose: CarPose): void {
+  const p = carPose(spec, t, pose);
   car.position.set(p.x, p.y, p.z);
   car.rotation.y = p.heading;
   const angle = wheelAngle(p.distance, radius);
@@ -267,9 +271,11 @@ function buildBirds(life: LifeScene, tier: QualityTier, library: GltfLibrary): v
   const q = new Quaternion();
   const p = new Vector3();
   const one = new Vector3(1, 1, 1);
+  const at: Pose = { x: 0, y: 0, z: 0, heading: 0 };
   life.movers.push((t) => {
-    slots.forEach((slot, i) => {
-      const at = birdPosition(slot.flock, slot.index, t);
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      birdPosition(slot.flock, slot.index, t, at);
       flock.setMatrixAt(i, m.compose(p.set(at.x, at.y, at.z), q.setFromAxisAngle(UP, at.heading), one).multiply(local));
       if (flaps) {
         const [up, down] = birdWings(slot, t);
@@ -277,7 +283,7 @@ function buildBirds(life: LifeScene, tier: QualityTier, library: GltfLibrary): v
         wings.morphTargetInfluences![1] = down;
         flock.setMorphAt(i, wings);
       }
-    });
+    }
     flock.instanceMatrix.needsUpdate = true;
     if (flock.morphTexture) flock.morphTexture.needsUpdate = true;
   });

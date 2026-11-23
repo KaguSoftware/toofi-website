@@ -1,5 +1,5 @@
 import { flapWeights } from "@/lib/sawad/wind";
-import { samplePath, type BirdFlock, type Clip, type MovingCar, type Walker } from "./landscape";
+import { samplePath, type BirdFlock, type Clip, type MovingCar, type PathPose, type Walker } from "./landscape";
 
 /*
  * Motion for the life on the 28 ha plan (people, cars, birds), as plain maths. SceneLife.tsx puts
@@ -28,21 +28,36 @@ export function clipTimeScale(clip: Clip, speed: number, scale: number): number 
   return Math.min(TIME_SCALE_RANGE.max, Math.max(TIME_SCALE_RANGE.min, speed / (natural * scale)));
 }
 
-export type Pose = { x: number; y: number; z: number; heading: number };
+export type Pose = PathPose;
+export type CarPose = Pose & { distance: number };
+
+/*
+ * Each pose function takes an optional `out`: SceneLife passes one object per walker or car and
+ * reuses it on every frame, so moving the life makes no garbage (ledger T22). Without `out` a new
+ * object is returned, which is what the film's track export keeps.
+ */
 
 /** Where a walker is `t` seconds in: along the route from its phase, or standing at the start facing `heading`. */
-export function walkerPose(walker: Walker, t: number): Pose {
+export function walkerPose(walker: Walker, t: number, out?: Pose): Pose {
   if (walker.speed <= 0 || walker.route.points.length < 2) {
-    const [x, y, z] = walker.route.points[0];
-    return { x, y, z, heading: walker.heading };
+    const start = walker.route.points[0];
+    const pose = out ?? { x: 0, y: 0, z: 0, heading: 0 };
+    pose.x = start[0];
+    pose.y = start[1];
+    pose.z = start[2];
+    pose.heading = walker.heading;
+    return pose;
   }
-  return samplePath(walker.route, (walker.phase + t) * walker.speed);
+  return samplePath(walker.route, (walker.phase + t) * walker.speed, out);
 }
 
 /** Where a car is `t` seconds in, and how far it has driven (for turning the wheels). */
-export function carPose(car: MovingCar, t: number): Pose & { distance: number } {
+export function carPose(car: MovingCar, t: number, out?: CarPose): CarPose {
   const distance = (car.phase + t) * car.speed;
-  return { ...samplePath(car.route, distance), distance };
+  const pose = out ?? { x: 0, y: 0, z: 0, heading: 0, distance: 0 };
+  samplePath(car.route, distance, pose);
+  pose.distance = distance;
+  return pose;
 }
 
 /** Wheel turn (radians about its axle) after rolling `distance` metres on a wheel of `radius` metres. */

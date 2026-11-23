@@ -24,7 +24,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const reportError = vi.fn();
 vi.mock("@/lib/monitoring", () => ({ reportError: (...args: unknown[]) => reportError(...args) }));
 
-import { planLife, type CarKind } from "./landscape";
+import { birdPosition, planLife, type CarKind } from "./landscape";
+import { birdSlots, carPose, walkerPose } from "./lifeMotion";
 import { LIFE_DISTANCE, SceneLife, advanceLife, buildLife, showLife, startLife, stopLife, type GltfLibrary, type SceneLifeProps } from "./SceneLife";
 import type { QualityTier } from "./types";
 
@@ -244,6 +245,39 @@ describe("SceneLife", () => {
     showLife(life, away(car, 5));
     expect(car.visible).toBe(true);
     expect(casts(car)).toBe(true);
+  });
+
+  it("puts each person, car and bird where its own motion says, frame after frame (no pose shared between them)", () => {
+    // Each mover reuses one pose object across frames (ledger T22); none may leak into another.
+    const life = buildLife("high", makeLibrary());
+    const plan = planLife("high");
+    const birds = life.root.getObjectByName("birds") as InstancedMesh;
+    const local = new Matrix4();
+    birds.getMatrixAt(0, local);
+    const first = birdPosition(birdSlots(plan.flocks)[0].flock, 0, 0);
+    // The bird's node transform rides on every instance: recover it from frame 0.
+    local.premultiply(new Matrix4().makeRotationY(first.heading).setPosition(first.x, first.y, first.z).invert());
+    for (let frame = 0; frame < 4; frame++) {
+      advanceLife(life, 0.07);
+      const t = life.clock.t;
+      for (const w of plan.walkers) {
+        const person = life.root.getObjectByName(`person:${w.id}`)!;
+        const p = walkerPose(w, t);
+        expect([person.position.x, person.position.y, person.position.z, person.rotation.y]).toEqual([p.x, p.y, p.z, p.heading]);
+      }
+      for (const c of plan.moving) {
+        const car = life.root.getObjectByName(`car:${c.id}`)!;
+        const p = carPose(c, t);
+        expect([car.position.x, car.position.y, car.position.z, car.rotation.y]).toEqual([p.x, p.y, p.z, p.heading]);
+      }
+      birdSlots(plan.flocks).forEach((slot, i) => {
+        const at = birdPosition(slot.flock, slot.index, t);
+        const got = new Matrix4();
+        birds.getMatrixAt(i, got);
+        const want = new Matrix4().makeRotationY(at.heading).setPosition(at.x, at.y, at.z).multiply(local);
+        got.elements.forEach((e, k) => expect(e).toBeCloseTo(want.elements[k], 3));
+      });
+    }
   });
 
   it("never casts shadows on the low tier, however close", () => {

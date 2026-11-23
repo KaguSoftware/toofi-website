@@ -64,6 +64,20 @@ describe("carPose", () => {
     expect(p.x).toBeCloseTo(samplePath(car.route, 40).x);
   });
 
+  it("writes into a pose it is given, for a car and for a walker moving or standing", () => {
+    const car: MovingCar = { id: "c", asset: "car-sedan", tint: "#fff", speed: 10, phase: 1, route: { ...line(500), closed: true } };
+    const carOut = { x: 0, y: 0, z: 0, heading: 0, distance: 0 };
+    expect(carPose(car, 3, carOut)).toBe(carOut);
+    expect(carOut).toEqual(carPose(car, 3));
+    const walking: Walker = { id: "w", asset: "person-man-shirt", clip: "walk", speed: 1.2, scale: 1, phase: 2, route: line(100), heading: 0.4 };
+    const standing: Walker = { ...walking, speed: 0 };
+    const out = { x: 9, y: 9, z: 9, heading: 9 };
+    expect(walkerPose(walking, 7, out)).toBe(out);
+    expect(out).toEqual(walkerPose(walking, 7));
+    expect(walkerPose(standing, 7, out)).toBe(out);
+    expect(out).toEqual({ x: 0, y: 1, z: 0, heading: 0.4 });
+  });
+
   it("keeps the plan's cars on their loops", () => {
     for (const car of planLife("high").moving) {
       const p = carPose(car, 1000);

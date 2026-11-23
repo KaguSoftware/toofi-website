@@ -275,4 +275,72 @@ describe("routes", () => {
   it("copes with a single point", () => {
     expect(samplePath({ points: [[3, 1, 4]], closed: false }, 99)).toMatchObject({ x: 3, y: 1, z: 4 });
   });
+
+  it("writes into a pose it is given and returns it, with the same values as a new one", () => {
+    const out = { x: 0, y: 0, z: 0, heading: 0 };
+    for (const d of [0, 5, 25, 45, -7, 1e4]) {
+      for (const route of [open, closed]) {
+        expect(samplePath(route, d, out)).toBe(out);
+        expect(out).toEqual(samplePath(route, d));
+      }
+    }
+    expect(samplePath({ points: [[3, 1, 4]], closed: false }, 99, out)).toBe(out);
+    expect(out).toEqual({ x: 3, y: 1, z: 4, heading: 0 });
+  });
+
+  // The walk before routes were measured once (ledger T22): every planned route must move exactly as it did.
+  function samplePathBefore(route: LifeRoute, distance: number) {
+    const pts = route.closed ? [...route.points, route.points[0]] : route.points;
+    const total = routeLength(route);
+    if (pts.length < 2 || total === 0) return { x: pts[0][0], y: pts[0][1], z: pts[0][2], heading: 0 };
+    let d: number;
+    let reverse = false;
+    if (route.closed) d = ((distance % total) + total) % total;
+    else {
+      const m = ((distance % (2 * total)) + 2 * total) % (2 * total);
+      reverse = m > total;
+      d = reverse ? 2 * total - m : m;
+    }
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x0, y0, z0] = pts[i];
+      const [x1, y1, z1] = pts[i + 1];
+      const seg = Math.hypot(x1 - x0, z1 - z0);
+      if (d <= seg || i === pts.length - 2) {
+        const t = seg === 0 ? 0 : Math.min(1, d / seg);
+        const heading = Math.atan2(x1 - x0, z1 - z0) + (reverse ? Math.PI : 0);
+        return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, z: z0 + (z1 - z0) * t, heading };
+      }
+      d -= seg;
+    }
+    const last = pts[pts.length - 1];
+    return { x: last[0], y: last[1], z: last[2], heading: 0 };
+  }
+
+  it("moves every planned walker and car exactly as before, frame after frame", () => {
+    const out = { x: 0, y: 0, z: 0, heading: 0 };
+    for (const tier of TIERS) {
+      const { walkers, moving } = planLife(tier);
+      const routes = [...walkers.filter((w) => w.route.points.length > 1).map((w) => w.route), ...moving.map((c) => c.route)];
+      expect(routes.length).toBeGreaterThan(3);
+      for (const route of routes) {
+        const total = routeLength(route);
+        for (let k = -3; k <= 40; k++) {
+          const d = (k * total) / 17 + 0.123;
+          expect(samplePath(route, d, out)).toEqual(samplePathBefore(route, d));
+        }
+      }
+    }
+  });
+});
+
+describe("birdPosition into a pose", () => {
+  it("writes into a pose it is given and returns it, with the same values as a new one", () => {
+    const out = { x: 0, y: 0, z: 0, heading: 0 };
+    for (const f of planLife("low").flocks) {
+      for (const t of [0, 3.3, 120]) {
+        expect(birdPosition(f, 1, t, out)).toBe(out);
+        expect(out).toEqual(birdPosition(f, 1, t));
+      }
+    }
+  });
 });

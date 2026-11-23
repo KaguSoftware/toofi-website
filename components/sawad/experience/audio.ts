@@ -28,9 +28,12 @@ const FADE_SECONDS = 1.2;
  * The music bed: "With These Hands" by Scott Buckley, the whole piece, looped. It is licensed
  * CC BY 4.0, so the credit (`showcase.musicCredit`, shown by the controls while the sound is on)
  * has to stay wherever the piece plays.
+ *
+ * The file is AAC-LC at 96 kbps, 48 kHz (3.74 MB; the MP3 was 4.47 MB), encoded from the WAV
+ * master in the main checkout's `out/music/`, with its index at the front so it streams.
  */
 export const MUSIC_BED = {
-  src: "/sawad/audio/with-these-hands.mp3",
+  src: "/sawad/audio/with-these-hands.m4a",
   title: "With These Hands",
   artist: "Scott Buckley",
   licence: "CC-BY 4.0",

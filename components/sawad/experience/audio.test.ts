@@ -1,4 +1,4 @@
-import { statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AMBIENCE_FOLLOW_MS, AMBIENCE_VS_MUSIC, ambienceGain, audioSupported, createAmbience, layerLevels, MASTER_GAIN, MUSIC_BED, MUSIC_GAIN } from "./audio";
@@ -607,10 +607,19 @@ describe("createAmbience with a music bed", () => {
 
 describe("MUSIC_BED", () => {
   it("points at a file that ships with the site, small enough to stream on demand", () => {
-    expect(MUSIC_BED.src).toMatch(/^\/sawad\/audio\/[a-z0-9-]+\.mp3$/);
+    // AAC at 96 kbps (ledger T54, owner decision D13): 3.74 MB where the MP3 was 4.47 MB.
+    expect(MUSIC_BED.src).toMatch(/^\/sawad\/audio\/[a-z0-9-]+\.m4a$/);
     const file = statSync(join(process.cwd(), "public", MUSIC_BED.src));
     expect(file.size).toBeGreaterThan(500_000);
-    expect(file.size).toBeLessThan(6_000_000);
+    expect(file.size).toBeLessThan(4_000_000);
+  });
+
+  it("can start playing before it has downloaded: the index comes before the audio", () => {
+    const head = readFileSync(join(process.cwd(), "public", MUSIC_BED.src)).subarray(0, 64 * 1024);
+    const moov = head.indexOf("moov");
+    expect(moov).toBeGreaterThan(0);
+    const mdat = head.indexOf("mdat");
+    expect(mdat === -1 || moov < mdat).toBe(true);
   });
 
   it("names the piece, its composer, the licence and where it comes from", () => {
