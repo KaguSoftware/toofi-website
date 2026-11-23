@@ -1,4 +1,5 @@
 import { DataTexture, SRGBColorSpace, TextureLoader, Vector4, type Material, type Mesh, type MeshStandardMaterial, type Object3D, type Texture } from "three";
+import { assetUrl } from "../scene/assetUrl";
 import type { QualityTier } from "../scene/types";
 import type { Daylight } from "./daylight";
 
@@ -24,14 +25,15 @@ export type LightmapManifest = {
 export type GroundPage = { url: string; bounds: Bounds; intensity: number };
 
 export async function loadLightmapManifest(fetcher: typeof fetch = fetch): Promise<LightmapManifest> {
-  const res = await fetcher(`${LIGHTMAP_BASE}lightmaps.json`);
+  const res = await fetcher(assetUrl(`${LIGHTMAP_BASE}lightmaps.json`));
   if (!res.ok) throw new Error(`lightmaps.json: HTTP ${res.status}`);
   return (await res.json()) as LightmapManifest;
 }
 
 export function groundPage(manifest: LightmapManifest, tier: QualityTier, state: Daylight): GroundPage {
   const page = manifest.tiers[tier].pages.ground;
-  return { url: LIGHTMAP_BASE + page.files[state], bounds: page.projection.bounds, intensity: manifest.states[state].intensity };
+  // The ground page is fetched as its PNG (a TextureLoader in ExperienceWorld), at its versioned address.
+  return { url: assetUrl(LIGHTMAP_BASE + page.files[state]), bounds: page.projection.bounds, intensity: manifest.states[state].intensity };
 }
 
 /** Loads a baked page: sRGB-encoded irradiance, unflipped (the glTF convention the bake uses). */

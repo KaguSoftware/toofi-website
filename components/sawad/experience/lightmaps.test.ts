@@ -1,7 +1,9 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BoxGeometry, Mesh, MeshStandardMaterial, Object3D, SRGBColorSpace, Texture, type WebGLProgramParametersWithUniforms } from "three";
 import { describe, expect, it, vi } from "vitest";
+import { assetUrl } from "../scene/assetUrl";
+import { shippedPath } from "../../../scripts/blender/version-assets.mjs";
 import {
   applyGroundLight,
   createGroundLight,
@@ -15,7 +17,7 @@ import {
   type LightmapManifest,
 } from "./lightmaps";
 
-const manifest = JSON.parse(readFileSync(join(process.cwd(), "public/sawad/lightmaps/zaitun/lightmaps.json"), "utf8")) as LightmapManifest;
+const manifest = JSON.parse(readFileSync(shippedPath("/sawad/lightmaps/zaitun/lightmaps.json"), "utf8")) as LightmapManifest;
 
 const fakeShader = () =>
   ({ uniforms: {}, vertexShader: "#include <common>\n#include <project_vertex>", fragmentShader: "#include <common>\n#include <lights_fragment_maps>" }) as unknown as WebGLProgramParametersWithUniforms;
@@ -30,7 +32,7 @@ describe("loadLightmapManifest", () => {
   it("fetches lightmaps.json and returns it", async () => {
     const fetcher = vi.fn(async () => ({ ok: true, status: 200, json: async () => manifest }) as Response);
     await expect(loadLightmapManifest(fetcher as unknown as typeof fetch)).resolves.toBe(manifest);
-    expect(fetcher).toHaveBeenCalledWith(`${LIGHTMAP_BASE}lightmaps.json`);
+    expect(fetcher).toHaveBeenCalledWith(assetUrl(`${LIGHTMAP_BASE}lightmaps.json`));
   });
 
   it("throws on a non-ok response", async () => {
@@ -44,7 +46,9 @@ describe("groundPage", () => {
     for (const tier of ["low", "high"] as const) {
       for (const state of ["day", "dusk"] as const) {
         const page = groundPage(manifest, tier, state);
-        expect(page.url).toBe(`${LIGHTMAP_BASE}${state}-ground-${tier}.png`);
+        expect(page.url).toBe(assetUrl(`${LIGHTMAP_BASE}${state}-ground-${tier}.png`));
+        // Only dusk blends the ground page in, so only the dusk PNGs ship (the masters live in scripts/blender/lightmaps/).
+        if (state === "dusk") expect(existsSync(join(process.cwd(), "public", page.url)), page.url).toBe(true);
         expect(page.bounds).toEqual({ minX: -490, maxX: 490, minZ: -320, maxZ: 128 });
         expect(page.intensity).toBe(manifest.states[state].intensity);
       }

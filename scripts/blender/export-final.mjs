@@ -11,6 +11,7 @@
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { LIGHTMAP_BUDGET, OPTIONAL_BUDGETS } from "./finalize-manifest.mjs";
+import { shippedPath } from "./version-assets.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 export const MODELS_DIR = here("../../public/sawad/models/");
@@ -201,23 +202,34 @@ export function updateManifest(manifest, sizes) {
   return { ...manifest, files, budgets };
 }
 
+/** The shipped file for a name in a public folder (fresh or versioned, version-assets.mjs), or null. */
+const shipped = (folder) => (f) => {
+  try {
+    return shippedPath(folder + f);
+  } catch {
+    return null;
+  }
+};
+export const shippedModel = shipped("/sawad/models/");
+export const shippedLightmap = shipped("/sawad/lightmaps/zaitun/");
+
 function run() {
-  const sizeAt = (dir) => (f) => (existsSync(dir + f) ? statSync(dir + f).size : null);
-  const modelSize = sizeAt(MODELS_DIR);
-  const lightmaps = JSON.parse(readFileSync(LIGHTMAPS_DIR + "lightmaps.json", "utf8"));
+  const sizeAt = (find) => (f) => (find(f) ? statSync(find(f)).size : null);
+  const modelSize = sizeAt(shippedModel);
+  const lightmaps = JSON.parse(readFileSync(shippedLightmap("lightmaps.json"), "utf8"));
   const sizes = Object.fromEntries(
     [...Object.values(COMPOUND_FILES), ...Object.keys(ZAITUN_BUDGETS.optional)].map((f) => [f, modelSize(f)]),
   );
-  const sets = Object.fromEntries(TIERS.map((tier) => [tier, lightmapSets(lightmaps, tier, sizeAt(LIGHTMAPS_DIR))]));
+  const sets = Object.fromEntries(TIERS.map((tier) => [tier, lightmapSets(lightmaps, tier, sizeAt(shippedLightmap))]));
   const { rows, problems } = evaluateBudgets({ sizes, sets });
 
   const structure = {};
   for (const tier of TIERS) {
-    structure[tier] = checkModel(describeGlb(readGlbJson(readFileSync(MODELS_DIR + COMPOUND_FILES[tier]))), { lightmaps: lightmaps.tiers[tier] });
+    structure[tier] = checkModel(describeGlb(readGlbJson(readFileSync(shippedModel(COMPOUND_FILES[tier])))), { lightmaps: lightmaps.tiers[tier] });
     for (const page of Object.values(lightmaps.tiers[tier].pages)) {
       for (const state of STATES) {
         const file = page.files[state].replace(/\.png$/, ".ktx2");
-        structure[tier].push(...checkKtx2(readKtx2Header(readFileSync(LIGHTMAPS_DIR + file)), file, page.size));
+        structure[tier].push(...checkKtx2(readKtx2Header(readFileSync(shippedLightmap(file))), file, page.size));
       }
     }
     problems.push(...structure[tier].map((p) => `${tier}: ${p}`));
@@ -225,7 +237,7 @@ function run() {
 
   writeFileSync(
     REPORT_PATH,
-    JSON.stringify({ generatedBy: "scripts/blender/export-final.sh", lightmapUv: { gltf: LIGHTMAP_SEMANTIC, channel: 2 }, lightmaps: lightmapFiles(lightmaps, sizeAt(LIGHTMAPS_DIR)), budgets: rows, structureProblems: structure, passed: problems.length === 0 }, null, 2) + "\n",
+    JSON.stringify({ generatedBy: "scripts/blender/export-final.sh", lightmapUv: { gltf: LIGHTMAP_SEMANTIC, channel: 2 }, lightmaps: lightmapFiles(lightmaps, sizeAt(shippedLightmap)), budgets: rows, structureProblems: structure, passed: problems.length === 0 }, null, 2) + "\n",
   );
   if (existsSync(MANIFEST_PATH)) {
     const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));

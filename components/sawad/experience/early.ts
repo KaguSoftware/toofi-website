@@ -10,6 +10,7 @@ import {
   SOFTWARE_RENDERER,
   WEAK_GPU,
 } from "../scene/capability";
+import { assetUrl } from "../scene/assetUrl";
 import type { QualityTier } from "../scene/types";
 
 /**
@@ -37,11 +38,11 @@ export const EARLY_ATTR = "data-early";
  * read from the server or from the first-render code; early.test.ts fails if they drift.
  */
 export const FIRST_MODEL_URL: Record<QualityTier, string> = {
-  high: "/sawad/models/compound-zaitun-far-high.glb",
-  low: "/sawad/models/compound-zaitun-far-low.glb",
+  high: assetUrl("/sawad/models/compound-zaitun-far-high.glb"),
+  low: assetUrl("/sawad/models/compound-zaitun-far-low.glb"),
 };
 /** The texture decoder (`BASIS_TRANSCODER_PATH` of scene/compoundModel.ts): every model needs it. */
-export const DECODER_URLS: readonly string[] = ["/sawad/basis/basis_transcoder.js", "/sawad/basis/basis_transcoder.wasm"];
+export const DECODER_URLS: readonly string[] = ["basis_transcoder.js", "basis_transcoder.wasm"].map((f) => assetUrl("/sawad/basis/") + f);
 
 /** What the first frame cannot start without, for a tier. */
 export const firstAssets = (tier: QualityTier): string[] => [FIRST_MODEL_URL[tier], ...DECODER_URLS];

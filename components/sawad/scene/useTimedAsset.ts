@@ -22,7 +22,19 @@ export type TimedAssetOptions<T> = {
   context?: Record<string, unknown>;
   /** False skips the load and settles at once with nothing (the asset is not needed). */
   enabled?: boolean;
+  /**
+   * Keeps the asset through a hide instead of freeing it. Next hides a route it leaves in React
+   * `<Activity mode="hidden">`, which runs this hook's cleanup although the component (and the
+   * canvas) stay; on the way back the asset used to be fetched, decoded and uploaded again, and the
+   * site showed without its buildings meanwhile (ledger T14). With `keep`, a cleanup only schedules
+   * the release: it is freed after `ms`, or at once when `alive()` says the canvas is gone (a real
+   * unmount); a reveal before then takes the same asset back.
+   */
+  keep?: { ms: number; alive: () => boolean };
 };
+
+/** How long a hidden scene keeps its assets before freeing them (a visit to another page and back). */
+export const KEEP_HIDDEN_MS = 180_000;
 
 /**
  * Loads one asset for the scene and says when the first frame may show. The poster hands over to
@@ -30,20 +42,58 @@ export type TimedAssetOptions<T> = {
  * after MODEL_TIMEOUT_MS is freed, not swapped in, and the timeout is reported as `sawad-scene`.
  * A change of `key` (a new tier or variant) starts again from a held, unsettled state.
  */
-export function useTimedAsset<T>(key: string, { load, dispose, stage, context, enabled = true }: TimedAssetOptions<T>): TimedAssetState<T> {
+export function useTimedAsset<T>(key: string, { load, dispose, stage, context, enabled = true, keep }: TimedAssetOptions<T>): TimedAssetState<T> {
   // Results are tagged with the key they belong to, so a new key reads as held without a reset.
   const [state, setState] = useState<TimedAssetState<T> & { key: string }>({ value: null, settled: false, key: "" });
   // The latest callbacks; the effect restarts only when the key changes.
-  const latest = useRef({ load, dispose, stage, context });
+  const latest = useRef({ load, dispose, stage, context, keep });
   useEffect(() => {
-    latest.current = { load, dispose, stage, context };
+    latest.current = { load, dispose, stage, context, keep };
   });
+  // An asset kept through a hide (`keep`), with the timers that will free it unless it is taken back.
+  const kept = useRef<{ key: string; value: T; timers: ReturnType<typeof setTimeout>[] } | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
     let closed = false; // settled, or torn down
     let owned: T | null = null;
     const { load: start, stage: name, context: extra } = latest.current;
+
+    // Frees an asset now, and never hands it out again.
+    const free = (value: T) => {
+      latest.current.dispose(value);
+      setState((s) => (s.value === value ? { value: null, settled: false, key: "" } : s));
+    };
+    // Lets go of what this effect owns: freed now, or kept for a reveal (`keep`).
+    const letGo = (value: T) => {
+      const rule = latest.current.keep;
+      if (!rule) return free(value);
+      const release = () => {
+        if (kept.current?.value !== value) return;
+        for (const t of kept.current.timers) clearTimeout(t);
+        kept.current = null;
+        free(value);
+      };
+      kept.current = { key, value, timers: [setTimeout(() => !rule.alive() && release(), 0), setTimeout(release, rule.ms)] };
+    };
+
+    // A reveal: the asset kept through the hide is taken back as it is.
+    const held = kept.current;
+    if (held) {
+      for (const t of held.timers) clearTimeout(t);
+      kept.current = null;
+      if (held.key === key) {
+        owned = held.value;
+        // Always a new state object: whoever uses the asset must re-render on a reveal, as it did when
+        // the asset was loaded again. The post chain depends on it: a reveal builds a new composer, and
+        // PostFX hands it to the render pass only when it re-renders (without this the hero stays black).
+        setState({ value: held.value, settled: true, key });
+        return () => letGo(held.value);
+      }
+      // Kept for another key (a new tier or variant): it is not coming back.
+      free(held.value);
+    }
+
     const timer = setTimeout(() => {
       if (closed) return;
       closed = true;
@@ -75,12 +125,8 @@ export function useTimedAsset<T>(key: string, { load, dispose, stage, context, e
     return () => {
       closed = true;
       clearTimeout(timer);
-      if (owned) {
-        const freed = owned;
-        latest.current.dispose(freed);
-        // Never hand out a freed asset, even if this key loads again.
-        setState((s) => (s.value === freed ? { value: null, settled: false, key: "" } : s));
-      }
+      // Never hand out a freed asset, even if this key loads again (`free`).
+      if (owned) letGo(owned);
     };
   }, [key, enabled]);
 

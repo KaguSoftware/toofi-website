@@ -70,9 +70,13 @@ import {
   prepareCompound,
   withKtx2,
   detailOf,
+  dayPageOf,
   pairDetail,
+  upgradeDayPage,
   upgradeToFull,
+  HALF_DAY_PAGE,
 } from "./compoundModel";
+import { assetUrl } from "./assetUrl";
 import { createBakedLight } from "./bakedLight";
 import { BAKED_LIGHT_BASE, type BakedManifest } from "./bakedLight";
 
@@ -157,8 +161,8 @@ describe("loadCompound", () => {
   it("loads the low tier file on the low tier", async () => {
     calls.result = () => Promise.resolve({ scene: new Group() });
     await loadCompound("low", renderer);
-    expect(calls.urls).toEqual(["/sawad/models/compound-low.glb"]);
-    expect(COMPOUND_MODEL_URL.high).toBe("/sawad/models/compound-high.glb");
+    expect(calls.urls).toEqual([assetUrl("/sawad/models/compound-low.glb")]);
+    expect(COMPOUND_MODEL_URL.high).toBe(assetUrl("/sawad/models/compound-high.glb"));
   });
 
   it("reports and rejects when the model cannot load", async () => {
@@ -172,7 +176,7 @@ describe("loadCompound", () => {
 
 describe("compoundModelUrl", () => {
   it("gives Zaitun Hills its 28 ha model and keeps the 7 ha model for the other compounds", () => {
-    expect(compoundModelUrl("zaitun", "high")).toBe("/sawad/models/compound-zaitun-high.glb");
+    expect(compoundModelUrl("zaitun", "high")).toBe(assetUrl("/sawad/models/compound-zaitun-high.glb"));
     expect(compoundModelUrl("zaitun", "low")).toBe(PLAN_COMPOUND_MODEL_URL.low);
     expect(compoundModelUrl("dijla", "high")).toBe(COMPOUND_MODEL_URL.high);
     expect(compoundModelUrl("shatt", "low")).toBe(COMPOUND_MODEL_URL.low);
@@ -191,7 +195,7 @@ describe("compoundModelUrl", () => {
     // One KTX2 loader for the far set, the light and the full file, kept until the full file is in.
     expect(calls.detectSupport).toEqual([renderer]);
     expect(calls.ktx2Disposed).toBe(0);
-    expect(PLAN_FAR_MODEL_URL.high).toBe("/sawad/models/compound-zaitun-far-high.glb");
+    expect(PLAN_FAR_MODEL_URL.high).toBe(assetUrl("/sawad/models/compound-zaitun-far-high.glb"));
   });
 
   it("waits for the full file, as before, when the far set cannot load", async () => {
@@ -225,8 +229,9 @@ describe("the baked light", () => {
     calls.byUrl[PLAN_COMPOUND_MODEL_URL.high] = pending;
     calls.result = () => Promise.resolve({ scene: m.scene });
     const group = await loadCompound("high", renderer, "zaitun");
-    expect(fetcher).toHaveBeenCalledWith(`${BAKED_LIGHT_BASE}lightmaps.json`);
-    expect(calls.textures).toEqual([`${BAKED_LIGHT_BASE}day-buildings-high.ktx2`, `${BAKED_LIGHT_BASE}day-site-high.ktx2`]);
+    expect(fetcher).toHaveBeenCalledWith(assetUrl(`${BAKED_LIGHT_BASE}lightmaps.json`));
+    // The high tier's first frame takes the buildings page at half size (ledger T36).
+    expect(calls.textures).toEqual([assetUrl(`${BAKED_LIGHT_BASE}day-buildings-high.half.ktx2`), assetUrl(`${BAKED_LIGHT_BASE}day-site-high.ktx2`)]);
     expect(calls.ktx2Disposed).toBe(0); // still needed for the full file
     const light = bakedLightOf(group)!;
     expect(light.tier).toBe("high");
@@ -287,7 +292,7 @@ describe("loadLibrary", () => {
     expect(lib.animations).toBe(animations);
     expect(scene.name).toBe(""); // not renamed or prepared like the compound
     expect(calls.ktx2Disposed).toBe(1);
-    expect(LIBRARY_URL.vegetation.low).toBe("/sawad/models/vegetation-low.glb");
+    expect(LIBRARY_URL.vegetation.low).toBe(assetUrl("/sawad/models/vegetation-low.glb"));
   });
 
   it("reports which library failed and rejects", async () => {
@@ -573,3 +578,104 @@ describe("pairDetail", () => {
     expect(() => pairDetail(k.scene, l.scene)).toThrow("aoMap");
   });
 });
+
+describe("the asset diet in the loader (F2B)", () => {
+  it("drops the zero TEXCOORD_1 a mesh without an AO map keeps, and keeps it where an AO map reads it (T6)", () => {
+    const m = fakeModel();
+    const bare = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+    bare.geometry.setAttribute("uv1", bare.geometry.getAttribute("uv").clone());
+    m.wall.geometry.setAttribute("uv1", m.wall.geometry.getAttribute("uv").clone());
+    m.scene.add(bare);
+    prepareCompound(m.scene);
+    expect(bare.geometry.getAttribute("uv1")).toBeUndefined();
+    expect(m.wall.geometry.getAttribute("uv1")).toBeDefined();
+  });
+
+  it("composes every node's matrix once and stops three recomposing it each frame (T23)", () => {
+    const m = fakeModel();
+    m.wall.position.set(4, 0, 2);
+    prepareCompound(m.scene);
+    m.scene.traverse((o) => expect(o.matrixAutoUpdate).toBe(false));
+    expect(m.wall.matrix.elements[12]).toBe(4);
+    m.scene.updateMatrixWorld();
+    expect(m.wall.matrixWorld.elements[14]).toBe(2);
+  });
+
+  it("keeps the finder on the far set: no full file, no swap (T30)", async () => {
+    const far = new Group();
+    calls.byUrl[PLAN_FAR_MODEL_URL.high] = () => Promise.resolve({ scene: far });
+    calls.result = () => Promise.resolve({ scene: new Group() });
+    const group = await loadCompound("high", renderer, "zaitun", "far");
+    expect(group).toBe(far);
+    expect(detailOf(group)).toBeNull();
+    expect(calls.urls).toEqual([PLAN_FAR_MODEL_URL.high]);
+  });
+
+  it("takes the half page on the high tier only", async () => {
+    expect(HALF_DAY_PAGE).toEqual({ high: true, low: false });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(MANIFEST))));
+    calls.byUrl[PLAN_COMPOUND_MODEL_URL.low] = pending;
+    calls.result = () => Promise.resolve({ scene: bakeableModel().scene });
+    const group = await loadCompound("low", renderer, "zaitun");
+    expect(calls.textures).toEqual([assetUrl(`${BAKED_LIGHT_BASE}day-buildings-low.ktx2`), assetUrl(`${BAKED_LIGHT_BASE}day-site-low.ktx2`)]);
+    expect(dayPageOf(group)).toBeNull();
+  });
+
+  it("swaps the full buildings page in after the hold, on its own frames, and frees the half page (T36)", async () => {
+    const half = new Texture();
+    const full = new Texture();
+    const light = createBakedLight(MANIFEST, "high", { buildings: half, site: new Texture() });
+    const lit = new MeshStandardMaterial({ lightMap: half });
+    light.materials.buildings.push(lit);
+    const freed = vi.spyOn(half, "dispose");
+    const queue: (() => void)[] = [];
+    const step = async (n: number) => {
+      for (let i = 0; i < n; i++) {
+        queue.shift()?.();
+        await Promise.resolve();
+        await Promise.resolve();
+      }
+    };
+    const initTexture = vi.fn();
+    const redraw = vi.fn();
+    const up = upgradeDayPage(light, () => Promise.resolve(full), { renderer: { initTexture } as unknown as WebGLRenderer, tier: "high", frame: (run) => queue.push(run), redraw, holdFrames: 3 });
+    await step(3);
+    expect(up.state).toBe("far");
+    expect(lit.lightMap).toBe(half);
+    await step(4);
+    await up.settled;
+    expect(initTexture).toHaveBeenCalledWith(full);
+    expect(up.state).toBe("full");
+    expect(lit.lightMap).toBe(full);
+    expect(light.day.buildings).toBe(full);
+    expect(light.uniforms.buildings.uBakedDusk.value).toBe(full);
+    expect(freed).toHaveBeenCalled();
+    expect(redraw).toHaveBeenCalled();
+  });
+
+  it("leaves the half page in place when the full page fails, and reports it", async () => {
+    const half = new Texture();
+    const light = createBakedLight(MANIFEST, "high", { buildings: half, site: new Texture() });
+    const error = new Error("404");
+    const up = upgradeDayPage(light, () => Promise.reject(error), { renderer: { initTexture: vi.fn() } as unknown as WebGLRenderer, tier: "high", frame: (run) => run(), holdFrames: 0 });
+    expect(await up.settled).toBe("failed");
+    expect(light.day.buildings).toBe(half);
+    expect(reportError).toHaveBeenCalledWith("sawad-scene", error, { stage: "baked-light-full", tier: "high" });
+  });
+
+  it("never swaps once the model was freed", async () => {
+    const half = new Texture();
+    const full = new Texture();
+    const freedFull = vi.spyOn(full, "dispose");
+    const light = createBakedLight(MANIFEST, "high", { buildings: half, site: new Texture() });
+    let resolve!: (t: Texture) => void;
+    const up = upgradeDayPage(light, () => new Promise((r) => (resolve = r)), { renderer: { initTexture: vi.fn() } as unknown as WebGLRenderer, tier: "high", frame: (run) => run(), holdFrames: 0 });
+    await Promise.resolve();
+    up.cancel();
+    resolve(full);
+    expect(await up.settled).toBe("cancelled");
+    expect(light.day.buildings).toBe(half);
+    expect(freedFull).toHaveBeenCalled();
+  });
+});
+

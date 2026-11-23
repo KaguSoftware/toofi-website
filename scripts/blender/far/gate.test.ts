@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHOTS, MODES, blockDiff, blockedPatterns, candidateFile, moveCapture, verdict } from "./gate.mjs";
+import { DEFAULT_SHOTS, EXTRA_SHOTS, MODES, blockDiff, blockedPatterns, candidateFile, moveCapture, planShot, verdict } from "./gate.mjs";
 
 describe("the far set's look gate", () => {
   it("refuses the full files to keep the far set, and the far files to fall back to the full one", () => {
-    expect(blockedPatterns("far")).toEqual(["**/sawad/models/compound-zaitun-high.glb", "**/sawad/models/compound-zaitun-low.glb"]);
+    expect(blockedPatterns("far")).toEqual(["**/sawad/models/compound-zaitun-high.*.glb", "**/sawad/models/compound-zaitun-low.*.glb"]);
     expect(blockedPatterns("full")).toEqual(["**/sawad/models/compound-zaitun-far-*.glb"]);
     expect(blockedPatterns("mixed")).toEqual([]);
     expect(() => blockedPatterns("near")).toThrow("unknown mode near");
@@ -47,5 +47,15 @@ describe("the far set's look gate", () => {
     moveCapture(plan, 900);
     expect(plan.steps.map((st) => [st.frame, st.do])).toEqual([[5, "click"], [900, "capture"], [900, "capture"]]);
     expect(plan.lastFrame).toBe(902);
+  });
+
+  it("plans the close-up camera itself and hands every other camera to the rig", () => {
+    const rig = (name: string, opts: unknown) => ({ steps: [], lastFrame: 0, name, opts });
+    const close = planShot("close", rig, { level: 3, width: 1440 });
+    expect(close.steps[0]).toEqual({ frame: 1, do: "pin", level: 3 });
+    expect(close.steps.at(-1)).toEqual({ frame: EXTRA_SHOTS.close.capture, do: "capture", name: "close", width: 1440 });
+    expect(close.lastFrame).toBe(EXTRA_SHOTS.close.capture + 2);
+    expect(close.steps.map((s: { frame: number }) => s.frame)).toEqual([...close.steps.map((s: { frame: number }) => s.frame)].sort((a, b) => a - b));
+    expect(planShot("aerial", rig, { level: 1 })).toMatchObject({ name: "aerial", opts: { level: 1, record: false, capture: true, width: 960 } });
   });
 });

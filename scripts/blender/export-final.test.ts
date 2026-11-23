@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
@@ -16,11 +16,12 @@ import {
   readGlbJson,
   readKtx2Header,
   updateManifest,
+  shippedLightmap,
+  shippedModel,
 } from "./export-final.mjs";
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const MODELS = here("../../public/sawad/models/");
-const LIGHTMAPS = here("../../public/sawad/lightmaps/zaitun/");
 
 /** A GLB container around a JSON chunk (no binary chunk: the checks never read buffers). */
 function glb(json: object): Buffer {
@@ -274,11 +275,12 @@ describe("updateManifest", () => {
 });
 
 describe("the shipped Zaitun export", () => {
-  const lightmaps = JSON.parse(readFileSync(LIGHTMAPS + "lightmaps.json", "utf8"));
-  const sizeIn = (dir: string) => (f: string) => (existsSync(dir + f) ? statSync(dir + f).size : null);
+  // Models and pages ship under versioned names (version-assets.mjs): found through the map.
+  const lightmaps = JSON.parse(readFileSync(shippedLightmap("lightmaps.json")!, "utf8"));
+  const sizeIn = (find: (f: string) => string | null) => (f: string) => (find(f) ? statSync(find(f)!).size : null);
 
   it.each(["high", "low"] as const)("the %s model honours the lightmap contract", (tier) => {
-    const description = describeGlb(readGlbJson(readFileSync(MODELS + COMPOUND_FILES[tier])));
+    const description = describeGlb(readGlbJson(readFileSync(shippedModel(COMPOUND_FILES[tier])!)));
     expect(checkModel(description, { lightmaps: lightmaps.tiers[tier] })).toEqual([]);
   });
 
@@ -287,14 +289,14 @@ describe("the shipped Zaitun export", () => {
     for (const [page, info] of Object.entries(pages)) {
       for (const png of Object.values(info.files)) {
         const file = png.replace(/\.png$/, ".ktx2");
-        expect(checkKtx2(readKtx2Header(readFileSync(LIGHTMAPS + file)), `${tier} ${page} ${file}`, info.size)).toEqual([]);
+        expect(checkKtx2(readKtx2Header(readFileSync(shippedLightmap(file)!)), `${tier} ${page} ${file}`, info.size)).toEqual([]);
       }
     }
   });
 
   it("is within every budget", () => {
-    const sizes = Object.fromEntries([...Object.values(COMPOUND_FILES), ...Object.keys(ZAITUN_BUDGETS.optional)].map((f) => [f, sizeIn(MODELS)(f as string)]));
-    const sets = Object.fromEntries((["high", "low"] as const).map((tier) => [tier, lightmapSets(lightmaps, tier, sizeIn(LIGHTMAPS))]));
+    const sizes = Object.fromEntries([...Object.values(COMPOUND_FILES), ...Object.keys(ZAITUN_BUDGETS.optional)].map((f) => [f, sizeIn(shippedModel)(f as string)]));
+    const sets = Object.fromEntries((["high", "low"] as const).map((tier) => [tier, lightmapSets(lightmaps, tier, sizeIn(shippedLightmap))]));
     expect(evaluateBudgets({ sizes, sets }).problems).toEqual([]);
   });
 
@@ -303,7 +305,7 @@ describe("the shipped Zaitun export", () => {
     expect(report.passed).toBe(true);
     expect(report.lightmapUv).toEqual({ gltf: "TEXCOORD_2", channel: 2 });
     const manifest = JSON.parse(readFileSync(MODELS + "compound-zaitun.manifest.json", "utf8"));
-    for (const file of Object.values(COMPOUND_FILES)) expect(manifest.files[file]).toBe(statSync(MODELS + file).size);
+    for (const file of Object.values(COMPOUND_FILES)) expect(manifest.files[file]).toBe(statSync(shippedModel(file)!).size);
     expect(manifest.budgets).toEqual({ "compound-zaitun-high.glb": ZAITUN_BUDGETS.compound.high, "compound-zaitun-low.glb": ZAITUN_BUDGETS.compound.low });
   });
 });

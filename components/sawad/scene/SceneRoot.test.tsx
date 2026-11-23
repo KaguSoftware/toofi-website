@@ -32,9 +32,12 @@ const libraryDeferred = (): LibDeferred => {
   });
   return { promise, resolve, reject };
 };
-const libs = vi.hoisted(() => ({ pending: {} as Record<string, { promise: Promise<unknown> }>, loaded: [] as string[] }));
+const libs = vi.hoisted(() => ({ pending: {} as Record<string, { promise: Promise<unknown> }>, loaded: [] as string[], compound: [] as unknown[][] }));
 vi.mock("./compoundModel", () => ({
-  loadCompound: () => model.promise,
+  loadCompound: (...args: unknown[]) => {
+    libs.compound.push(args);
+    return model.promise;
+  },
   loadLibrary: (kind: string) => {
     libs.loaded.push(kind);
     return libs.pending[kind].promise;
@@ -118,6 +121,13 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("SceneRoot", () => {
+  it("keeps the finder's compound on the far set (ledger T30)", async () => {
+    libs.compound.length = 0;
+    const scene = await mount({ ...film, variant: "zaitun" });
+    expect(libs.compound[0]).toEqual(["high", expect.anything(), "zaitun", "far"]);
+    await scene.unmount();
+  });
+
   it("is not ready until the baked model is attached", async () => {
     const onReady = vi.fn();
     const scene = await mount({ ...film, onReady });

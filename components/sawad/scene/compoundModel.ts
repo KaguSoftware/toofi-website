@@ -4,25 +4,29 @@ import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js"
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { reportError } from "@/lib/monitoring";
-import { applyBakedLight, copyNamed, createBakedLight, loadBakedManifest, loadBakedPages, type BakedLight } from "./bakedLight";
+import { assetUrl } from "./assetUrl";
+import { applyBakedLight, bakedHalfPageUrl, copyNamed, createBakedLight, loadBakedManifest, loadBakedPage, loadBakedPages, setBakedDayPage, type BakedLight } from "./bakedLight";
 import { usesPlan } from "./site";
 import type { QualityTier, SceneVariant } from "./types";
 
 /**
+ * Every address below is versioned (`assetUrl`, ledger T32): the file name carries a hash of its
+ * content, so the tables change whenever a file does.
+ *
  * The baked compound architecture (scripts/blender/build_compound.py). The high tier has the
  * 2048 trim sheet and 1024 AO; the low tier 1024 / 512, without mashrabiya screens or benches.
  */
 export const COMPOUND_MODEL_URL: Record<QualityTier, string> = {
-  high: "/sawad/models/compound-high.glb",
-  low: "/sawad/models/compound-low.glb",
+  high: assetUrl("/sawad/models/compound-high.glb"),
+  low: assetUrl("/sawad/models/compound-low.glb"),
 };
 /**
  * The compound rebuilt on the 28 ha masterplan (Zaitun Hills, `build_compound.py --plan zaitun`).
  * The 7 ha files above stay for Bustan Dijla and Shatt Gardens until they move onto the new layout.
  */
 export const PLAN_COMPOUND_MODEL_URL: Record<QualityTier, string> = {
-  high: "/sawad/models/compound-zaitun-high.glb",
-  low: "/sawad/models/compound-zaitun-low.glb",
+  high: assetUrl("/sawad/models/compound-zaitun-high.glb"),
+  low: assetUrl("/sawad/models/compound-zaitun-low.glb"),
 };
 /**
  * The Zaitun far set (scripts/blender/export-far.sh): the same nodes, copies and materials as the
@@ -30,8 +34,8 @@ export const PLAN_COMPOUND_MODEL_URL: Record<QualityTier, string> = {
  * file only; the full file loads beside it and replaces it in place (`upgradeToFull`).
  */
 export const PLAN_FAR_MODEL_URL: Record<QualityTier, string> = {
-  high: "/sawad/models/compound-zaitun-far-high.glb",
-  low: "/sawad/models/compound-zaitun-far-low.glb",
+  high: assetUrl("/sawad/models/compound-zaitun-far-high.glb"),
+  low: assetUrl("/sawad/models/compound-zaitun-far-low.glb"),
 };
 
 /** The baked compound a variant draws. */
@@ -46,15 +50,15 @@ export function compoundModelUrl(variant: SceneVariant, tier: QualityTier): stri
  */
 export type LibraryKind = "vegetation" | "life";
 export const LIBRARY_URL: Record<LibraryKind, Record<QualityTier, string>> = {
-  vegetation: { high: "/sawad/models/vegetation-high.glb", low: "/sawad/models/vegetation-low.glb" },
-  life: { high: "/sawad/models/life-high.glb", low: "/sawad/models/life-low.glb" },
+  vegetation: { high: assetUrl("/sawad/models/vegetation-high.glb"), low: assetUrl("/sawad/models/vegetation-low.glb") },
+  life: { high: assetUrl("/sawad/models/life-high.glb"), low: assetUrl("/sawad/models/life-low.glb") },
 };
 
 /** A loaded library: its scene (the source meshes, never mounted as is) and its animation clips. */
 export type GltfLibrary = { scene: Group; animations: AnimationClip[] };
 
-/** Basis Universal transcoder for the KTX2 textures (copied from three/examples/jsm/libs/basis). */
-export const BASIS_TRANSCODER_PATH = "/sawad/basis/";
+/** Basis Universal transcoder for the KTX2 textures (copied from three/examples/jsm/libs/basis), in a folder named by its hash. */
+export const BASIS_TRANSCODER_PATH = assetUrl("/sawad/basis/");
 export const COMPOUND_NAME = "architecture-model";
 
 type MaterialWithMaps = Material & Partial<Record<"map" | "aoMap" | "normalMap" | "roughnessMap" | "metalnessMap" | "emissiveMap" | "alphaMap" | "lightMap", Texture | null>>;
@@ -73,6 +77,7 @@ export function bakedLightOf(model: Object3D | null): BakedLight | null {
 export function disposeObject(root: Object3D): void {
   // A far set still waiting for its full detail: the detail is freed when it arrives, never swapped in.
   detailOf(root)?.cancel();
+  dayPageOf(root)?.cancel();
   const textures = new Set<Texture>();
   const materials = new Set<Material>();
   root.traverse((o) => {
@@ -93,19 +98,35 @@ export function disposeObject(root: Object3D): void {
   bakedLightOf(root)?.dispose();
 }
 
-/** Shadows on every mesh (transparent glass receives but does not cast), AO read from UV1. */
+/**
+ * Shadows on every mesh (transparent glass receives but does not cast), AO read from UV1, and the
+ * matrices composed once. The model never moves (it is mounted as is), so three need not recompose
+ * every node's matrix each frame (S5-8: `updateMatrixWorld` was the second-largest script cost).
+ *
+ * Zaitun ships AO maps only on the court lattices (scripts/blender/diet.mjs, ledger T6): elsewhere
+ * the baked light holds the occlusion. A mesh that kept the lightmap UVs keeps a `TEXCOORD_1` the file
+ * defines as zeros (glTF wants its UV sets without a gap); nothing samples it, so it is dropped here
+ * before it is ever uploaded.
+ */
 export function prepareCompound(root: Object3D): void {
   root.traverse((o) => {
+    o.matrixAutoUpdate = false;
+    o.updateMatrix();
     const mesh = o as Mesh;
     if (!mesh.isMesh) return;
     const materials = materialsOf(mesh);
     const blended = materials.some((m) => m.transparent && m.blending === NormalBlending);
     mesh.castShadow = !blended;
     mesh.receiveShadow = true;
+    let ao = false;
     for (const m of materials as MaterialWithMaps[]) {
       // The bake lives on its own lightmap UVs (glTF occlusionTexture.texCoord = 1).
-      if (m.aoMap) m.aoMap.channel = 1;
+      if (m.aoMap) {
+        m.aoMap.channel = 1;
+        ao = true;
+      }
     }
+    if (!ao && mesh.geometry.getAttribute("uv1")) mesh.geometry.deleteAttribute("uv1");
   });
 }
 
@@ -150,11 +171,15 @@ function loadGltf(url: string, ktx2: KTX2Loader): Promise<GLTF> {
 /**
  * The day pages of the baked light, loaded beside the model. A failure is reported and leaves
  * the model on real-time light: the scene still shows, only without the bake.
+ *
+ * With `half`, the buildings page comes as its half-size mip level (`bakedHalfPageUrl`): what the
+ * first frame waits for drops from 0.72 to about 0.2 MB on the high tier (ledger T36), and the full
+ * page replaces it after the poster hold (`upgradeDayPage`).
  */
-async function loadDayLight(tier: QualityTier, ktx2: KTX2Loader): Promise<BakedLight | null> {
+async function loadDayLight(tier: QualityTier, ktx2: KTX2Loader, half = false): Promise<BakedLight | null> {
   try {
     const manifest = await loadBakedManifest();
-    return createBakedLight(manifest, tier, await loadBakedPages(manifest, tier, "day", ktx2));
+    return createBakedLight(manifest, tier, await loadBakedPages(manifest, tier, "day", ktx2, half ? { buildings: bakedHalfPageUrl(manifest, tier, "buildings", "day") } : {}));
   } catch (error) {
     reportError("sawad-scene", error, { stage: "baked-light", tier });
     return null;
@@ -182,8 +207,15 @@ function finishCompound(group: Group, baked: BakedLight | null): Group {
  * so the group the caller holds stays the same object. If the far set cannot load, it waits for
  * the full file instead, as before the far set existed.
  */
-export async function loadCompound(tier: QualityTier, renderer: WebGLRenderer, variant: SceneVariant = "dijla"): Promise<Group> {
-  if (usesPlan(variant)) return loadPlanCompound(tier, renderer, variant);
+/**
+ * How much of the Zaitun model a scene wants: `full`, the far set and then the full detail in its
+ * place (Home); `far`, the far set only (the finder's stage card, ledger T30 and the owner's D12:
+ * its views stay on far-view detail and the 7 MB full file is never fetched).
+ */
+export type CompoundDetailWanted = "full" | "far";
+
+export async function loadCompound(tier: QualityTier, renderer: WebGLRenderer, variant: SceneVariant = "dijla", detail: CompoundDetailWanted = "full"): Promise<Group> {
+  if (usesPlan(variant)) return loadPlanCompound(tier, renderer, variant, detail);
   const url = compoundModelUrl(variant, tier);
   try {
     const gltf = await withKtx2(renderer, (ktx2) => loadGltf(url, ktx2));
@@ -194,12 +226,16 @@ export async function loadCompound(tier: QualityTier, renderer: WebGLRenderer, v
   }
 }
 
-async function loadPlanCompound(tier: QualityTier, renderer: WebGLRenderer, variant: SceneVariant): Promise<Group> {
+/** Tiers whose first frame takes the buildings page at half size, the full page following (ledger T36). */
+export const HALF_DAY_PAGE: Record<QualityTier, boolean> = { high: true, low: false };
+
+async function loadPlanCompound(tier: QualityTier, renderer: WebGLRenderer, variant: SceneVariant, detail: CompoundDetailWanted): Promise<Group> {
   const url = PLAN_COMPOUND_MODEL_URL[tier];
   const farUrl = PLAN_FAR_MODEL_URL[tier];
   // One loader for the far set, the light and the full file: one transcoder start-up, not three.
   const ktx2 = createKtx2(renderer);
-  const light = loadDayLight(tier, ktx2);
+  const half = HALF_DAY_PAGE[tier];
+  const light = loadDayLight(tier, ktx2, half);
   let far: GLTF;
   try {
     far = await loadGltf(farUrl, ktx2);
@@ -208,7 +244,10 @@ async function loadPlanCompound(tier: QualityTier, renderer: WebGLRenderer, vari
     reportError("sawad-scene", error, { stage: "compound-far", tier, variant, url: farUrl });
     try {
       const [gltf, baked] = await Promise.all([loadGltf(url, ktx2), light]);
-      return finishCompound(gltf.scene, baked);
+      const group = finishCompound(gltf.scene, baked);
+      // The first frame already waited for the full model: the full page comes with it, no swap.
+      if (baked && half) await upgradeDayPage(baked, () => loadBakedPage(baked.manifest, baked.tier, "buildings", "day", ktx2), { renderer, tier, holdFrames: 0 }).settled;
+      return group;
     } catch (fullError) {
       reportError("sawad-scene", fullError, { stage: "compound-model", tier, variant, url });
       throw fullError;
@@ -216,17 +255,92 @@ async function loadPlanCompound(tier: QualityTier, renderer: WebGLRenderer, vari
       ktx2.dispose();
     }
   }
-  const group = finishCompound(far.scene, await light);
-  // The full file waits until the far set is on screen, so on a slow line it never shares the
-  // bandwidth the first frame is waiting for. Anything drawn with this renderer since now counts.
+  const baked = await light;
+  const group = finishCompound(far.scene, baked);
+  // The full file and the full lightmap page wait until the far set is on screen, so on a slow line
+  // they never share the bandwidth the first frame is waiting for. Anything drawn since now counts.
   const drawn = renderer.info.render.frame;
-  group.userData.detail = upgradeToFull(group, () => loadGltf(url, ktx2), {
-    renderer,
-    tier,
-    shown: () => renderer.info.render.frame > drawn,
-    onSettled: () => ktx2.dispose(),
-  });
+  const shown = () => renderer.info.render.frame > drawn;
+  const settles: Promise<unknown>[] = [];
+  if (baked && half) {
+    const page = upgradeDayPage(baked, () => loadBakedPage(baked.manifest, baked.tier, "buildings", "day", ktx2), { renderer, tier, shown });
+    group.userData.dayPage = page;
+    settles.push(page.settled);
+  }
+  if (detail === "full") {
+    group.userData.detail = upgradeToFull(group, () => loadGltf(url, ktx2), { renderer, tier, shown });
+    settles.push(detailOf(group)!.settled);
+  }
+  // The transcoder's workers end once nothing more is coming through this loader.
+  void Promise.all(settles).finally(() => ktx2.dispose());
   return group;
+}
+
+// ------------------------------------------------------------------ the full lightmap page (T36)
+
+export type DayPageUpgrade = {
+  readonly state: DetailState;
+  /** Resolves once the full page is in, or the half page was left (a failure, or the model was freed). */
+  readonly settled: Promise<DetailState>;
+  cancel: () => void;
+};
+
+/** The day-page upgrade a compound carries, or null (the low tier, the 7 ha compound, or already full). */
+export function dayPageOf(model: Object3D | null): DayPageUpgrade | null {
+  return (model?.userData.dayPage as DayPageUpgrade | undefined) ?? null;
+}
+
+/**
+ * Replaces the half-size buildings page with the full page once the first frame is on screen and the
+ * poster hold is over, as `upgradeToFull` does for the geometry: the texture is uploaded on its own
+ * frame, then every lit material takes it on the next (bakedLight.ts `setBakedDayPage`; same slot,
+ * same shader). A failure is reported and leaves the half page in place: the scene stays lit.
+ */
+export function upgradeDayPage(light: BakedLight, loadFull: () => Promise<Texture>, options: UpgradeOptions): DayPageUpgrade {
+  const { renderer, tier, frame = browserFrame, redraw = () => invalidate(), shown = () => true, holdFrames = DETAIL_HOLD_FRAMES } = options;
+  let state: DetailState = "far";
+  const nextFrame = () => new Promise<void>((resolve) => frame(resolve));
+  const settled = (async (): Promise<DetailState> => {
+    let full: Texture | null = null;
+    try {
+      while (state === "far" && !shown()) await nextFrame();
+      if (state !== "far") return state;
+      const hold = (async () => {
+        for (let i = 0; i < holdFrames && state === "far"; i++) await nextFrame();
+      })();
+      [full] = await Promise.all([loadFull(), hold]);
+      if (holdFrames > 0) await nextFrame();
+      if (state !== "far") {
+        full.dispose();
+        return state;
+      }
+      renderer.initTexture(full);
+      if (holdFrames > 0) await nextFrame();
+      if ((state as DetailState) !== "far") {
+        full.dispose();
+        return state;
+      }
+      setBakedDayPage(light, "buildings", full).dispose();
+      state = "full";
+      redraw();
+      return state;
+    } catch (error) {
+      full?.dispose();
+      if ((state as DetailState) === "cancelled") return "cancelled";
+      reportError("sawad-scene", error, { stage: "baked-light-full", tier });
+      state = "failed";
+      return state;
+    }
+  })();
+  return {
+    get state() {
+      return state;
+    },
+    settled,
+    cancel() {
+      if (state === "far") state = "cancelled";
+    },
+  };
 }
 
 // ------------------------------------------------------------------ the far set's full detail

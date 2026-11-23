@@ -107,6 +107,7 @@ vi.mock("../scene/SceneWorld", () => ({
   },
 }));
 
+import { assetUrl } from "../scene/assetUrl";
 import { createBakedLight, type BakedManifest } from "../scene/bakedLight";
 import { DAYLIGHT_SECONDS, HANDOVER, WINDOW_GLOW } from "./daylight";
 import { ExperienceWorld, dressHandover, findWorldParts, type ExperienceWorldProps } from "./ExperienceWorld";
@@ -377,7 +378,8 @@ describe("ExperienceWorld", () => {
     const w = await mount({ model: group });
     await w.update({ model: group, daylight: "dusk" });
     await settle();
-    expect(kt.load.mock.calls.map((c) => c[0])).toEqual(["/sawad/lightmaps/zaitun/dusk-buildings-high.ktx2", "/sawad/lightmaps/zaitun/dusk-site-high.ktx2"]);
+    // At their versioned addresses (scripts/blender/version-assets.mjs, ledger T32).
+    expect(kt.load.mock.calls.map((c) => c[0])).toEqual([assetUrl("/sawad/lightmaps/zaitun/dusk-buildings-high.ktx2"), assetUrl("/sawad/lightmaps/zaitun/dusk-site-high.ktx2")]);
     expect(light.dusk?.buildings.channel).toBe(2);
     await w.frames(DUSK_FRAMES);
     expect(light.uniforms.buildings.uBakedMix.value).toBe(1);

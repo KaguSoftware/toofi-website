@@ -18,10 +18,10 @@ const deferred = (): Deferred => {
   });
   return { promise, resolve, reject };
 };
-const loadCompound = vi.fn<(tier: string, renderer: unknown) => Promise<Group>>(() => model.promise);
+const loadCompound = vi.fn<(tier: string, renderer: unknown, variant?: string, detail?: string) => Promise<Group>>(() => model.promise);
 const loadLibrary = vi.fn<(kind: string, tier: string, renderer: unknown) => Promise<{ scene: Group; animations: unknown[] }>>();
 vi.mock("./compoundModel", () => ({
-  loadCompound: (tier: string, renderer: unknown) => loadCompound(tier, renderer),
+  loadCompound: (tier: string, renderer: unknown, variant: string, detail: string) => (detail === "full" ? loadCompound(tier, renderer) : loadCompound(tier, renderer, variant, detail)),
   loadLibrary: (kind: string, tier: string, renderer: unknown) => loadLibrary(kind, tier, renderer),
   disposeObject: (...args: unknown[]) => disposeObject(...args),
 }));
@@ -41,6 +41,8 @@ function Harness({ tier, variant }: { tier: QualityTier; variant: SceneVariant }
 const mount = (tier: QualityTier, variant: SceneVariant) => ReactThreeTestRenderer.create(<Harness tier={tier} variant={variant} />);
 /** Lets a settled model promise reach the hook. */
 const settle = () => ReactThreeTestRenderer.act(async () => {});
+/** An unmount frees on the next turn, once it has seen that the canvas left the page (useTimedAsset `keep`). */
+const released = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
   model = deferred();
@@ -62,6 +64,7 @@ describe("useCompoundModel", () => {
     expect(reportError).not.toHaveBeenCalled();
     // The hook loaded it, so the hook frees it.
     await renderer.unmount();
+    await released();
     expect(disposeObject).toHaveBeenCalledWith(group);
   });
 
@@ -140,6 +143,25 @@ describe("useCompoundModel", () => {
   });
 });
 
+describe("useCompoundModel with the far set only", () => {
+  function Far() {
+    const current = useCompoundModel("high", "zaitun", "far");
+    useEffect(() => {
+      state = current;
+    });
+    return null;
+  }
+
+  it("asks the loader for the far set only (the finder, ledger T30)", async () => {
+    await ReactThreeTestRenderer.create(<Far />);
+    expect(loadCompound).toHaveBeenCalledWith("high", expect.anything(), "zaitun", "far");
+    const group = new Group();
+    model.resolve(group);
+    await settle();
+    expect(state).toEqual({ model: group, settled: true });
+  });
+});
+
 describe("useSceneLibrary", () => {
   let lib: LibraryState;
   function Library({ enabled }: { enabled: boolean }) {
@@ -162,6 +184,7 @@ describe("useSceneLibrary", () => {
     await settle();
     expect(lib).toEqual({ library: loaded, settled: true });
     await renderer.unmount();
+    await released();
     expect(disposeObject).toHaveBeenCalledWith(scene);
   });
 

@@ -46,7 +46,8 @@ describe("kindOf", () => {
 describe("publicFiles", () => {
   it("walks public/ and reports URL and size", () => {
     const files = publicFiles();
-    expect(files.some((f) => f.url === "/sawad/basis/basis_transcoder.wasm" && f.bytes > 0)).toBe(true);
+    // The transcoder sits in a folder named by its content hash (scripts/blender/version-assets.mjs).
+    expect(files.some((f) => /^\/sawad\/basis\/[0-9a-f]{10}\/basis_transcoder\.wasm$/.test(f.url) && f.bytes > 0)).toBe(true);
   });
 });
 

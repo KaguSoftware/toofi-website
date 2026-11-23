@@ -6,9 +6,11 @@
 #   SAMPLES=128 scripts/blender/bake-lightmaps.sh     # faster draft
 #   BLENDER=/path/to/blender scripts/blender/bake-lightmaps.sh
 #
-# Writes public/sawad/lightmaps/zaitun/ (PNG pages + lightmaps.json), scripts/blender/lighting.report.json
-# and scripts/blender/out/compound-zaitun-<tier>.lit.raw.glb (the model with UV2, for track 6B's
-# KTX2 + meshopt export). About 15 minutes on an M-series Mac (Metal).
+# Writes scripts/blender/lightmaps/zaitun/ (the PNG pages, masters for export-final.sh), the stable
+# public/sawad/lightmaps/zaitun/lightmaps.json, scripts/blender/lighting.report.json and
+# scripts/blender/out/compound-zaitun-<tier>.lit.raw.glb (the model with UV2, for track 6B's
+# KTX2 + meshopt export). About 15 minutes on an M-series Mac (Metal). Then run export-final.sh,
+# which encodes the pages and versions every file (version-assets.mjs).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
@@ -22,3 +24,9 @@ for tier in high low; do
   "$BLENDER" -b --factory-startup -P scripts/blender/build_compound.py -- --plan zaitun --tier "$tier" --blend "$OUT/zaitun-$tier.blend"
   "$BLENDER" -b "$OUT/zaitun-$tier.blend" --python-exit-code 1 -P scripts/blender/lighting.py -- --tier "$tier" --samples "${SAMPLES:-512}" --validate
 done
+
+# lighting.py writes its PNG pages beside lightmaps.json in public/. They are masters, never fetched
+# (the site ships their KTX2 files), so they move out of public/ (ledger T49); export-final.sh puts
+# back the two the scene does fetch (the dusk ground pages).
+mkdir -p scripts/blender/lightmaps/zaitun
+mv public/sawad/lightmaps/zaitun/*.png scripts/blender/lightmaps/zaitun/

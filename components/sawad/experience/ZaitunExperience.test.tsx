@@ -103,6 +103,7 @@ vi.mock("./StoryScroll", async () => {
 });
 
 import { ZaitunExperience, captureAt, resetDeviceCache } from "./ZaitunExperience";
+import { assetUrl } from "../scene/assetUrl";
 
 const labels: ExperienceLabels = {
   region: "A tour of Zaitun Hills",
@@ -617,7 +618,7 @@ describe("ZaitunExperience before its code arrives", () => {
     expect(script).toBeGreaterThan(section);
     expect(script).toBeLessThan(page.indexOf("xp__stage"));
     expect(page).toContain("document.currentScript");
-    expect(page).toContain("/sawad/models/compound-zaitun-far-low.glb");
+    expect(page).toContain(assetUrl("/sawad/models/compound-zaitun-far-low.glb"));
   });
 
   it("leaves the script out where the owner has switched the live scene off", () => {
@@ -668,7 +669,7 @@ describe("ZaitunExperience before its code arrives", () => {
     cap.tier = "low";
     await mount();
     const hints = Array.from(document.head.querySelectorAll("link[rel=preload]"), (l) => l.getAttribute("href"));
-    expect(hints).toEqual(["/sawad/models/compound-zaitun-far-low.glb", "/sawad/basis/basis_transcoder.js", "/sawad/basis/basis_transcoder.wasm"]);
+    expect(hints).toEqual([assetUrl("/sawad/models/compound-zaitun-far-low.glb"), assetUrl("/sawad/basis/") + "basis_transcoder.js", assetUrl("/sawad/basis/") + "basis_transcoder.wasm"]);
   });
 
   it("asks for nothing where the scene is not coming", async () => {

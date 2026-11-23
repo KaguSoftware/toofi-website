@@ -6,8 +6,9 @@
  *
  *   node scripts/blender/finalize-manifest.mjs     (run by scripts/blender/build.sh)
  */
-import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { shippedPath } from "./version-assets.mjs";
 
 /**
  * Export budgets for the 28 ha site (docs/zaitun/EXPORT_BUDGETS.md has the reasoning).
@@ -66,7 +67,15 @@ export function buildManifest(reports, sizeOf) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const read = (tier) => JSON.parse(readFileSync(here(`./out/build-report-${tier}.json`), "utf8"));
-  const manifest = buildManifest({ high: read("high"), low: read("low") }, (f) => (existsSync(MODELS_DIR + f) ? statSync(MODELS_DIR + f).size : null));
+  // A fresh build output, or the versioned file version-assets.mjs left (ledger T32).
+  const sizeOf = (f) => {
+    try {
+      return statSync(shippedPath(`/sawad/models/${f}`)).size;
+    } catch {
+      return null;
+    }
+  };
+  const manifest = buildManifest({ high: read("high"), low: read("low") }, sizeOf);
   writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2) + "\n");
   for (const [f, size] of Object.entries(manifest.files)) console.log(`${f}: ${(size / 1e6).toFixed(2)} MB (budget ${manifest.budgets[f] / 1e6} MB)`);
 }

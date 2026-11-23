@@ -4,8 +4,8 @@
     {
       "tier": "high",
       "file": "compound-zaitun-far-high.glb",
-      "bytes": 4687324,
-      "fullBytes": 10261952,
+      "bytes": 4551004,
+      "fullBytes": 5848160,
       "budget": 4800000,
       "settings": {
         "error": 0.05,
@@ -403,8 +403,8 @@
     {
       "tier": "low",
       "file": "compound-zaitun-far-low.glb",
-      "bytes": 2689404,
-      "fullBytes": 4973992,
+      "bytes": 2620148,
+      "fullBytes": 3628752,
       "budget": 2800000,
       "settings": {
         "error": 0.08,

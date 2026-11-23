@@ -61,6 +61,8 @@ mkdir -p public/sawad/basis
 cp node_modules/three/examples/jsm/libs/basis/basis_transcoder.{js,wasm} public/sawad/basis/
 
 node scripts/blender/finalize-manifest.mjs
+# Every shipped file gets its content hash in its name, the transcoder a folder named by its hash (ledger T32).
+node scripts/blender/version-assets.mjs
 
 # Optional: typed JSX for the React Three Fiber scene.  JSX=1 scripts/blender/build.sh
 [ "${JSX:-0}" = 1 ] && scripts/blender/gltfjsx.sh

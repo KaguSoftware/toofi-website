@@ -10,25 +10,29 @@ import {
   Quaternion,
   ShaderChunk,
   ShaderLib,
+  Texture,
   Vector3,
   type InstancedBufferAttribute,
-  type Texture,
   type WebGLProgramParametersWithUniforms,
   type WebGLRenderer,
 } from "three";
 import { describe, expect, it, vi } from "vitest";
+import { assetUrl } from "./assetUrl";
 import {
   BAKED_LIGHT_BASE,
   DUSK_MIP_BIAS,
   applyBakedLight,
   bakeMaterial,
+  bakedHalfPageUrl,
   bakedPageUrl,
   copyAt,
   copyNamed,
   createBakedLight,
   loadBakedManifest,
   loadBakedPages,
+  lightsWithSunShadow,
   mapsTail,
+  setBakedDayPage,
   setBakedDusk,
   setBakedMix,
   setBakedStrength,
@@ -50,17 +54,18 @@ function manifest(instances: Record<string, Copy>): BakedManifest {
 }
 
 describe("baked light files", () => {
-  it("ships each page as KTX2 beside the PNG master the manifest lists", () => {
+  it("ships each page as KTX2 for the PNG master the manifest lists, at its versioned address", () => {
     const m = manifest({});
-    expect(bakedPageUrl(m, "high", "buildings", "day")).toBe(`${BAKED_LIGHT_BASE}day-buildings-high.ktx2`);
-    expect(bakedPageUrl(m, "low", "site", "dusk")).toBe(`${BAKED_LIGHT_BASE}dusk-site-low.ktx2`);
+    expect(bakedPageUrl(m, "high", "buildings", "day")).toBe(assetUrl(`${BAKED_LIGHT_BASE}day-buildings-high.ktx2`));
+    expect(bakedPageUrl(m, "high", "buildings", "day")).toMatch(/day-buildings-high\.[0-9a-f]{10}\.ktx2$/);
+    expect(bakedPageUrl(m, "low", "site", "dusk")).toBe(assetUrl(`${BAKED_LIGHT_BASE}dusk-site-low.ktx2`));
   });
 
   it("reads the manifest, and fails on a bad response", async () => {
     const m = manifest({});
     const ok = vi.fn(async () => new Response(JSON.stringify(m)));
     await expect(loadBakedManifest(ok as unknown as typeof fetch)).resolves.toEqual(m);
-    expect(ok).toHaveBeenCalledWith(`${BAKED_LIGHT_BASE}lightmaps.json`);
+    expect(ok).toHaveBeenCalledWith(assetUrl(`${BAKED_LIGHT_BASE}lightmaps.json`));
     const missing = vi.fn(async () => new Response("", { status: 404 }));
     await expect(loadBakedManifest(missing as unknown as typeof fetch)).rejects.toThrow("HTTP 404");
   });
@@ -68,7 +73,7 @@ describe("baked light files", () => {
   it("loads a state's two pages unflipped, on the second lightmap UV set", async () => {
     const loader = { loadAsync: vi.fn(async (url: string) => (void url, tex() as Texture)) };
     const p = await loadBakedPages(manifest({}), "high", "dusk", loader);
-    expect(loader.loadAsync.mock.calls.map((c) => c[0])).toEqual([`${BAKED_LIGHT_BASE}dusk-buildings-high.ktx2`, `${BAKED_LIGHT_BASE}dusk-site-high.ktx2`]);
+    expect(loader.loadAsync.mock.calls.map((c) => c[0])).toEqual([assetUrl(`${BAKED_LIGHT_BASE}dusk-buildings-high.ktx2`), assetUrl(`${BAKED_LIGHT_BASE}dusk-site-high.ktx2`)]);
     for (const t of [p.buildings, p.site]) {
       expect(t.flipY).toBe(false);
       expect(t.channel).toBe(2);
@@ -133,6 +138,37 @@ describe("the lit material", () => {
     return shader;
   };
 
+  it("keeps the sun's shadow from three's light loop, for light 0 only, and refuses a loop it does not know", () => {
+    const loop = lightsWithSunShadow();
+    expect(loop).toContain("#if ( UNROLLED_LOOP_INDEX == 0 )");
+    expect(loop).toContain("directLight.color *= bakedShadowLit;");
+    // The rest of three's chunk is untouched.
+    expect(loop.replace(/\{\n\t\tfloat bakedShadowLit[\s\S]*?\n\t\t\}/, "")).toBe(ShaderChunk.lights_fragment_begin.replace(/directLight\.color \*= \( directLight\.visible && receiveShadow \) \? getShadow\( directionalShadowMap[^;]*;/, ""));
+    expect(() => lightsWithSunShadow("directLight.color *= 1.0;")).toThrow("changed");
+  });
+
+  it("swaps a day page into every lit material on it (the half page for the full one, ledger T36)", () => {
+    const light = createBakedLight(manifest({}), "high", pages());
+    const half = light.day.buildings;
+    const lit = bakeMaterial(new MeshStandardMaterial({ name: "villa-courtyard-atlas" }), half, light.uniforms.buildings, "buildings");
+    light.materials.buildings.push(lit);
+    const full = new Texture();
+    expect(setBakedDayPage(light, "buildings", full)).toBe(half);
+    expect(lit.lightMap).toBe(full);
+    expect(light.day.buildings).toBe(full);
+    // Without dusk pages the dusk uniform follows the day page; with them it is left alone.
+    expect(light.uniforms.buildings.uBakedDusk.value).toBe(full);
+    const dusk = new Texture();
+    setBakedDusk(light, { buildings: dusk, site: new Texture() });
+    setBakedDayPage(light, "buildings", new Texture());
+    expect(light.uniforms.buildings.uBakedDusk.value).toBe(dusk);
+  });
+
+  it("names the half page beside the full one", () => {
+    expect(bakedHalfPageUrl(manifest({}), "high", "buildings", "day")).toBe(assetUrl(`${BAKED_LIGHT_BASE}day-buildings-high.half.ktx2`));
+    expect(bakedHalfPageUrl(manifest({}), "high", "buildings", "day")).toMatch(/day-buildings-high\.half\.[0-9a-f]{10}\.ktx2$/);
+  });
+
   it("keeps the reflection half of three's chunk and refuses a chunk it does not know", () => {
     expect(mapsTail()).toContain("getIBLRadiance");
     expect(ShaderChunk.lights_fragment_maps.endsWith(mapsTail())).toBe(true);
@@ -157,8 +193,12 @@ describe("the lit material", () => {
     expect(shader.fragmentShader).toContain("mix( bakedDay, bakedDusk, uBakedMix )");
     expect(shader.fragmentShader).toContain(`texture2D( uBakedDusk, vLightMapUv, ${DUSK_MIP_BIAS.toFixed(1)} )`);
     expect(shader.fragmentShader).toContain("reflectedLight.directDiffuse *= 1.0 - uBakedStrength;");
-    // Plants and people are not in the bake: the sun they hold back comes off the baked light.
-    expect(shader.fragmentShader).toContain("getShadow( directionalShadowMap[ 0 ]");
+    // Plants and people are not in the bake: the sun they hold back comes off the baked light,
+    // read from three's own shadow lookup for the sun instead of a second one (ledger T48).
+    expect(shader.fragmentShader).toContain("bakedSunLit = bakedShadowLit;");
+    expect(shader.fragmentShader).toContain("baked - bakedSun * ( 1.0 - bakedSunLit )");
+    expect(shader.fragmentShader).not.toContain("#include <lights_fragment_begin>");
+    expect(shader.fragmentShader.match(/getShadow\( directionalShadowMap/g)).toHaveLength(1);
     expect(shader.fragmentShader).not.toContain("#include <lights_fragment_maps>");
     expect(shader.fragmentShader).toContain("getIBLRadiance");
   });

@@ -33,12 +33,49 @@ export const OUT_DIR = here("../out/far-gate/");
 export const MODES = ["far", "full", "mixed"];
 export const DEFAULT_SHOTS = { far: ["poster-hold", "aerial", "opening"], full: null, mixed: null };
 
-/** URL patterns refused in each mode (Playwright glob syntax). */
+/** URL patterns refused in each mode (Playwright glob syntax). The files carry a content hash in their names (version-assets.mjs). */
 export function blockedPatterns(mode) {
-  if (mode === "far") return ["**/sawad/models/compound-zaitun-high.glb", "**/sawad/models/compound-zaitun-low.glb"];
+  if (mode === "far") return ["**/sawad/models/compound-zaitun-high.*.glb", "**/sawad/models/compound-zaitun-low.*.glb"];
   if (mode === "full") return ["**/sawad/models/compound-zaitun-far-*.glb"];
   if (mode === "mixed") return [];
   throw new Error(`unknown mode ${mode} (one of ${MODES.join(", ")})`);
+}
+
+/**
+ * Cameras the rig's list lacks, run by this gate as if they were the rig's (same plan format as
+ * scripts/perf/shots.mjs). `close`: the closest look a visitor gets at a surface, for F2B's atlas one
+ * mip lower (ledger T42): the walk, turned toward the building fronts, walked on until they fill the
+ * view. It has no stored reference frame: capture it on main and on the change, and compare the two
+ * runs (scripts/perf/S3/compare.mjs --against), at --width 1440.
+ */
+export const EXTRA_SHOTS = {
+  close: {
+    note: "Explore, Walk, turn left toward the building fronts, then W held until they fill the view",
+    steps: [
+      { frame: 5, do: "click", selector: ".xp__explore" },
+      { frame: 30, do: "click", selector: '.xp__hud[data-hud="explore"] .xp__modes button:nth-child(2)' },
+      { frame: 200, do: "key", type: "keydown", code: "ArrowLeft" },
+      { frame: 245, do: "key", type: "keyup", code: "ArrowLeft" },
+      { frame: 250, do: "key", type: "keydown", code: "KeyW" },
+      { frame: 430, do: "key", type: "keyup", code: "KeyW" },
+    ],
+    capture: 480,
+  },
+};
+
+/**
+ * A shot's plan: one of EXTRA_SHOTS, or the rig's own (`planFor` from scripts/perf/shots.mjs).
+ * @param {string} name
+ * @param {(name: string, options: object) => any} planFor
+ * @param {{ level?: number | null, width?: number }} [options]
+ */
+export function planShot(name, planFor, { level = null, width = 960 } = {}) {
+  const extra = EXTRA_SHOTS[name];
+  if (!extra) return planFor(name, { level, record: false, capture: true, width });
+  const steps = [...extra.steps.map((s) => ({ ...s })), { frame: extra.capture, do: "capture", name, width }];
+  if (level !== null) steps.push({ frame: 1, do: "pin", level });
+  steps.sort((a, b) => a.frame - b.frame);
+  return { steps, lastFrame: extra.capture + 2 };
 }
 
 /** Where a candidate's far file for a tier lives. */
@@ -130,7 +167,7 @@ async function main() {
         for (const pattern of blocked) await context.route(pattern, (route) => route.abort("failed"));
         if (candidate) {
           await context.route("**/sawad/models/compound-zaitun-far-*.glb", (route) => {
-            const tier = /far-(high|low)\.glb/.exec(route.request().url())[1];
+            const tier = /far-(high|low)\.(?:[0-9a-f]+\.)?glb/.exec(route.request().url())[1];
             return route.fulfill({ status: 200, contentType: "model/gltf-binary", body: readFileSync(candidateFile(candidate, tier)) });
           });
         }
@@ -142,7 +179,7 @@ async function main() {
         candidate = cand;
         const tag = cand ? `${cand}-` : "";
         for (const shot of shots) {
-          const plan = planFor(shot, { level: REFERENCE_LEVEL[tier], record: false, capture: true, width });
+          const plan = planShot(shot, planFor, { level: REFERENCE_LEVEL[tier], width });
           if (args["capture-at"]) moveCapture(plan, Number(args["capture-at"]));
           if (shot === "poster-hold") plan.steps.unshift({ frame: 0, do: "capture", name: "handover-scene", width }, { frame: 0, do: "capturePoster", name: "handover-poster", width });
           const { context, page } = await openPage(routed, tier === "high" ? "desktop" : "phone", { probe: { virtualTime: true, plan: plan.steps }, throttle: false });

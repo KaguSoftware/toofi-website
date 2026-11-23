@@ -17,8 +17,10 @@
  * Writes public/sawad/models/compound-zaitun-far-<tier>.glb and public/sawad/models/zaitun-far.json.
  * Exits 1 when a far file does not match its full file's structure.
  */
-import { existsSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { STEPS, parseGlb, writeGlb } from "../diet.mjs";
+import { shippedPath } from "../version-assets.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 export const MODELS_DIR = here("../../../public/sawad/models/");
@@ -371,7 +373,7 @@ async function aoBrightSpots(t, tier, farTextures) {
 async function buildTier(t, tier, tierSettings = FAR_SETTINGS[tier], dest = MODELS_DIR + farFile(tier)) {
   const settings = tierSettings;
   const { io, PropertyType, EXTMeshoptCompression, prune, reorder, MeshoptEncoder, MeshoptSimplifier } = t;
-  const fullPath = MODELS_DIR + fullFile(tier);
+  const fullPath = shippedPath("/sawad/models/" + fullFile(tier));
   const texPath = OUT_DIR + texturesFile(tier);
   if (!existsSync(texPath)) throw new Error(`missing ${texPath}: run scripts/blender/export-far.sh`);
   const doc = await io.read(fullPath);
@@ -433,6 +435,10 @@ async function buildTier(t, tier, tierSettings = FAR_SETTINGS[tier], dest = MODE
   doc.createExtension(EXTMeshoptCompression).setRequired(true).setEncoderOptions({ method: EXTMeshoptCompression.EncoderMethod.QUANTIZE });
   const out = dest;
   await io.write(out, doc);
+  // glTF Transform stores the full file's free TEXCOORD_1 placeholder as real zeros: the diet's AO
+  // step puts the placeholder back, byte for byte the rest (diet.mjs, ledger T6).
+  const dieted = STEPS.ao.apply(parseGlb(readFileSync(out)));
+  if (dieted.changed) writeFileSync(out, writeGlb(dieted));
 
   // Read back what was written and hold it against the full file.
   const farSummary = summarize(await io.read(out));

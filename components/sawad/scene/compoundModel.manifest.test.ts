@@ -1,6 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { shippedPath } from "../../../scripts/blender/version-assets.mjs";
 import { residencesIn, type ResidenceTypeId } from "@/lib/sawad/data";
 import { PAD_Y, planAmenities, planApartmentBlocks, planLamps, planParking, planVilla, planVillas, villaPlot, type VillaType } from "./layout";
 import { paletteHex } from "./world";
@@ -9,7 +10,8 @@ import { paletteHex } from "./world";
  * The shipped model (scripts/blender/build.sh) must agree with layout.ts, stay on budget and
  * use the scene's palette. Rebuild the model when one of these fails after a layout change.
  */
-const models = (f: string) => fileURLToPath(new URL(`../../../public/sawad/models/${f}`, import.meta.url));
+/** A file in public/sawad/models: the models by their versioned names (scripts/blender/version-assets.mjs), the reports as they are. */
+const models = (f: string) => (f.endsWith(".glb") ? shippedPath(`/sawad/models/${f}`) : fileURLToPath(new URL(`../../../public/sawad/models/${f}`, import.meta.url)));
 type Manifest = {
   villas: Array<{ name: string; position: [number, number, number] }>;
   files: Record<string, number>;
@@ -179,9 +181,10 @@ describe.each(["compound-zaitun-high.glb", "compound-zaitun-low.glb"])("%s", (fi
     expect(names).not.toContain("terrain"); // the scene draws the ground itself
   });
 
-  it("bakes AO on the second UV set for every trim-sheet material with an occlusion map", () => {
+  it("keeps AO maps, on the second UV set, only where the baked light does not reach: the court lattices", () => {
+    // Everywhere else the baked lightmap holds the occlusion (scripts/blender/diet.mjs, ledger T6).
     const withAo = gltf.materials.filter((m) => m.occlusionTexture);
-    expect(withAo.length).toBeGreaterThanOrEqual(12); // villas, apartment, site, garden, amenities
+    expect(withAo.map((m) => m.name).sort()).toEqual(["amenity-padel-lattice", "amenity-tennis-lattice"]);
     for (const m of withAo) expect(m.occlusionTexture!.texCoord).toBe(1);
   });
 

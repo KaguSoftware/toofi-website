@@ -2,12 +2,13 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { shippedPath } from "./version-assets.mjs";
 
 /**
  * Checks the Zaitun Hills lighting (scripts/blender/lighting.py, track 4) through what it writes:
  *   scripts/blender/lighting.report.json             sun, north, rigs, pages, seams, validation
  *   public/sawad/lightmaps/zaitun/lightmaps.json     what the web scene reads
- *   public/sawad/lightmaps/zaitun/*.png              the lightmap pages
+ *   scripts/blender/lightmaps/zaitun/*.png           the lightmap pages (PNG masters)
  * Regenerate with scripts/blender/bake-lightmaps.sh.
  */
 
@@ -54,7 +55,7 @@ type Tier = "high" | "low";
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 const read = (p: string) => readFileSync(here(p), "utf8");
 const report: Report = JSON.parse(read("./lighting.report.json"));
-const manifest: Manifest = JSON.parse(read("../../public/sawad/lightmaps/zaitun/lightmaps.json"));
+const manifest: Manifest = JSON.parse(readFileSync(shippedPath("/sawad/lightmaps/zaitun/lightmaps.json"), "utf8"));
 const layout = JSON.parse(read("./layout.json"));
 const plan = layout.masterplan;
 const world = read("../../components/sawad/scene/world.ts");
@@ -142,7 +143,8 @@ describe("Zaitun lighting (scripts/blender/lighting.py)", () => {
       expect(report.tiers[tier].pages[page].size, page).toEqual(size);
       expect(pages[page].size, page).toEqual(size);
       for (const state of STATES) {
-        const file = here(`../../public/sawad/lightmaps/zaitun/${pages[page].files[state]}`);
+        // The PNG masters live outside public/ (ledger T49); the site ships their KTX2 files.
+        const file = here(`./lightmaps/zaitun/${pages[page].files[state]}`);
         expect(existsSync(file), file).toBe(true);
         expect(pngSize(file), file).toEqual(size);
       }

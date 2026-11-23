@@ -5,9 +5,9 @@
 #   scripts/blender/export-far.sh            # needs KTX-Software's `ktx` CLI (4.3+) on PATH
 #   pnpm install --dir scripts/blender/far --ignore-workspace     # once, for far-set.mjs
 #
-# In:   public/sawad/models/compound-zaitun-<tier>.glb           the shipped full model (geometry source)
+# In:   public/sawad/models/compound-zaitun-<tier>.<hash>.glb    the shipped full model (geometry source)
 #       scripts/blender/out/compound-zaitun-<tier>.lit.raw.glb   track 4's lit raw GLB (texture source)
-# Out:  public/sawad/models/compound-zaitun-far-<tier>.glb
+# Out:  public/sawad/models/compound-zaitun-far-<tier>.<hash>.glb  (versioned by version-assets.mjs)
 #       public/sawad/models/zaitun-far.json                      sizes, triangles, checks
 #
 # The geometry is simplified straight from the shipped file, in its quantized space: every node,
@@ -55,3 +55,4 @@ if [ "${SKIP_TEXTURES:-0}" != 1 ]; then
   far_textures low 256 128 32
 fi
 [ "${SKIP_BUILD:-0}" = 1 ] || node scripts/blender/far/far-set.mjs
+node scripts/blender/version-assets.mjs

@@ -109,13 +109,13 @@
   "budgets": [
     {
       "label": "compound-zaitun-high.glb",
-      "bytes": 10261952,
+      "bytes": 5848160,
       "limit": 10500000,
       "ok": true
     },
     {
       "label": "vegetation-high.glb",
-      "bytes": 1227984,
+      "bytes": 665572,
       "limit": 1600000,
       "ok": true
     },
@@ -127,13 +127,13 @@
     },
     {
       "label": "high models together (initial load)",
-      "bytes": 11728768,
+      "bytes": 6752564,
       "limit": 12000000,
       "ok": true
     },
     {
       "label": "high page estimate (models + 2.30 MB other)",
-      "bytes": 14028768,
+      "bytes": 9052564,
       "limit": 15000000,
       "ok": true
     },
@@ -151,7 +151,7 @@
     },
     {
       "label": "compound-zaitun-low.glb",
-      "bytes": 4973992,
+      "bytes": 3628752,
       "limit": 5200000,
       "ok": true
     },
@@ -169,13 +169,13 @@
     },
     {
       "label": "low models together (initial load)",
-      "bytes": 5610416,
+      "bytes": 4265176,
       "limit": 5800000,
       "ok": true
     },
     {
       "label": "low page estimate (models + 2.30 MB other)",
-      "bytes": 7910416,
+      "bytes": 6565176,
       "limit": 15000000,
       "ok": true
     },

@@ -1,9 +1,9 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { shippedPath } from "../version-assets.mjs";
 import {
   FAR_BUDGET,
   FAR_SETTINGS,
-  MODELS_DIR,
   REPORT_PATH,
   TIERS,
   anchor,
@@ -164,7 +164,7 @@ describe("compareStructure", () => {
 
 /** The JSON chunk of a GLB. */
 const glbJson = (file: string) => {
-  const b = readFileSync(MODELS_DIR + file);
+  const b = readFileSync(shippedPath("/sawad/models/" + file));
   return JSON.parse(b.subarray(20, 20 + b.readUInt32LE(12)).toString("utf8"));
 };
 
@@ -177,15 +177,15 @@ describe("the shipped far set", () => {
       const r = report.tiers.find((x: { tier: string }) => x.tier === tier);
       expect(r.problems).toEqual([]);
       expect(r.settings).toEqual(FAR_SETTINGS[tier as "high" | "low"]);
-      expect(r.bytes).toBe(statSync(MODELS_DIR + farFile(tier)).size);
+      expect(r.bytes).toBe(statSync(shippedPath("/sawad/models/" + farFile(tier))).size);
       expect(r.bytes).toBeLessThanOrEqual(FAR_BUDGET[tier as "high" | "low"]);
-      expect(r.fullBytes).toBe(statSync(MODELS_DIR + fullFile(tier)).size); // built from the shipped full file
+      expect(r.fullBytes).toBe(statSync(shippedPath("/sawad/models/" + fullFile(tier))).size); // built from the shipped full file
     }
   });
 
   it("has the full file's nodes, meshes, materials and textures, and the extensions the loader wires", () => {
     for (const tier of TIERS) {
-      expect(existsSync(MODELS_DIR + farFile(tier))).toBe(true);
+      expect(existsSync(shippedPath("/sawad/models/" + farFile(tier)))).toBe(true);
       const far = glbJson(farFile(tier));
       const full = glbJson(fullFile(tier));
       expect(far.nodes.map((n: { name?: string }) => n.name)).toEqual(full.nodes.map((n: { name?: string }) => n.name));

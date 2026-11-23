@@ -5,11 +5,17 @@
 #   scripts/blender/export-final.sh              # needs KTX-Software's `ktx` CLI (4.3+) on PATH
 #
 # In:   scripts/blender/out/compound-zaitun-<tier>.lit.raw.glb    (scripts/blender/bake-lightmaps.sh)
-#       public/sawad/lightmaps/zaitun/<state>-<page>-<tier>.png    (same bake)
-# Out:  public/sawad/models/compound-zaitun-<tier>.glb            meshopt + KTX2, UV2 kept as TEXCOORD_2
-#       public/sawad/lightmaps/zaitun/<state>-<page>-<tier>.ktx2
+#       scripts/blender/lightmaps/zaitun/<state>-<page>-<tier>.png (same bake: the PNG masters)
+# Out:  public/sawad/models/compound-zaitun-<tier>.<hash>.glb     meshopt + KTX2, UV2 kept as TEXCOORD_2
+#       public/sawad/lightmaps/zaitun/<state>-<page>-<tier>.<hash>.ktx2
+#       public/sawad/lightmaps/zaitun/dusk-ground-<tier>.<hash>.png   the one page the scene fetches as PNG
 #       public/sawad/models/zaitun-export.json                    sizes, budgets, checks
 #       public/sawad/models/compound-zaitun.manifest.json         `files` and `budgets` updated in place
+#       components/sawad/scene/assetVersions.json                 stable → versioned names (version-assets.mjs)
+#
+# After the encode, the asset diet (diet.mjs: AO only on the court lattices, the high tier's atlas one
+# mip lower, the half-size day page) and the versioned names (version-assets.mjs). Then rebuild the far
+# set from the new full model: scripts/blender/export-far.sh.
 #
 # The model is encoded exactly as scripts/blender/build.sh encodes the 7 ha model, with one flag
 # added: `optimize` prunes unused vertex attributes by default, and TEXCOORD_2 (the lightmap UVs) is
@@ -21,6 +27,7 @@ GT=(npx -y @gltf-transform/cli@4.2.1)
 OUT=scripts/blender/out
 MODELS=public/sawad/models
 LIGHTMAPS=public/sawad/lightmaps/zaitun
+MASTERS=scripts/blender/lightmaps/zaitun
 
 command -v ktx >/dev/null || {
   echo "KTX2 textures need KTX-Software's ktx CLI (4.3+): https://github.com/KhronosGroup/KTX-Software/releases" >&2
@@ -56,11 +63,14 @@ encode_model() { # tier atlasSize normalSize simplifyArgs...
 # tier are each one set (6A budget: 2.0 MB high, 0.8 MB low). UASTC is closer to the PNG, but a
 # single 2048 x 2048 buildings page is about 2.9 MB, so it does not fit.
 encode_lightmaps() {
-  local png
-  for png in "$LIGHTMAPS"/*.png; do
-    ktx create --format R8G8B8_SRGB --encode basis-lz --qlevel 255 --clevel 5 --generate-mipmap "$png" "${png%.png}.ktx2"
-    ktx validate "${png%.png}.ktx2" >/dev/null
+  local png out
+  for png in "$MASTERS"/*.png; do
+    out="$LIGHTMAPS/$(basename "${png%.png}").ktx2"
+    ktx create --format R8G8B8_SRGB --encode basis-lz --qlevel 255 --clevel 5 --generate-mipmap "$png" "$out"
+    ktx validate "$out" >/dev/null
   done
+  # The dusk ground page is blended in as a PNG (experience/lightmaps.ts): it ships as it is.
+  cp "$MASTERS"/dusk-ground-*.png "$LIGHTMAPS/"
 }
 
 if [ "${SKIP_MODELS:-0}" != 1 ]; then
@@ -68,4 +78,6 @@ if [ "${SKIP_MODELS:-0}" != 1 ]; then
   encode_model low 1024 512 --simplify true --simplify-error 0.0005
 fi
 [ "${SKIP_LIGHTMAPS:-0}" = 1 ] || encode_lightmaps
+node scripts/blender/diet.mjs
 node scripts/blender/export-final.mjs
+node scripts/blender/version-assets.mjs

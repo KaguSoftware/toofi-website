@@ -47,7 +47,8 @@ export function SceneRoot({
   onFrame,
   onError,
 }: SceneRootProps) {
-  const { model, settled: modelSettled } = useCompoundModel(tier, variant);
+  // The finder's stage card stays on the far set: its views never need the full detail (ledger T30, D12).
+  const { model, settled: modelSettled } = useCompoundModel(tier, variant, "far");
   // The 28 ha plan also places its plants and its people, cars and birds from libraries.
   const plan = usesPlan(variant);
   const vegetation = useSceneLibrary("vegetation", tier, plan);
