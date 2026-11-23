@@ -62,6 +62,7 @@ export function SceneViewport({
   onSelect,
   labels,
   autoLoad = true,
+  posterSizes = "100vw",
   className,
 }: SceneViewportProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -175,7 +176,7 @@ export function SceneViewport({
       aria-label={labels.sceneLabel}
       onPointerDown={() => setHint(false)}
     >
-      <Image className="scene__poster" src={poster.src} alt={poster.alt} fill priority sizes="100vw" />
+      <Image className="scene__poster" src={poster.src} alt={poster.alt} fill priority sizes={posterSizes} />
       {loads && (
         <div key={sceneKey} ref={stageRef} className="scene__canvas" data-visible={running} aria-hidden="true">
           {current && (

@@ -4,9 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import type { FinderProps } from "@/components/sawad/finder/Finder";
 
 vi.mock("server-only", () => ({}));
-const m = vi.hoisted(() => ({ props: null as null | FinderProps }));
+const m = vi.hoisted(() => ({ props: null as null | FinderProps, suspend: false }));
 vi.mock("@/components/sawad/finder/Finder", () => ({
   Finder: (p: FinderProps) => {
+    if (m.suspend) throw new Promise(() => {});
     m.props = p;
     return <div data-testid="finder">{p.head}</div>;
   },
@@ -31,5 +32,18 @@ describe("residences template", () => {
     expect(m.props?.showScene).toBe(false);
     expect(m.props?.locale).toBe("ar");
     expect(screen.getByRole("heading", { level: 1, name: "ابحث عن منزل" })).toBeDefined();
+  });
+
+  it("holds the finder's boxes while it loads, so the footer does not jump", () => {
+    m.suspend = true;
+    try {
+      renderPage("/residences");
+    } finally {
+      m.suspend = false;
+    }
+    expect(screen.getByRole("heading", { level: 1 })).toBeDefined();
+    const skeleton = screen.getByTestId("finder-skeleton");
+    expect(skeleton.querySelector(".finder__stage")).not.toBeNull();
+    expect(skeleton.querySelector(".finder__panel")).not.toBeNull();
   });
 });

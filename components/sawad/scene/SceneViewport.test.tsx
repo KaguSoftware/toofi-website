@@ -7,7 +7,9 @@ import type { SceneLabels, SceneMarker } from "./types";
 
 vi.mock("next/image", () => ({
   // eslint-disable-next-line @next/next/no-img-element
-  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => <img src={src} alt={alt} className={className} />,
+  default: ({ src, alt, className, sizes }: { src: string; alt: string; className?: string; sizes?: string }) => (
+    <img src={src} alt={alt} className={className} data-sizes={sizes} />
+  ),
 }));
 
 const cap = { ok: true, tier: "low" as "low" | "high", reducedMotion: false };
@@ -269,5 +271,19 @@ describe("SceneViewport", () => {
     expect(ready()).toBeNull();
     await act(async () => last().onFrame?.(30));
     expect(ready()).toBe("true");
+  });
+});
+
+describe("SceneViewport poster sizes", () => {
+  afterEach(cleanup);
+  it("defaults the poster to the full viewport width", () => {
+    render(<SceneViewport mode="film" variant="dijla" view="aerial" poster={poster} labels={labels} autoLoad={false} />);
+    expect(screen.getByAltText(poster.alt).getAttribute("data-sizes")).toBe("100vw");
+  });
+  it("passes a narrower stage's sizes hint to the poster", () => {
+    render(
+      <SceneViewport mode="explorer" variant="dijla" view="aerial" poster={poster} labels={labels} autoLoad={false} posterSizes="(min-width: 64rem) 60vw, 100vw" />,
+    );
+    expect(screen.getByAltText(poster.alt).getAttribute("data-sizes")).toBe("(min-width: 64rem) 60vw, 100vw");
   });
 });

@@ -29,9 +29,16 @@ export const residencesTemplate: TemplateDefinition = {
         <TweaksPanel g={g} locale={locale} />
         <Suspense
           fallback={
-            <div className="finder-head">
-              <div className="container stack">{head}</div>
-            </div>
+            <>
+              <div className="finder-head">
+                <div className="container stack">{head}</div>
+              </div>
+              {/* Same boxes as the finder, so the footer does not jump when it mounts. */}
+              <div className="finder" data-testid="finder-skeleton" aria-hidden="true">
+                <div className="finder__stage" />
+                <div className="finder__panel" />
+              </div>
+            </>
           }
         >
           <Finder locale={locale} showScene={showScene} head={head} />

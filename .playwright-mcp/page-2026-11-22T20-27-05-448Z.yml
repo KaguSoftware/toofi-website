@@ -1,0 +1,14 @@
+- generic [active] [ref=e1]:
+  - heading "Directory listing for /" [level=1] [ref=e2]
+  - separator [ref=e3]
+  - list [ref=e4]:
+    - listitem [ref=e5]:
+      - link "before.mp3" [ref=e6] [cursor=pointer]:
+        - /url: before.mp3
+    - listitem [ref=e7]:
+      - link "encoded.m4a" [ref=e8] [cursor=pointer]:
+        - /url: encoded.m4a
+    - listitem [ref=e9]:
+      - link "with-these-hands.m4a" [ref=e10] [cursor=pointer]:
+        - /url: with-these-hands.m4a
+  - separator [ref=e11]

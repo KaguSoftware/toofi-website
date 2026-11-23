@@ -103,6 +103,7 @@ export function Finder({ locale, showScene, defaultView = "aerial", head }: Find
   );
 
   const resultsLabel = results.length ? countHomes(results.length, locale) : d.noResults;
+  const posterSizes = "(min-width: 64rem) 60vw, 100vw";
   const poster = {
     src: sceneImage(compound.variant, state.view),
     alt: `${compound.name[locale]}, ${d.views[state.view]}. ${d.illustrative}`,
@@ -140,7 +141,7 @@ export function Finder({ locale, showScene, defaultView = "aerial", head }: Find
       <div className="finder">
         <div className="finder__stage">
           {showScene ? (
-            <ErrorBoundary name="FinderScene" fallback={<Image src={poster.src} alt={poster.alt} fill sizes="60vw" style={{ objectFit: "cover" }} />}>
+            <ErrorBoundary name="FinderScene" fallback={<Image src={poster.src} alt={poster.alt} fill sizes={posterSizes} style={{ objectFit: "cover" }} />}>
               <SceneViewport
                 // Remount when the screen class flips, so autoLoad is read once per mount.
                 key={isDesktop ? "desktop" : "mobile"}
@@ -153,10 +154,11 @@ export function Finder({ locale, showScene, defaultView = "aerial", head }: Find
                 onSelect={(id) => select(id, "scene")}
                 labels={d.scene}
                 autoLoad={isDesktop}
+                posterSizes={posterSizes}
               />
             </ErrorBoundary>
           ) : (
-            <Image src={poster.src} alt={poster.alt} fill sizes="(min-width: 64rem) 60vw, 100vw" style={{ objectFit: "cover" }} />
+            <Image src={poster.src} alt={poster.alt} fill sizes={posterSizes} style={{ objectFit: "cover" }} />
           )}
           <div className="finder__stage-ui">
             <div className="viewpoints" role="group" aria-label={d.viewpoint}>

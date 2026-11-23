@@ -25,6 +25,8 @@ export type SceneViewportProps = {
   onSelect?: (id: string) => void;
   labels: SceneLabels;
   autoLoad?: boolean; // default true. false → poster + a "load3d" button; 3D only loads on click
+  /** The poster's `sizes` hint, for stages narrower than the viewport. Default `100vw`. */
+  posterSizes?: string;
   className?: string;
 };
 
