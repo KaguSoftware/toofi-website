@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Vector3, type PerspectiveCamera } from "three";
 import type { Wind } from "@/lib/sawad/wind";
@@ -17,6 +17,9 @@ export type SceneVegetationProps = { tier: QualityTier; library: GltfLibrary };
  */
 export const SceneDetail = createContext<VegetationDetail>("distance");
 
+/** The wind holds where it is in frames whose `still` is set (the reel's tour, experience/ReelCapture.tsx). The live scene never sets it. */
+export const PlantsStill = createContext<RefObject<{ still?: boolean }> | null>(null);
+
 type Clock = { seconds: number; last: ViewCone | null };
 
 const _forward = new Vector3();
@@ -29,8 +32,8 @@ function readCone(camera: PerspectiveCamera, aspect: number): ViewCone {
 }
 
 /** One frame: the wind moves on, and the plants are re-sorted if the camera has moved or turned. */
-function step(clock: Clock, wind: Wind, field: VegetationField, camera: PerspectiveCamera, aspect: number, delta: number): void {
-  clock.seconds += Math.min(delta, MAX_FRAME_SECONDS);
+function step(clock: Clock, wind: Wind, field: VegetationField, camera: PerspectiveCamera, aspect: number, delta: number, still: boolean): void {
+  if (!still) clock.seconds += Math.min(delta, MAX_FRAME_SECONDS);
   wind.update(clock.seconds);
   const cone = readCone(camera, aspect);
   if (!needsResort(clock.last, cone)) return;
@@ -46,6 +49,7 @@ export function SceneVegetation({ tier, library }: SceneVegetationProps) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const size = useThree((s) => s.size);
   const detail = useContext(SceneDetail);
+  const hold = useContext(PlantsStill);
   const wind = useMemo(() => prepareVegetationLibrary(library.scene), [library]);
   const field = useMemo(() => buildVegetationField(library.scene, tier, undefined, detail), [library, tier, detail]);
   const clock = useRef<Clock>({ seconds: 0, last: null });
@@ -57,7 +61,7 @@ export function SceneVegetation({ tier, library }: SceneVegetationProps) {
   // After the camera rig has moved the camera (priority 0) and before RenderPass draws (priority 1;
   // it already owns rendering, so a positive priority here changes nothing else). The first frame
   // is sorted too, so the poster hands over to the finished planting.
-  useFrame((_, delta) => step(clock.current, wind, field, camera, size.width / Math.max(1, size.height), delta), 0.5);
+  useFrame((_, delta) => step(clock.current, wind, field, camera, size.width / Math.max(1, size.height), delta, hold?.current?.still ?? false), 0.5);
 
   return (
     <group name="vegetation">

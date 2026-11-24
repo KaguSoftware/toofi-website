@@ -137,6 +137,15 @@ describe("ExperienceHud in the story", () => {
     expect(screen.getByRole("button", { name: "Scroll to begin" })).toBeTruthy();
   });
 
+  it("shows the scroll cue once the intro has ended, only while the visitor has not scrolled", () => {
+    const h = setup();
+    expect(screen.queryByTestId("scroll-cue")).toBeNull();
+    h.rerender(<ExperienceHud {...h.props} introDone />);
+    expect(screen.getByTestId("scroll-cue").textContent).toContain("Scroll to begin");
+    h.rerender(<ExperienceHud {...h.props} introDone prompt={false} />);
+    expect(screen.queryByTestId("scroll-cue")).toBeNull();
+  });
+
   it("hides the prompt when prompt is false", () => {
     setup({ prompt: false });
     expect(screen.queryByRole("button", { name: "Skip the intro" })).toBeNull();

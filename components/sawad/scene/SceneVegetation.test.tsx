@@ -9,7 +9,7 @@ vi.mock("@/lib/monitoring", () => ({ reportError: (...args: unknown[]) => report
 
 import type { Wind } from "@/lib/sawad/wind";
 import { planLandscape } from "./landscape";
-import { SceneDetail, SceneVegetation } from "./SceneVegetation";
+import { PlantsStill, SceneDetail, SceneVegetation } from "./SceneVegetation";
 
 const TREES = ["olive-a", "olive-b", "palm", "citrus"].flatMap((a) => [`${a}_LOD0`, `${a}_LOD1`, `${a}_LOD2`, `${a}_card`]);
 const OTHERS = ["hedge-low", "hedge-tall", "shrub-ball", "grass-green", "grass-dry"];
@@ -111,6 +111,27 @@ describe("SceneVegetation", () => {
     expect(wind.uniforms.uWindTime.value).toBeCloseTo(0.15);
     await renderer.advanceFrames(1, 30);
     expect(wind.uniforms.uWindTime.value).toBeCloseTo(0.25);
+    await renderer.unmount();
+  });
+
+  it("holds the breeze in still frames, and picks it up where it was", async () => {
+    const lib = library();
+    const hold = { current: { still: false } };
+    const renderer = await ReactThreeTestRenderer.create(
+      <PlantsStill value={hold}>
+        <Probe />
+        <SceneVegetation tier="low" library={lib} />
+      </PlantsStill>,
+    );
+    const update = vi.spyOn(lib.scene.userData.sawadWind as Wind, "update");
+    await renderer.advanceFrames(1, 0.05);
+    const at = update.mock.lastCall![0];
+    hold.current.still = true;
+    await renderer.advanceFrames(5, 0.05);
+    expect(update.mock.lastCall![0]).toBe(at);
+    hold.current.still = false;
+    await renderer.advanceFrames(1, 0.05);
+    expect(update.mock.lastCall![0]).toBeCloseTo(at + 0.05);
     await renderer.unmount();
   });
 

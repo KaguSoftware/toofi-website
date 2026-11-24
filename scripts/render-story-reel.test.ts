@@ -36,10 +36,12 @@ describe("the reel's capture script", () => {
     expect(last.position).toBeCloseTo(INTRO_SECONDS - 1 / reel.REEL_FPS);
   });
 
-  it("runs on into the tour with the clock unbroken, a frame for every tenth of a sequence second", () => {
+  it("runs on into the tour with the clock unbroken, a frame for every twentieth of a sequence second", () => {
     const frames = script.tourFrames();
     expect(frames).toHaveLength(reel.TOUR_FRAMES + 1);
-    expect(frames[0]).toEqual({ part: "tour", index: 0, seconds: reel.OPENING_SECONDS, position: INTRO_SECONDS });
+    expect(frames[0]).toEqual({ part: "tour", index: 0, seconds: reel.OPENING_SECONDS, position: INTRO_SECONDS, still: true });
+    expect(frames.every((f) => f.still)).toBe(true);
+    expect(script.openingFrames().some((f) => "still" in f)).toBe(false);
     expect(frames[frames.length - 1].position).toBe(STORY_END);
     // Every stop is a frame of the file, at the time the page seeks to.
     for (const beat of BEATS) {
@@ -48,7 +50,8 @@ describe("the reel's capture script", () => {
     }
     const plan = script.framePlan({ tour: true });
     expect(plan).toHaveLength(script.openingFrames().length + frames.length);
-    for (let i = 1; i < plan.length; i++) expect(plan[i].seconds - plan[i - 1].seconds).toBeCloseTo(1 / reel.REEL_FPS);
+    // Never a step back or a jump; the tour's are finer, three sequence seconds to one of the scene's.
+    for (let i = 1; i < plan.length; i++) expect(plan[i].seconds - plan[i - 1].seconds).toBeCloseTo(plan[i - 1].part === "tour" ? 1 / (3 * reel.TOUR_FRAMES_PER_UNIT) : 1 / reel.REEL_FPS);
     expect(script.framePlan({ tour: false })).toHaveLength(script.openingFrames().length);
   });
 
@@ -93,8 +96,8 @@ describe("the reel's capture script", () => {
     expect(arg(tour, "-i")).toBe("/f/tour/%05d.jpg");
     // A seek decodes a handful of frames at most: close key frames, no B-frames, no extra ones at cuts.
     // Key frames fall on whole sequence seconds, so every stop of the story is one.
-    expect(Number(arg(tour, "-g"))).toBeLessThanOrEqual(12);
-    expect(Number(arg(tour, "-g")) % reel.TOUR_FRAMES_PER_UNIT).toBe(0);
+    expect(Number(arg(tour, "-g"))).toBeLessThanOrEqual(20);
+    expect(reel.TOUR_FRAMES_PER_UNIT % Number(arg(tour, "-g"))).toBe(0);
     for (const beat of BEATS) expect(Math.round(reel.tourTime(beat.at) * reel.REEL_FPS) % Number(arg(tour, "-g"))).toBe(0);
     expect(arg(tour, "-keyint_min")).toBe(arg(tour, "-g"));
     expect(arg(tour, "-bf")).toBe("0");

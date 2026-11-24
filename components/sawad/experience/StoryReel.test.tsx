@@ -420,7 +420,7 @@ describe("StoryReel", () => {
     const reel = mount();
     expect(reel.opening.getAttribute("src")).toBe(reelSources("flight", "wide", "av1").opening);
     fireEvent.ended(reel.opening);
-    expect(reel.tour.getAttribute("src")).toBe(reelSources("flight", "wide", "av1").tour);
+    expect(reel.tour.getAttribute("src")).toBe(reelSources("flight", "wide", "hevc").tour);
     reel.unmount();
     plays = ["hvc1"];
     expect(mount().opening.getAttribute("src")).toBe(reelSources("flight", "wide", "hevc").opening);

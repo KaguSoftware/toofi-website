@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import { MUSIC_BED } from "./audio";
 import type { Daylight } from "./daylight";
+import { ScrollCue } from "./ScrollCue";
 import type { ExperienceLabels, ExperienceMode, ExploreMode } from "./types";
 
 export type ExperienceHudProps = {
@@ -139,6 +140,7 @@ export function ExperienceHud({
 
   return (
     <div className="xp__hud" data-hud="story">
+      {prompt && introDone ? <ScrollCue label={labels.scrollHint} /> : null}
       <div className="xp__tools">
         {canPause ? (
           <div className="xp__group">

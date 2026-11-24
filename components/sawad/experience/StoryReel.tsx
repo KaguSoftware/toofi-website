@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { reportError } from "@/lib/monitoring";
 import type { ViewId } from "../scene/types";
-import { INTRO_SECONDS, approach, scrollToPosition } from "./beats";
+import { INTRO_SECONDS, glide, scrollToPosition } from "./beats";
 import { playsReel } from "../scene/capability";
-import { REEL_FPS, TOUR_FRAMES, openingPosition, playableCodecs, reelFileOf, reelShape, reelSources, tourTime, type ReelCodec } from "./reel";
+import { REEL_FPS, TOUR_FRAMES, bestCodec, openingPosition, playableCodecs, reelFileOf, reelShape, reelSources, tourTime, type ReelCodec } from "./reel";
 import type { RigState, ScrollState } from "./types";
 
 export type StoryReelProps = {
@@ -65,8 +65,8 @@ function mediaError(video: HTMLVideoElement, part: string): Error {
  * - The opening plays by itself over the poster. The early script (early.ts) has usually started
  *   it while the page was still being parsed; if not (a page reached by a link), it starts here.
  *   A browser that will not play unasked keeps the poster until the visitor's first touch.
- * - The tour is never played. Each frame the playhead closes on where the scroll wants it, on
- *   the same easing the live camera used (beats.ts `approach`), and the video is sought to that
+ * - The tour is never played. Each frame the playhead closes on where the scroll wants it, with
+ *   momentum (beats.ts `glide`), and the video is sought to that
  *   frame; a seek still under way is left to finish, so a slow device shows fewer frames, never a
  *   wrong one. A scroll during the opening cuts to the tour.
  *
@@ -83,7 +83,7 @@ export default function StoryReel({ view, playing, active = true, scroll, rig, o
   /** Which file is on screen. The playhead moves to the tour first (`st.part`); the picture follows once the tour has its frame. */
   const [shown, setShown] = useState<"opening" | "tour">("opening");
   const [started, setStarted] = useState(false);
-  const st = useRef({ part: "opening" as "opening" | "tour", head: 0, started: false, introDone: false, failed: false, tourAsked: false, blocked: false, off: false, codecs: null as ReelCodec[] | null });
+  const st = useRef({ part: "opening" as "opening" | "tour", head: 0, speed: 0, started: false, introDone: false, failed: false, tourAsked: false, blocked: false, off: false, codecs: null as ReelCodec[] | null });
   const latest = useRef({ playing, active, onStart, onIntroEnd, onError });
   useEffect(() => {
     latest.current = { playing, active, onStart, onIntroEnd, onError };
@@ -103,7 +103,7 @@ export default function StoryReel({ view, playing, active = true, scroll, rig, o
   const address = useCallback(
     (video: HTMLVideoElement, part: "opening" | "tour") => {
       const codecs = (st.current.codecs ??= playableCodecs(video));
-      return reelSources(view, reelShape(window.innerWidth, window.innerHeight), codecs[0])[part];
+      return reelSources(view, reelShape(window.innerWidth, window.innerHeight), bestCodec(part, codecs))[part];
     },
     [view],
   );
@@ -117,7 +117,7 @@ export default function StoryReel({ view, playing, active = true, scroll, rig, o
       if (video.getAttribute("src") !== failed) return true;
       const { codec, shape } = reelFileOf(failed ?? "");
       s.codecs = (s.codecs ?? playableCodecs(video)).filter((c) => c !== codec);
-      const next = s.codecs[0];
+      const next = bestCodec(part, s.codecs);
       if (codec === "h264" || !next) {
         fail(error, part);
         return false;
@@ -251,7 +251,9 @@ export default function StoryReel({ view, playing, active = true, scroll, rig, o
         if (progress > AT_TOP) endIntro();
       }
       if (s.part === "tour") {
-        s.head = approach(Math.max(s.head, INTRO_SECONDS), scrollToPosition(progress), dt);
+        const next = glide({ head: Math.max(s.head, INTRO_SECONDS), speed: s.speed }, scrollToPosition(progress), dt);
+        s.head = next.head;
+        s.speed = next.speed;
         // One seek at a time: asking again while the last is under way would only queue up.
         if (tour.readyState >= 1 && !tour.seeking) {
           const want = tourSeekTime(s.head);

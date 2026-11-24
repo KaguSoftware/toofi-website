@@ -22,8 +22,11 @@ export const REEL_FPS = 30;
 /** The opening's length: the hold on the poster frame, then the sequence's first stretch at one second a second. */
 export const OPENING_SECONDS = INTRO_HOLD_SECONDS + INTRO_SECONDS;
 
-/** Tour frames for each sequence second: fine enough that a slow scroll moves a frame every few pixels. */
-export const TOUR_FRAMES_PER_UNIT = 10;
+/**
+ * Tour frames for each sequence second. Twenty puts the pictures about a metre of walking apart at
+ * street level; at ten a slow scroll moved in visible steps.
+ */
+export const TOUR_FRAMES_PER_UNIT = 20;
 export const TOUR_FRAMES = (STORY_END - INTRO_SECONDS) * TOUR_FRAMES_PER_UNIT;
 /** The tour file's length in seconds. */
 export const TOUR_SECONDS = TOUR_FRAMES / REEL_FPS;
@@ -73,9 +76,21 @@ export const REEL_TYPE: Record<ReelCodec, string> = {
   h264: "",
 };
 
-/** The codecs this browser says it plays, best first. Only a "probably" counts; H.264 is always last. */
+/**
+ * The tour's order. It is seen a frame at a time, and its HEVC holds one level from frame to frame
+ * where its AV1 still pulses a little at key frames (scripts/render-story-reel.mjs `ENCODE`).
+ */
+export const TOUR_CODECS: readonly ReelCodec[] = ["hevc", "av1", "h264"];
+export const CODEC_ORDER: Record<"opening" | "tour", readonly ReelCodec[]> = { opening: REEL_CODECS, tour: TOUR_CODECS };
+
+/** The codecs this browser says it plays. Only a "probably" counts; H.264 is always one of them. */
 export function playableCodecs(video: Pick<HTMLVideoElement, "canPlayType">): ReelCodec[] {
   return REEL_CODECS.filter((c) => !REEL_TYPE[c] || video.canPlayType(REEL_TYPE[c]) === "probably");
+}
+
+/** The best of some playable codecs for a part of the reel. */
+export function bestCodec(part: "opening" | "tour", codecs: readonly ReelCodec[]): ReelCodec | undefined {
+  return CODEC_ORDER[part].find((c) => codecs.includes(c));
 }
 
 /** The stable public paths; `reelSources` gives the versioned addresses to fetch. H.264 carries the plain name. */

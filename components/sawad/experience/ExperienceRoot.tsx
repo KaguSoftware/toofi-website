@@ -3,7 +3,7 @@ import { useFrame, useThree, type RootState } from "@react-three/fiber";
 import type { EffectComposer as Composer } from "postprocessing";
 import { reportError } from "@/lib/monitoring";
 import { SceneMarkers } from "../scene/SceneMarkers";
-import { SceneDetail } from "../scene/SceneVegetation";
+import { PlantsStill, SceneDetail } from "../scene/SceneVegetation";
 import type { QualityTier, SceneMarker, ViewId } from "../scene/types";
 import { useCompoundModel, useSceneLibrary } from "../scene/useCompoundModel";
 import { compileAhead, warmUp } from "./compileAhead";
@@ -241,18 +241,20 @@ export function ExperienceRoot({
   return (
     <>
       <SceneDetail value={reel ? "max" : "distance"}>
-        <ExperienceWorld
-          tier={tier}
-          model={model}
-          fallback={modelSettled}
-          vegetation={vegetation.library}
-          plantingFallback={vegetation.settled && !vegetation.library}
-          life={life.library}
-          daylight={daylight}
-          godRays={settings.godRays}
-          sunRise={sunRise}
-          rig={rig}
-        />
+        <PlantsStill value={reel ? reelHead : null}>
+          <ExperienceWorld
+            tier={tier}
+            model={model}
+            fallback={modelSettled}
+            vegetation={vegetation.library}
+            plantingFallback={vegetation.settled && !vegetation.library}
+            life={life.library}
+            daylight={daylight}
+            godRays={settings.godRays}
+            sunRise={sunRise}
+            rig={rig}
+          />
+        </PlantsStill>
       </SceneDetail>
       {exploring ? <SceneMarkers variant="zaitun" markers={homes} selectedId={selectedId} onSelect={onSelect} /> : null}
       {exploring ? <UnitTargets markers={homes} selectedId={selectedId} onSelect={onSelect} /> : null}

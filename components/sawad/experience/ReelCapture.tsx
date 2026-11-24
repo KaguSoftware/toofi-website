@@ -4,15 +4,17 @@ import type { Object3D } from "three";
 import { reportError } from "@/lib/monitoring";
 import { dayPageOf, detailOf } from "../scene/compoundModel";
 
-/** The sequence position the camera is held at for the frame being recorded. */
-export type ReelHead = { position: number };
+/** The sequence position the camera is held at for the frame being recorded, and whether the plants stand still in it. */
+export type ReelHead = { position: number; still?: boolean };
 
 /**
  * What scripts/render-story-reel.mjs drives, on `window.__sawadReel`: one call per frame of the
  * reel. `frame` puts the story camera at a sequence position, moves the scene's clock to `seconds`
- * and draws, all before it returns, so the canvas can be read right after it.
+ * and draws, all before it returns, so the canvas can be read right after it. With `still` the wind
+ * stops where it was: the tour is sought by the scroll, forward and back, and plants that sway as
+ * the page scrolls would sway backwards on the way up (and cost a share of every frame's bits).
  */
-export type ReelCaptureApi = { frame: (seconds: number, position: number) => void };
+export type ReelCaptureApi = { frame: (seconds: number, position: number, still?: boolean) => void };
 
 export const REEL_CAPTURE_KEY = "__sawadReel";
 
@@ -43,8 +45,9 @@ export function ReelCapture({ head, model, ready, onReady }: ReelCaptureProps) {
     let closed = false;
     const host = window as unknown as Host;
     const api: ReelCaptureApi = {
-      frame(seconds, position) {
+      frame(seconds, position, still = false) {
         head.current.position = position;
+        head.current.still = still;
         advance(seconds, false);
       },
     };

@@ -453,6 +453,88 @@
   }
 }
 
+/* The opening has landed: the picture dims for a moment and a finger drags upward, so the visitor scrolls. */
+.xp__hud > .xp__cue {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  color: var(--xp-cream);
+  background: oklch(0.12 0.01 70 / 0.62);
+  pointer-events: none;
+  animation: xp-cue 2.8s ease both;
+}
+.xp__cue-gesture {
+  position: relative;
+  width: 3rem;
+  height: 9rem;
+  display: flex;
+  justify-content: center;
+}
+.xp__cue-track {
+  position: absolute;
+  inset-block: 1.5rem 0;
+  width: 2px;
+  background: oklch(0.962 0.012 85 / 0.3);
+}
+.xp__cue-arrow {
+  position: absolute;
+  inset-block-start: 0;
+  opacity: 0.9;
+}
+.xp__cue-finger {
+  position: absolute;
+  inset-block-end: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: oklch(0.962 0.012 85 / 0.85);
+  box-shadow: 0 0 0 0 oklch(0.962 0.012 85 / 0.5);
+  animation: xp-drag 1.4s cubic-bezier(0.45, 0, 0.25, 1) 0.2s 2 both;
+}
+.xp__cue-label {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 8px oklch(0.16 0.012 70 / 0.6);
+}
+@keyframes xp-cue {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes xp-drag {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  15% {
+    transform: translateY(0) scale(0.85);
+    opacity: 1;
+    box-shadow: 0 0 0 0 oklch(0.962 0.012 85 / 0.5);
+  }
+  80% {
+    transform: translateY(-5.5rem) scale(0.85);
+    opacity: 1;
+    box-shadow: 0 0 0 12px oklch(0.962 0.012 85 / 0);
+  }
+  100% {
+    transform: translateY(-6rem) scale(0.85);
+    opacity: 0;
+  }
+}
+
 .xp__hint {
   position: absolute;
   inset-block-end: 1rem;
@@ -671,6 +753,8 @@
     transition-duration: 1ms;
   }
   .xp__prompt-line::after,
+  .xp__cue,
+  .xp__cue-finger,
   .xp__hint,
   .xp__unit {
     animation: none;

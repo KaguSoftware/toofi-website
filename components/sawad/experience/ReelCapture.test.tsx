@@ -56,6 +56,10 @@ describe("ReelCapture", () => {
       { seconds: 2.5, position: 0.5 },
       { seconds: 2.5 + 1 / 30, position: 0.5 + 1 / 30 },
     ]);
+    // The tour's frames ask for plants that stand still; the opening's do not.
+    expect(head.current).toEqual({ position: 0.5 + 1 / 30, still: false });
+    api()!.frame(3, 14, true);
+    expect(head.current).toEqual({ position: 14, still: true });
     await renderer.unmount();
     // Gone with the scene: a later page must not find a handle to a canvas that is no more.
     expect(api()).toBeUndefined();

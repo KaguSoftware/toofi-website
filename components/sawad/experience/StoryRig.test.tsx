@@ -26,7 +26,7 @@ import { PLAN_CENTER } from "../scene/layout";
 import { siteFor } from "../scene/site";
 import type { SceneMarker, Vec3 } from "../scene/types";
 import { viewpoints } from "../scene/viewpoints";
-import { AMBIENT_IDLE_SECONDS, HEAD_MAX_SPEED, INTRO_HOLD_SECONDS, INTRO_SECONDS, scrollToPosition } from "./beats";
+import { AMBIENT_IDLE_SECONDS, HEAD_MAX_SPEED, approach, INTRO_HOLD_SECONDS, INTRO_SECONDS, scrollToPosition } from "./beats";
 import { StoryRig, type StoryRigProps } from "./StoryRig";
 import { storyPose } from "./storySheet";
 import { initialRigState, type ExperienceApi, type ScrollState } from "./types";
@@ -162,7 +162,8 @@ describe("StoryRig in the story", () => {
     rig.scroll.current.progress = 0.4;
     const goal = scrollToPosition(0.4);
     await rig.frames(1);
-    expect(rig.rig.current.head).toBeCloseTo(INTRO_SECONDS + HEAD_MAX_SPEED * 0.1, 6);
+    expect(rig.rig.current.head).toBeCloseTo(approach(INTRO_SECONDS, goal, 0.1), 6);
+    expect(rig.rig.current.head).toBeLessThan(INTRO_SECONDS + HEAD_MAX_SPEED * 0.1 + 1e-6);
     expect(gap(rig, storyPose("flight", goal).position)).toBeGreaterThan(10);
     await rig.frames(120);
     expect(rig.rig.current.head).toBe(goal);
@@ -180,13 +181,13 @@ describe("StoryRig in the story", () => {
   it("keeps up with a fast scroll, so the camera stays with the captions", async () => {
     const rig = await mount();
     await rig.frames(INTRO_FRAMES);
-    // The whole tour in one flick: the camera is there within a second.
+    // The whole tour in one flick: the camera glides in behind it, and is there within two seconds.
     rig.scroll.current.progress = 1;
-    await rig.frames(10);
+    await rig.frames(20);
     expect(rig.rig.current.head).toBeGreaterThan(scrollToPosition(1) - 1);
     // And all the way back up just as quickly.
     rig.scroll.current.progress = 0;
-    await rig.frames(10);
+    await rig.frames(20);
     expect(rig.rig.current.head).toBeLessThan(INTRO_SECONDS + 1);
     await rig.unmount();
   });

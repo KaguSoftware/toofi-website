@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BEATS, INTRO_HOLD_SECONDS, INTRO_SECONDS, STORY_END } from "./beats";
-import { OPENING_SECONDS, REEL_CODECS, REEL_FPS, REEL_TYPE, REEL_SIZE, TOUR_FRAMES, TOUR_SECONDS, openingPath, openingPosition, playableCodecs, reelFileOf, reelShape, reelSources, tourPath, tourPosition, tourTime } from "./reel";
+import { OPENING_SECONDS, REEL_CODECS, REEL_FPS, REEL_TYPE, REEL_SIZE, TOUR_FRAMES, TOUR_SECONDS, openingPath, bestCodec, openingPosition, playableCodecs, reelFileOf, reelShape, reelSources, tourPath, tourPosition, tourTime } from "./reel";
 
 describe("the reel's timeline", () => {
   it("plays the opening as the live story did: a hold on the poster frame, then one sequence second a second to the gate", () => {
@@ -54,5 +54,11 @@ describe("the reel's timeline", () => {
     expect(playableCodecs(answers({ [REEL_TYPE.av1]: "probably", [REEL_TYPE.hevc]: "probably" }))).toEqual(["av1", "hevc", "h264"]);
     expect(playableCodecs(answers({ [REEL_TYPE.av1]: "maybe", [REEL_TYPE.hevc]: "probably" }))).toEqual(["hevc", "h264"]);
     expect(playableCodecs(answers({}))).toEqual(["h264"]);
+    // The tour would rather have HEVC, the opening AV1; each takes the next that is left.
+    expect(bestCodec("opening", ["av1", "hevc", "h264"])).toBe("av1");
+    expect(bestCodec("tour", ["av1", "hevc", "h264"])).toBe("hevc");
+    expect(bestCodec("tour", ["av1", "h264"])).toBe("av1");
+    expect(bestCodec("tour", ["h264"])).toBe("h264");
+    expect(bestCodec("tour", [])).toBeUndefined();
   });
 });

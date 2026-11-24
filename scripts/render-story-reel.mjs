@@ -13,7 +13,7 @@
  *   node scripts/blender/version-assets.mjs                # then: content hashes in the file names
  *
  * Per start view it records the opening (480 frames: the hold on the poster frame, then the flight
- * to the gate); in the first view's session it runs on into the tour (721 frames, ten per sequence
+ * to the gate); in the first view's session it runs on into the tour (1441 frames, twenty per sequence
  * second), so the tour's first frame is the frame every opening ends on. Frames go to
  * scripts/blender/out/reel/frames/ (not in git) as JPEG at 3840 x 2160; a frame already on disk is
  * drawn again (the scene's clock has to pass through it) but not read, so a stopped run resumes.
@@ -38,7 +38,9 @@ export const INTRO_HOLD_SECONDS = 2;
 export const INTRO_SECONDS = 14;
 export const STORY_END = 86;
 export const OPENING_SECONDS = INTRO_HOLD_SECONDS + INTRO_SECONDS;
-export const TOUR_FRAMES_PER_UNIT = 10;
+export const TOUR_FRAMES_PER_UNIT = 20;
+/** Tour frames for each second of the scene's clock: people and cars cover the same ground for a given scroll at any density. */
+export const TOUR_CLOCK_FPS = 3 * TOUR_FRAMES_PER_UNIT;
 export const TOUR_FRAMES = (STORY_END - INTRO_SECONDS) * TOUR_FRAMES_PER_UNIT;
 
 export const VIEWS = ["flight", "street", "terrace", "aerial"];
@@ -60,9 +62,9 @@ export function openingFrames() {
   return Array.from({ length: OPENING_SECONDS * REEL_FPS }, (_, k) => ({ part: "opening", index: k, seconds: k / REEL_FPS, position: openingPosition(k / REEL_FPS) }));
 }
 
-/** The tour's frames: the gate, then ten per sequence second to the final aerial, with the scene's clock running on from the opening. */
+/** The tour's frames: the gate, then TOUR_FRAMES_PER_UNIT per sequence second to the final aerial. The scene's clock runs on from the opening; the plants stand still. */
 export function tourFrames() {
-  return Array.from({ length: TOUR_FRAMES + 1 }, (_, k) => ({ part: "tour", index: k, seconds: OPENING_SECONDS + k / REEL_FPS, position: tourPosition(k) }));
+  return Array.from({ length: TOUR_FRAMES + 1 }, (_, k) => ({ part: "tour", index: k, seconds: OPENING_SECONDS + k / TOUR_CLOCK_FPS, position: tourPosition(k), still: true }));
 }
 
 /** Everything one page session draws, in order: the view's opening, then (once) the tour. */
@@ -79,19 +81,19 @@ export const outFile = (part, view, shape, dir = OUT_DIR, codec = "h264") => joi
 /**
  * How each file is encoded. The opening is played, so it gets an ordinary two-second group of
  * pictures and B-frames. The tour is never played, only sought as the page scrolls: a key frame
- * every ten frames and no B-frames, so a seek decodes nine frames at most, and every whole
- * sequence second, which every stop of the story is, lands on a key frame.
+ * every twenty frames (one sequence second, so every stop is one) and, in HEVC and H.264, no
+ * B-frames.
  *
- * The quality factors were chosen on the recorded frames (VMAF against the scaled frames, all
- * frames): the scene is tens of thousands of trees moving in the wind, which costs bits at any
- * setting. Opening at 28: 4.9 MB wide, 2.4 MB tall (VMAF 83). Tour at 31, with 30 and 32 measured
- * either side: 15.1 / 6.7 MB (VMAF 86) and 11.6 / 5.1 MB (VMAF 80). A lower factor is a larger file.
- *
- * AV1 and HEVC are set to the same VMAF as the H.264 files (each codec has its own scale of factors).
+ * The tour is also seen a frame at a time, so its frames must all be of one quality. Encoders give
+ * key frames more bits than the frames between them, and at a strong setting the whole picture's
+ * colour then jumped at every key frame: "it re-renders". `flat` takes that apart (equal quantisers
+ * for all frames, more bits for colour). On 400 frames, the jump of the colour (U) at key frames
+ * against the source's own: HEVC 0.18 ordinary, 0.04 to 0.06 flat; H.264 0.07 and 0.03; AV1 0.12 and
+ * 0.08. Lowering the factor alone hardly moved it, so the tour plays HEVC first (reel.ts `TOUR_CODECS`).
  */
 export const ENCODE = {
-  opening: { crf: { av1: 49, hevc: 30, h264: 28 }, gop: 60, bframes: 3 },
-  tour: { crf: { av1: 53, hevc: 35, h264: 31 }, gop: 10, bframes: 0 },
+  opening: { crf: { av1: 38, hevc: 26, h264: 25 }, gop: 60, bframes: 3, flat: false },
+  tour: { crf: { av1: 36, hevc: 28, h264: 29 }, gop: 20, bframes: 0, flat: true },
 };
 
 /**
@@ -112,13 +114,20 @@ export function codecArgs(part, codec) {
   const e = ENCODE[part];
   const crf = String(e.crf[codec]);
   const gop = String(e.gop);
-  if (codec === "av1") return ["-c:v", "libsvtav1", "-preset", "2", "-crf", crf, "-g", gop, "-svtav1-params", "tune=0:scd=0"];
+  if (codec === "av1") {
+    const zeros = "[0,0,0,0,0,0]";
+    const chroma = "[-40,-40,-40,-40,-40,-40]";
+    const flat = `:pred-struct=1:rc=0:aq-mode=0:use-fixed-qindex-offsets=1:key-frame-qindex-offset=0:key-frame-chroma-qindex-offset=-40:qindex-offsets=${zeros}:chroma-qindex-offsets=${chroma}`;
+    return ["-c:v", "libsvtav1", "-preset", e.flat ? "4" : "2", "-crf", crf, "-g", gop, "-svtav1-params", `tune=0:scd=0${e.flat ? flat : ""}`];
+  }
   if (codec === "hevc") {
     // `hvc1`, not ffmpeg's default `hev1`: Safari plays only the first.
-    const params = `log-level=error:keyint=${gop}:min-keyint=${gop}:scenecut=0:open-gop=0:bframes=${e.bframes}`;
-    return ["-c:v", "libx265", "-preset", "slower", "-crf", crf, "-tag:v", "hvc1", "-x265-params", params];
+    const flat = e.flat ? ":ipratio=1.0:cutree=0:aq-mode=1:cbqpoffs=-6:crqpoffs=-6" : "";
+    const params = `log-level=error:keyint=${gop}:min-keyint=${gop}:scenecut=0:open-gop=0:bframes=${e.bframes}${flat}`;
+    return ["-c:v", "libx265", "-preset", e.flat ? "slow" : "slower", "-crf", crf, "-tag:v", "hvc1", "-x265-params", params];
   }
-  return ["-c:v", "libx264", "-profile:v", "high", "-preset", "veryslow", "-crf", crf, "-g", gop, "-keyint_min", gop, "-sc_threshold", "0", "-bf", String(e.bframes)];
+  const flat = e.flat ? ["-x264-params", "ipratio=1.0:mbtree=0:chroma-qp-offset=-4"] : [];
+  return ["-c:v", "libx264", "-profile:v", "high", "-preset", e.flat ? "slow" : "veryslow", "-crf", crf, "-g", gop, "-keyint_min", gop, "-sc_threshold", "0", "-bf", String(e.bframes), ...flat];
 }
 
 /** The ffmpeg arguments for one file. */
@@ -164,10 +173,10 @@ export async function loadPlaywright() {
 /** Draws one frame in the page and returns it as JPEG bytes (base64), or nothing when `read` is false. */
 export async function drawFrame(page, frame, read) {
   return page.evaluate(
-    async ({ seconds, position, read }) => {
+    async ({ seconds, position, still, read }) => {
       const canvas = document.querySelector(".xp__canvas canvas");
       if (!canvas) throw new Error("no canvas");
-      window.__sawadReel.frame(seconds, position);
+      window.__sawadReel.frame(seconds, position, still);
       if (!read) return null;
       // Read in the task that drew it: the drawing buffer is not kept past the next paint.
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.96));

@@ -62,10 +62,12 @@ export function scrollToPosition(progress: number): number {
 /**
  * How quickly the playhead closes on the scroll (per second), and its top speed in sequence
  * seconds per second. Tight enough that the camera stays with the captions, which follow the
- * scroll exactly (a flick through the whole tour is caught up within a second); the top speed only stops a single
- * frame from jumping.
+ * scroll exactly. The rate is loose on purpose: the playhead keeps gliding for a moment after the
+ * visitor stops (about 0.6 s to settle) and smooths the notches of a mouse wheel, instead of
+ * halting dead with the scroll. A flick through the whole tour is still caught up within about
+ * a second; the top speed only stops a single frame from jumping.
  */
-export const HEAD_RATE = 12;
+export const HEAD_RATE = 8;
 export const HEAD_MAX_SPEED = 96;
 
 /** The playhead counts as caught up with the scroll within this many sequence seconds. */
@@ -81,6 +83,46 @@ export function approach(head: number, goal: number, dt: number, rate = HEAD_RAT
   const eased = gap * (1 - Math.exp(-rate * dt));
   const limit = maxSpeed * dt;
   return head + Math.max(-limit, Math.min(limit, eased));
+}
+
+/** The reel's playhead: where it is, and how fast it is going (sequence seconds per second). */
+export type Glide = { head: number; speed: number };
+/** How long the playhead takes to answer the scroll, in seconds: it is at rest about two and a half of these after the scroll is. */
+export const GLIDE_SECONDS = 0.4;
+/**
+ * The slowest the playhead goes before it stops (sequence seconds per second). The tour has twenty
+ * pictures to a sequence second, so below this the glide would end as a handful of pictures, each
+ * far apart in time, instead of as a movement.
+ */
+export const GLIDE_MIN_SPEED = 0.6;
+
+/**
+ * Moves the reel's playhead toward where the scroll wants it, with momentum: a critically damped
+ * spring. Its speed never jumps, so a scroll eases it away and, when the scroll stops, it slows
+ * along a curve to a stop (`approach` starts at full speed the moment the scroll moves). It never
+ * passes the goal. A step of any length is exact, so the glide is the same at any frame rate.
+ */
+export function glide(state: Glide, goal: number, dt: number, seconds = GLIDE_SECONDS, maxSpeed = HEAD_MAX_SPEED): Glide {
+  if (dt <= 0) return state;
+  const gap = goal - state.head;
+  if (Math.abs(gap) < 1e-4) return { head: goal, speed: 0 };
+  const omega = 2 / seconds;
+  const decay = Math.exp(-omega * dt);
+  const pull = (state.speed - omega * gap) * dt;
+  let head = goal + (pull - gap) * decay;
+  let speed = (state.speed - omega * pull) * decay;
+  // Near the end: no slower than the least speed, and then stop.
+  const least = GLIDE_MIN_SPEED * dt;
+  const slowing = Math.abs(gap) < GLIDE_MIN_SPEED * seconds && Math.abs(speed) < GLIDE_MIN_SPEED;
+  if (slowing && Math.abs(head - state.head) < least) head = state.head + Math.sign(gap) * Math.min(least, Math.abs(gap));
+  const most = maxSpeed * dt;
+  if (Math.abs(head - state.head) > most) {
+    head = state.head + Math.sign(head - state.head) * most;
+    speed = Math.sign(head - state.head) * maxSpeed;
+  }
+  // Past the goal (a scroll that turned back on a fast playhead may swing wide; one that did not must not).
+  if (gap > 0 !== goal - head > 0 && state.speed * gap >= 0) return { head: goal, speed: 0 };
+  return { head, speed };
 }
 
 /** Seconds after the intro without any input before the camera drifts into the slow circuit. */
