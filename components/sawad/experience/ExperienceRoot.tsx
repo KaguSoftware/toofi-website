@@ -3,13 +3,15 @@ import { useFrame, useThree, type RootState } from "@react-three/fiber";
 import type { EffectComposer as Composer } from "postprocessing";
 import { reportError } from "@/lib/monitoring";
 import { SceneMarkers } from "../scene/SceneMarkers";
+import { SceneDetail } from "../scene/SceneVegetation";
 import type { QualityTier, SceneMarker, ViewId } from "../scene/types";
 import { useCompoundModel, useSceneLibrary } from "../scene/useCompoundModel";
 import { compileAhead, warmUp } from "./compileAhead";
 import type { Daylight } from "./daylight";
 import { ExperienceWorld } from "./ExperienceWorld";
 import { STARVED_FPS, createQualityMonitor } from "./monitor";
-import { QUALITY, QUALITY_RANGE, fpsBounds, pixelRatio, type QualityLevel } from "./quality";
+import { QUALITY, QUALITY_RANGE, REEL_QUALITY, fpsBounds, pixelRatio, type QualityLevel } from "./quality";
+import { ReelCapture, type ReelHead } from "./ReelCapture";
 import { StoryRig } from "./StoryRig";
 import type { ExperienceApi, ExperienceControl, ExperienceMode, RigState, ScrollState } from "./types";
 import { UnitTargets } from "./UnitTargets";
@@ -50,6 +52,15 @@ export type ExperienceRootProps = {
   playing?: boolean;
   /** Development capture: hold the story at this sequence position. */
   holdAt?: number | null;
+  /**
+   * Development capture of the reel (ReelCapture.tsx): frames are drawn only when the capture
+   * script asks, at the reel's quality, with every plant at its finest level.
+   */
+  reel?: boolean;
+  /** The reel capture's handle is on `window`. */
+  onReelReady?: () => void;
+  /** An explorer opened from the reel: the sequence position the reel was showing (StoryRig). */
+  startAt?: number | null;
   /** The homes, for exploring: status markers and click targets. */
   markers?: SceneMarker[];
   selectedId?: string | null;
@@ -112,6 +123,9 @@ export function ExperienceRoot({
   reducedMotion,
   playing,
   holdAt,
+  reel = false,
+  onReelReady,
+  startAt,
   markers,
   selectedId,
   scroll,
@@ -155,11 +169,14 @@ export function ExperienceRoot({
     };
   }, []);
 
-  const settings = QUALITY[level];
+  const settings = reel ? REEL_QUALITY : QUALITY[level];
   const setDpr = useThree((s) => s.setDpr);
   useEffect(() => {
-    setDpr(pixelRatio(level, window.devicePixelRatio));
-  }, [level, setDpr]);
+    setDpr(reel ? REEL_QUALITY.maxDpr : pixelRatio(level, window.devicePixelRatio));
+  }, [level, reel, setDpr]);
+  const reelHead = useRef<ReelHead>({ position: 0 });
+  /** The shaders are ready and the loop may start (or, for the reel, frames may be asked for). */
+  const [warm, setWarm] = useState(false);
 
   const get = useThree((s) => s.get);
   useLayoutEffect(() => {
@@ -205,7 +222,9 @@ export function ExperienceRoot({
         .then(() => (closed ? 0 : warmUp(gl, draw, { cancelled: () => closed })))
         .catch(reported)
         .then(() => {
-          if (!closed) latest.current.onReady?.();
+          if (closed) return;
+          setWarm(true);
+          latest.current.onReady?.();
         });
     }
     return () => {
@@ -221,18 +240,20 @@ export function ExperienceRoot({
 
   return (
     <>
-      <ExperienceWorld
-        tier={tier}
-        model={model}
-        fallback={modelSettled}
-        vegetation={vegetation.library}
-        plantingFallback={vegetation.settled && !vegetation.library}
-        life={life.library}
-        daylight={daylight}
-        godRays={settings.godRays}
-        sunRise={sunRise}
-        rig={rig}
-      />
+      <SceneDetail value={reel ? "max" : "distance"}>
+        <ExperienceWorld
+          tier={tier}
+          model={model}
+          fallback={modelSettled}
+          vegetation={vegetation.library}
+          plantingFallback={vegetation.settled && !vegetation.library}
+          life={life.library}
+          daylight={daylight}
+          godRays={settings.godRays}
+          sunRise={sunRise}
+          rig={rig}
+        />
+      </SceneDetail>
       {exploring ? <SceneMarkers variant="zaitun" markers={homes} selectedId={selectedId} onSelect={onSelect} /> : null}
       {exploring ? <UnitTargets markers={homes} selectedId={selectedId} onSelect={onSelect} /> : null}
       <StoryRig
@@ -241,6 +262,8 @@ export function ExperienceRoot({
         reducedMotion={reducedMotion}
         playing={playing}
         holdAt={holdAt}
+        reel={reel ? reelHead : null}
+        startAt={startAt}
         scroll={scroll}
         input={input}
         rig={rig}
@@ -252,7 +275,8 @@ export function ExperienceRoot({
       />
       {PostFX ? <PostFX settings={settings} rig={rig} composerRef={composer} /> : null}
       {/* A capture holds its level: stills must not depend on how fast the capturing machine is. */}
-      {holdAt == null ? <QualityMonitor tier={tier} level={level} onQuality={onQuality} onStarved={onStarved} /> : null}
+      {holdAt == null && !reel ? <QualityMonitor tier={tier} level={level} onQuality={onQuality} onStarved={onStarved} /> : null}
+      {reel ? <ReelCapture head={reelHead} model={model} ready={warm} onReady={onReelReady} /> : null}
       <RenderPass composer={composer} draw={fx?.drawComposer} preparing={preparing} onFirstFrame={onFirstFrame} onFrame={onFrame} onError={onError} onContextLost={onContextLost} />
     </>
   );

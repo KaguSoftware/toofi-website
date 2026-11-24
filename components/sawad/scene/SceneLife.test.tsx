@@ -245,6 +245,14 @@ describe("SceneLife", () => {
     showLife(life, away(car, 5));
     expect(car.visible).toBe(true);
     expect(casts(car)).toBe(true);
+
+    // Frames rendered offline for the reel: everyone, with a shadow, at any distance.
+    showLife(life, away(person, LIFE_DISTANCE.car.draw + 500), true);
+    expect(person.visible).toBe(true);
+    expect(casts(person)).toBe(true);
+    expect(car.visible).toBe(true);
+    showLife(life, away(person, LIFE_DISTANCE.person.draw + 5));
+    expect(person.visible).toBe(false);
   });
 
   it("puts each person, car and bird where its own motion says, frame after frame (no pose shared between them)", () => {

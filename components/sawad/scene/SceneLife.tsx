@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import {
   AnimationMixer,
@@ -20,6 +20,7 @@ import { reportError } from "@/lib/monitoring";
 import { MAX_FRAME_SECONDS } from "./flight";
 import { birdPosition, planLife, type CarKind, type MovingCar, type ParkedCar, type Walker } from "./landscape";
 import { birdSlots, birdWings, carPose, clipTimeScale, walkerPose, wheelAngle, wheelRadius, type CarPose, type Pose } from "./lifeMotion";
+import { SceneDetail } from "./SceneVegetation";
 import type { QualityTier } from "./types";
 
 /** A loaded GLB: the scene graph and its clips (public/sawad/models/life-<tier>.glb). */
@@ -327,13 +328,17 @@ export function advanceLife(life: LifeScene, deltaSeconds: number): void {
   }
 }
 
-/** Draws people and cars only within their distances from the camera, and lets them cast shadows only closer still. */
-export function showLife(life: LifeScene, camera: Vector3): void {
+/**
+ * Draws people and cars only within their distances from the camera, and lets them cast shadows
+ * only closer still. With `all` (frames rendered offline for the reel) everyone is drawn, with
+ * their shadow, at any distance: nobody appears as the camera comes closer.
+ */
+export function showLife(life: LifeScene, camera: Vector3, all = false): void {
   for (const a of life.actors) {
     const d = a.root.position.distanceTo(camera);
     const limits = LIFE_DISTANCE[a.kind];
-    a.root.visible = d < limits.draw;
-    const shadow = a.casts && d < limits.shadow;
+    a.root.visible = all || d < limits.draw;
+    const shadow = a.casts && (all || d < limits.shadow);
     if (shadow !== a.shadow) {
       a.shadow = shadow;
       for (const m of a.meshes) m.castShadow = shadow;
@@ -348,12 +353,13 @@ export function showLife(life: LifeScene, camera: Vector3): void {
  */
 export function SceneLife({ tier, library }: SceneLifeProps) {
   const life = useMemo(() => buildLife(tier, library), [tier, library]);
+  const all = useContext(SceneDetail) === "max";
   useEffect(() => {
     startLife(life);
     return () => stopLife(life);
   }, [life]);
   useFrame(({ camera }, delta) => {
-    showLife(life, camera.position);
+    showLife(life, camera.position, all);
     advanceLife(life, delta);
   });
   return <primitive object={life.root} />;

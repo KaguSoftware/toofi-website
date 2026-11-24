@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PROBE_KEY, canRender3D, isSoftwareRenderer, isWeakGpu, probeGpu, qualityTier, readCapabilityEnv, render3D, resetWebGL2Probe, type CapabilityEnv } from "./capability";
+import { PROBE_KEY, canRender3D, isSoftwareRenderer, isWeakGpu, playsReel, probeGpu, qualityTier, readCapabilityEnv, render3D, resetWebGL2Probe, type CapabilityEnv } from "./capability";
 
 const ok: CapabilityEnv = { webgl2: true, reducedMotion: false, mode: "explorer", deviceMemory: 8, hardwareConcurrency: 8 };
 
@@ -8,6 +8,24 @@ afterEach(() => {
   resetWebGL2Probe();
   vi.restoreAllMocks();
   delete (window as { matchMedia?: unknown }).matchMedia;
+});
+
+describe("playsReel", () => {
+  it("plays the story as video wherever it was not declined, GPU or not", () => {
+    expect(playsReel(ok)).toBe(true);
+    // No WebGL2, little memory, few threads and a "3g" report still play video.
+    expect(playsReel({ ...ok, webgl2: false, deviceMemory: 1, hardwareConcurrency: 2, effectiveType: "3g" } as CapabilityEnv)).toBe(true);
+    expect(playsReel({ reducedMotion: false })).toBe(true);
+  });
+
+  it.each<[string, Partial<CapabilityEnv>]>([
+    ["Save-Data", { saveData: true }],
+    ["a 2g link", { effectiveType: "2g" }],
+    ["a slow 2g link", { effectiveType: "slow-2g" }],
+    ["reduced motion", { reducedMotion: true }],
+  ])("keeps the stills with %s", (_, patch) => {
+    expect(playsReel({ ...ok, ...patch })).toBe(false);
+  });
 });
 
 describe("canRender3D", () => {

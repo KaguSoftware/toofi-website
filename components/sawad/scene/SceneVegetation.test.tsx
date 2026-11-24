@@ -9,7 +9,7 @@ vi.mock("@/lib/monitoring", () => ({ reportError: (...args: unknown[]) => report
 
 import type { Wind } from "@/lib/sawad/wind";
 import { planLandscape } from "./landscape";
-import { SceneVegetation } from "./SceneVegetation";
+import { SceneDetail, SceneVegetation } from "./SceneVegetation";
 
 const TREES = ["olive-a", "olive-b", "palm", "citrus"].flatMap((a) => [`${a}_LOD0`, `${a}_LOD1`, `${a}_LOD2`, `${a}_card`]);
 const OTHERS = ["hedge-low", "hedge-tall", "shrub-ball", "grass-green", "grass-dry"];
@@ -64,6 +64,29 @@ describe("SceneVegetation", () => {
     expect(drawn(instanced())).toBeGreaterThan(0);
     expect(drawn(instanced())).toBeLessThanOrEqual(land.olives.length + land.palms.length + land.citrus.length + land.hedges.length + land.shrubs.length + land.grass.length);
     expect(reportError).not.toHaveBeenCalled();
+    await renderer.unmount();
+  });
+
+  it("draws every plant at its finest level under the reel capture's max detail", async () => {
+    const renderer = await ReactThreeTestRenderer.create(
+      <SceneDetail value="max">
+        <Probe />
+        <SceneVegetation tier="low" library={library()} />
+      </SceneDetail>,
+    );
+    const instanced = () => root.scene.getObjectByName("vegetation")!.children as InstancedMesh[];
+    const camera = root.camera as PerspectiveCamera;
+    camera.position.set(0, 400, 600);
+    camera.lookAt(0, 0, -60);
+    await renderer.advanceFrames(1, 1 / 60);
+    const land = planLandscape("low");
+    expect(drawn(instanced())).toBe(land.olives.length + land.palms.length + land.citrus.length + land.hedges.length + land.shrubs.length + land.grass.length);
+    // Looking the other way draws the same plants, at the same levels.
+    const before = instanced().map((m) => m.count);
+    camera.lookAt(0, 0, 4000);
+    await renderer.advanceFrames(1, 1 / 60);
+    expect(instanced().map((m) => m.count)).toEqual(before);
+    expect(instanced().filter((m) => /:(LOD1|LOD2|card):/.test(m.name)).every((m) => m.count === 0)).toBe(true);
     await renderer.unmount();
   });
 

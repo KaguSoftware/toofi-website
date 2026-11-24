@@ -8,6 +8,7 @@ import { siteFor } from "../scene/site";
 import type { SceneMarker, Vec3, ViewId } from "../scene/types";
 import { lerpCamera, tourAngleNear, tourPose, viewpoints, type CameraPose } from "../scene/viewpoints";
 import { AMBIENT_BLEND_SECONDS, AMBIENT_IDLE_SECONDS, HEAD_SETTLED, INTRO_HOLD_SECONDS, INTRO_SECONDS, approach, scrollToPosition } from "./beats";
+import type { ReelHead } from "./ReelCapture";
 import { storyPose } from "./storySheet";
 import type { ExperienceApi, ExperienceMode, RigState, ScrollState } from "./types";
 import { WALK_KEYS, keysToMove, stepWalk, walkPose, walkStart, type WalkInput, type WalkState } from "./walk";
@@ -23,6 +24,13 @@ export type StoryRigProps = {
   playing?: boolean;
   /** Development capture: hold the story at this sequence position. */
   holdAt?: number | null;
+  /** Development capture of the reel: the position to hold for the frame being recorded (ReelCapture.tsx). */
+  reel?: RefObject<ReelHead> | null;
+  /**
+   * An explorer opened from the reel: the sequence position the reel was showing. The camera starts
+   * on that shot and orbits about what it looks at, so the live scene appears where the video was.
+   */
+  startAt?: number | null;
   scroll: RefObject<ScrollState>;
   input: RefObject<WalkInput>;
   /** Written every frame: the lens and the camera's surroundings. */
@@ -121,7 +129,7 @@ function describePlace(rig: RigState, pose: CameraPose, focus: number, blur: num
  * visitor at the top does nothing. Exploring hands over to damped orbit controls or a walk,
  * with eased flights between the modes.
  */
-export function StoryRig({ view, mode, reducedMotion = false, playing = true, holdAt = null, scroll, input, rig, markers, selectedId = null, apiRef, onIntroEnd, onError }: StoryRigProps) {
+export function StoryRig({ view, mode, reducedMotion = false, playing = true, holdAt = null, reel = null, startAt = null, scroll, input, rig, markers, selectedId = null, apiRef, onIntroEnd, onError }: StoryRigProps) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const canvas = useThree((s) => s.gl.domElement);
   const invalidate = useThree((s) => s.invalidate);
@@ -132,6 +140,8 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
   const keys = useRef(new Set<string>());
   const story = useRef({ head: holdAt ?? 0, held: 0, idle: 0, ambient: 0, tourSeconds: 0, tourAngle: 0, introDone: false });
   const currentMode = useRef<ExperienceMode>(mode);
+  /** True until the first orbit has taken over from the reel's shot. */
+  const fromReel = useRef(mode !== "story" && startAt !== null);
   const failed = useRef(false);
   const latest = useRef({ markers, reducedMotion, playing, holdAt, view, onIntroEnd, onError });
   useEffect(() => {
@@ -174,7 +184,7 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
 
   // The opening frame: the poster's shot, or the aerial for a visitor who explores without the story.
   useLayoutEffect(() => {
-    applyPose(camera, null, mode === "story" ? storyPose(view, holdAt ?? 0) : viewpoints("zaitun").aerial);
+    applyPose(camera, null, mode === "story" ? storyPose(view, holdAt ?? 0) : startAt !== null ? storyPose(view, startAt) : viewpoints("zaitun").aerial);
     // Mount only: later changes of mode and view are flown to below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera]);
@@ -194,8 +204,9 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
       flight.current = latest.current.reducedMotion ? null : { from, to: { position: back, target: [w.x, w.y, w.z], fov: 46 }, elapsed: 0, seconds: WALK_FLY_SECONDS };
       if (flight.current) controls.enabled = false;
       else applyPose(camera, controls, { position: back, target: [w.x, w.y, w.z], fov: 46 });
-    } else if (currentMode.current === "story") {
-      // No move at all: orbit about what the story camera was looking at.
+    } else if (currentMode.current === "story" || fromReel.current) {
+      // No move at all: orbit about what the story camera (or the reel's frame) was looking at.
+      fromReel.current = false;
       controls.target.set(...orbitTargetFor(from));
     } else {
       controls.target.set(PLAN_CENTER.x, PLAN_CENTER.y, PLAN_CENTER.z);
@@ -316,9 +327,10 @@ export function StoryRig({ view, mode, reducedMotion = false, playing = true, ho
 
     if (mode === "story") {
       const s = story.current;
-      const { playing: moving, holdAt: hold, onIntroEnd: introEnd } = latest.current;
+      const { playing: moving, holdAt: held, onIntroEnd: introEnd } = latest.current;
       const progress = scroll.current?.progress ?? 0;
       const atTop = progress <= AT_TOP;
+      const hold = reel?.current ? reel.current.position : held;
       if (hold !== null) s.head = hold;
       else if (atTop && s.head < INTRO_SECONDS) {
         // The opening holds on its poster frame first; a scroll skips the hold (the branch below).

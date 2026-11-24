@@ -137,6 +137,25 @@ describe("StoryRig in the story", () => {
     await rig.unmount();
   });
 
+  it("holds the reel's capture wherever its head says, frame by frame", async () => {
+    const reel = { current: { position: 0 } };
+    const rig = await mount({ reel });
+    // The opening's hold and clock are the capture script's business: nothing moves by itself.
+    await rig.frames(HOLD_FRAMES + 20);
+    expect(rig.rig.current.head).toBe(0);
+    reel.current.position = 5.5;
+    await rig.frames(1, 1 / 30);
+    expect(rig.rig.current.head).toBe(5.5);
+    expect(gap(rig, storyPose("flight", 5.5).position)).toBeLessThan(1e-6);
+    // Into the tour with no easing toward a scroll, and with the scroll left alone.
+    rig.scroll.current.progress = 1;
+    reel.current.position = 48;
+    await rig.frames(1, 1 / 30);
+    expect(rig.rig.current.head).toBe(48);
+    expect(gap(rig, storyPose("flight", 48).position)).toBeLessThan(1e-6);
+    await rig.unmount();
+  });
+
   it("follows the scroll as a glide, never a jump, and settles on the beat", async () => {
     const rig = await mount();
     await rig.frames(INTRO_FRAMES);
@@ -254,6 +273,20 @@ describe("StoryRig exploring", () => {
     const rig = await mount({ mode: "orbit" });
     expect(rig.camera.position.toArray()).toEqual(viewpoints("zaitun").aerial.position);
     expect(lastControls().target.toArray()).toEqual([PLAN_CENTER.x, PLAN_CENTER.y, PLAN_CENTER.z]);
+    await rig.unmount();
+  });
+
+  it("opens an explorer asked for from the reel on the shot the reel was showing", async () => {
+    const rig = await mount({ mode: "orbit", startAt: 48 });
+    const shot = storyPose("flight", 48);
+    expect(gap(rig, shot.position)).toBeLessThan(1e-6);
+    // It orbits about what that shot looked at, pulled inside the site: no flight, no cut to the aerial.
+    const t = lastControls().target;
+    const dir = forward(rig.camera);
+    const ahead = clampTarget({ x: shot.position[0] + dir.x * 60, y: shot.position[1] + dir.y * 60, z: shot.position[2] + dir.z * 60 });
+    expect(t.x).toBeCloseTo(ahead.x, 3);
+    expect(t.z).toBeCloseTo(ahead.z, 3);
+    expect([t.x, t.y, t.z]).not.toEqual([PLAN_CENTER.x, PLAN_CENTER.y, PLAN_CENTER.z]);
     await rig.unmount();
   });
 

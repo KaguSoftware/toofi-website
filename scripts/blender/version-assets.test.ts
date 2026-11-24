@@ -29,6 +29,8 @@ describe("names", () => {
     expect(VERSIONED_PATTERN.test(`/sawad/models/compound-zaitun-far-low.${h}.glb`)).toBe(true);
     expect(VERSIONED_PATTERN.test(`/sawad/lightmaps/zaitun/lightmaps.${h}.json`)).toBe(true);
     expect(VERSIONED_PATTERN.test(`/sawad/basis/${h}/basis_transcoder.wasm`)).toBe(true);
+    expect(VERSIONED_PATTERN.test(`/sawad/reel/zaitun-tour-wide.${h}.mp4`)).toBe(true);
+    expect(VERSIONED_PATTERN.test("/sawad/reel/zaitun-tour-wide.mp4")).toBe(false);
     expect(VERSIONED_PATTERN.test("/sawad/models/compound-zaitun-far-low.glb")).toBe(false);
     expect(VERSIONED_PATTERN.test("/sawad/models/compound-zaitun.manifest.json")).toBe(false);
     expect(VERSIONED_PATTERN.test("/sawad/scene-zaitun-aerial.jpg")).toBe(false);
@@ -42,6 +44,8 @@ describe("versionAll", () => {
       "sawad/models/compound-zaitun.manifest.json": "{}",
       "sawad/lightmaps/zaitun/lightmaps.json": "{}",
       "sawad/lightmaps/zaitun/day-site-high.ktx2": "ktx",
+      "sawad/reel/zaitun-tour-wide.mp4": "tour",
+      "sawad/reel/notes.txt": "not fetched",
       "sawad/basis/basis_transcoder.js": "js",
       "sawad/basis/basis_transcoder.wasm": "wasm",
     });
@@ -53,8 +57,10 @@ describe("versionAll", () => {
       "/sawad/lightmaps/zaitun/day-site-high.ktx2": `/sawad/lightmaps/zaitun/day-site-high.${hashOf(Buffer.from("ktx"))}.ktx2`,
       "/sawad/lightmaps/zaitun/lightmaps.json": `/sawad/lightmaps/zaitun/lightmaps.${hashOf(Buffer.from("{}"))}.json`,
       "/sawad/models/far-low.glb": `/sawad/models/${far}`,
+      "/sawad/reel/zaitun-tour-wide.mp4": `/sawad/reel/zaitun-tour-wide.${hashOf(Buffer.from("tour"))}.mp4`,
     });
     expect(readdirSync(join(dir, "sawad/models")).sort()).toEqual(["compound-zaitun.manifest.json", far]);
+    expect(readdirSync(join(dir, "sawad/reel")).sort()).toEqual(["notes.txt", `zaitun-tour-wide.${hashOf(Buffer.from("tour"))}.mp4`]);
     for (const f of BASIS.files) expect(existsSync(join(dir, "sawad/basis", basis, f))).toBe(true);
     expect(checkVersions(dir, map)).toEqual([]);
   });

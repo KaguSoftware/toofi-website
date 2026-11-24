@@ -146,6 +146,15 @@ const ALWAYS_NEAR = 18;
 type Bucket = { level: Level; meshes: InstancedMesh[]; attribute: InstancedBufferAttribute; count: number };
 type Field = { species: Species; buckets: Map<Level, Bucket> };
 
+/**
+ * How the field picks what to draw. "distance": each plant at the level its distance from the
+ * camera gives, nothing behind the camera or past its species' range (the live scene, which has a
+ * frame budget). "max": every plant, always, at the finest level the library has. That is for
+ * frames rendered offline (the story reel, scripts/render-story-reel.mjs), where a frame may take
+ * as long as it likes and nothing may change detail or appear as the camera comes closer.
+ */
+export type VegetationDetail = "distance" | "max";
+
 export type VegetationField = {
   /** Every InstancedMesh, to mount once. */
   objects: InstancedMesh[];
@@ -158,7 +167,8 @@ export type VegetationField = {
  * Builds the instanced planting for a tier from a prepared library. Species whose nodes the
  * library lacks are reported as `sawad-scene` and left out; the rest still draw.
  */
-export function buildVegetationField(root: Object3D, tier: QualityTier, species: Species[] = speciesFor(planLandscape(tier), tier)): VegetationField {
+export function buildVegetationField(root: Object3D, tier: QualityTier, species: Species[] = speciesFor(planLandscape(tier), tier), detail: VegetationDetail = "distance"): VegetationField {
+  const max = detail === "max";
   const objects: InstancedMesh[] = [];
   const fields: Field[] = [];
   const has = (name: string) => !!root.getObjectByName(name);
@@ -214,9 +224,11 @@ export function buildVegetationField(root: Object3D, tier: QualityTier, species:
           const dy = pos[i * 3 + 1] - eye.y;
           const dz = pos[i * 3 + 2] - eye.z;
           const d = Math.hypot(dx, dy, dz);
-          if (d > sp.maxDistance) continue;
-          if (d > ALWAYS_NEAR && dx * f.x + dy * f.y + dz * f.z < cosHalf * d) continue;
-          const level = sp.levels ? LOD_LEVEL[String(lodFor(d, tier))] : "LOD0";
+          if (!max) {
+            if (d > sp.maxDistance) continue;
+            if (d > ALWAYS_NEAR && dx * f.x + dy * f.y + dz * f.z < cosHalf * d) continue;
+          }
+          const level = sp.levels && !max ? LOD_LEVEL[String(lodFor(d, tier))] : "LOD0";
           const b = buckets.get(level);
           if (!b) continue;
           b.attribute.array.set(sp.matrices.subarray(i * 16, i * 16 + 16), b.count * 16);

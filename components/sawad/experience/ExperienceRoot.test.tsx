@@ -38,6 +38,9 @@ const parts = vi.hoisted(() => ({
   units: [] as unknown[],
   rig: [] as unknown[],
   fx: [] as unknown[],
+  reel: [] as unknown[],
+  /** The scene detail the world is given through context, one entry per render. */
+  detail: [] as string[],
   composer: null as unknown,
   draw: { calls: [] as unknown[][], fail: null as Error | null },
 }));
@@ -45,7 +48,17 @@ const record = (list: unknown[]) => (p: unknown) => {
   list.push(p);
   return null;
 };
-vi.mock("./ExperienceWorld", () => ({ ExperienceWorld: (p: unknown) => record(parts.world)(p) }));
+vi.mock("./ExperienceWorld", async () => {
+  const { useContext } = await import("react");
+  const { SceneDetail } = await import("../scene/SceneVegetation");
+  return {
+    ExperienceWorld: (p: unknown) => {
+      parts.detail.push(useContext(SceneDetail));
+      return record(parts.world)(p);
+    },
+  };
+});
+vi.mock("./ReelCapture", () => ({ ReelCapture: (p: unknown) => record(parts.reel)(p) }));
 vi.mock("../scene/SceneMarkers", () => ({ SceneMarkers: (p: unknown) => record(parts.markers)(p) }));
 vi.mock("./UnitTargets", () => ({ UnitTargets: (p: unknown) => record(parts.units)(p) }));
 vi.mock("./StoryRig", () => ({ StoryRig: (p: unknown) => record(parts.rig)(p) }));
@@ -74,7 +87,8 @@ vi.mock("./PostFX", () => ({
 }));
 
 import { ExperienceRoot, QualityMonitor, RenderPass, fxChunk, loadPostFX, resetPostFX, sceneControl, type ExperienceRootProps } from "./ExperienceRoot";
-import { QUALITY } from "./quality";
+import { QUALITY, REEL_QUALITY } from "./quality";
+import type { ReelCaptureProps } from "./ReelCapture";
 import { initialRigState } from "./types";
 import { emptyInput } from "./walk";
 
@@ -82,6 +96,7 @@ const last = <T,>(list: unknown[]) => list.at(-1) as T;
 const world = () => last<ExperienceWorldProps>(parts.world);
 const rig = () => last<StoryRigProps>(parts.rig);
 const fx = () => last<PostFXProps>(parts.fx);
+const reel = () => last<ReelCaptureProps>(parts.reel);
 
 let root: RootState;
 let getRoot: () => RootState;
@@ -137,7 +152,7 @@ beforeEach(() => {
   vegetation = deferred();
   life = deferred();
   loads.pending = { model, vegetation, life };
-  for (const list of [parts.world, parts.markers, parts.units, parts.rig, parts.fx, parts.draw.calls, ahead.compiles, ahead.warms]) list.length = 0;
+  for (const list of [parts.world, parts.markers, parts.units, parts.rig, parts.fx, parts.reel, parts.detail, parts.draw.calls, ahead.compiles, ahead.warms]) list.length = 0;
   parts.composer = null;
   parts.draw.fail = null;
   ahead.auto = true;
@@ -455,6 +470,51 @@ describe("ExperienceRoot", () => {
     getRoot().set({ frameloop: "always" });
     await scene.frames(400);
     expect(onQuality).not.toHaveBeenCalled();
+    await scene.unmount();
+  });
+
+  it("draws the live scene at the detail its distances give, with no capture handle", async () => {
+    const scene = await mount(base);
+    await drain();
+    expect(parts.detail.at(-1)).toBe("distance");
+    expect(parts.reel).toHaveLength(0);
+    expect(rig().reel).toBeNull();
+    await scene.unmount();
+  });
+
+  it("records the reel at its own quality, with every plant at its finest, frame by frame", async () => {
+    const onQuality = vi.fn();
+    const onReelReady = vi.fn();
+    const group = new Group();
+    const scene = await mount({ ...base, level: 3, reel: true, onQuality, onReelReady });
+    await drain();
+    // The reel's settings whatever the level: two device pixels per CSS pixel, no grain.
+    expect(fx().settings).toBe(REEL_QUALITY);
+    expect(getRoot().viewport.dpr).toBe(REEL_QUALITY.maxDpr);
+    expect(parts.detail.at(-1)).toBe("max");
+    // The opening still takes over from its poster: the reel's first frame is the poster's.
+    expect(world().sunRise).toBe(true);
+    // The capture and the camera rig share one head; the capture waits for the shaders.
+    expect(reel().head).toBe(rig().reel);
+    expect(reel().head.current).toEqual({ position: 0 });
+    expect(reel().onReady).toBe(onReelReady);
+    expect(reel().ready).toBe(false);
+    model.resolve(group);
+    vegetation.resolve({ scene: new Group(), animations: [] });
+    life.resolve({ scene: new Group(), animations: [] });
+    await drain();
+    expect(reel().ready).toBe(true);
+    expect(reel().model).toBe(group);
+    // No monitor: a frame may take as long as it likes.
+    getRoot().set({ frameloop: "always" });
+    await scene.frames(400);
+    expect(onQuality).not.toHaveBeenCalled();
+    await scene.unmount();
+  });
+
+  it("hands the rig the shot an explorer opened from the reel starts on", async () => {
+    const scene = await mount({ ...base, mode: "orbit", startAt: 48 });
+    expect(rig().startAt).toBe(48);
     await scene.unmount();
   });
 

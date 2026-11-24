@@ -33,6 +33,13 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
   3: { maxDpr: 1.75, smaa: true, bloom: true, dof: true, ssao: true, godRays: true, grain: true, vignette: true },
 };
 
+/**
+ * What the reel is recorded at (ReelCapture.tsx): the top level's effects at two device pixels
+ * per CSS pixel, which the encoder scales down, so every edge is supersampled. No grain: it does
+ * not survive video compression, and costs a share of every frame's bits.
+ */
+export const REEL_QUALITY: QualitySettings = { ...QUALITY[3], maxDpr: 2, grain: false };
+
 type Range = { min: QualityLevel; max: QualityLevel; start: QualityLevel };
 
 /** The levels a model tier may use. The high tier starts one below its best and earns the last step. */

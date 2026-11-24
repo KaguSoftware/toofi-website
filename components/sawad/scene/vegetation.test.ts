@@ -119,6 +119,26 @@ describe("buildVegetationField", () => {
     field.dispose();
   });
 
+  it("at max detail draws every plant at its finest level, wherever the camera is and looks", () => {
+    const [l0, l1, l2] = LOD_DISTANCE.high;
+    const places = [at(l0 / 2, 0), at((l0 + l1) / 2, 0), at((l1 + l2) / 2, 0), at(l2 + 200, 0), at(-300, 0)];
+    const field = buildVegetationField(library(TREE("olive")), "high", [species("olive", places)], "max");
+    expect(field.update(cone(at(0, 0)))).toEqual({ LOD0: 5, LOD1: 0, LOD2: 0, card: 0 });
+    // Coming closer or turning round changes nothing: no plant swaps its level or appears.
+    expect(field.update(cone(at(l2, 0), { x: -1, y: 0, z: 0 }))).toEqual({ LOD0: 5, LOD1: 0, LOD2: 0, card: 0 });
+    field.dispose();
+    // Hedges, shrubs and grass have no range either.
+    const grass = buildVegetationField(library(["grass"]), "high", [species("grass", [at(10, 0), at(GRASS_DISTANCE + 500, 0)], false, GRASS_DISTANCE)], "max");
+    expect(grass.update(cone(at(0, 0))).LOD0).toBe(2);
+    grass.dispose();
+    // The low tier's library has no LOD0: its finest level is drawn instead.
+    const low = buildVegetationField(library(["olive_LOD1", "olive_LOD2", "olive_card"]), "low", [species("olive", places)], "max");
+    low.update(cone(at(0, 0)));
+    expect(low.objects.filter((o) => o.name.startsWith("olive:LOD0")).every((o) => o.count === 5)).toBe(true);
+    expect(low.objects.filter((o) => !o.name.startsWith("olive:LOD0")).every((o) => o.count === 0)).toBe(true);
+    low.dispose();
+  });
+
   it("draws the low tier's missing LOD0 with LOD1, through one shared set of meshes", () => {
     const root = library(["olive_LOD1", "olive_LOD2", "olive_card"]);
     const field = buildVegetationField(root, "low", [species("olive", [at(1, 0), at(LOD_DISTANCE.low[1] - 5, 0)])]);

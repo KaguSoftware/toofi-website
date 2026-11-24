@@ -1,50 +1,57 @@
 # The Zaitun Hills experience
 
-The showcase on Home: an opening shot that plays by itself, a scroll-driven tour of five stops with bilingual captions, then free exploring (orbit, walk, clickable homes, day and dusk, sound). It is built on the scene in [`../scene/`](../scene/README.md) and adds nothing to it: the world, the model loading and the capability rules are imported from there unchanged.
+The showcase on Home: an opening shot that plays by itself, a scroll-driven tour of five stops with bilingual captions, then free exploring (orbit, walk, clickable homes, day and dusk, sound). The opening and the tour are video, "the reel", recorded from the live scene; the live scene itself, built on [`../scene/`](../scene/README.md), is fetched only when a visitor asks to explore. It adds nothing to the scene folder: the world, the model loading and the capability rules are imported from there.
 
-Stack, all pinned in `package.json`: React Three Fiber 9.8, `@react-three/postprocessing` 3.2 on `postprocessing` 6.39, Theatre.js core 0.7 (camera keyframes; Studio is a dev dependency), GSAP 3.15 with ScrollTrigger and `@gsap/react` 2.1.
+Stack, all pinned in `package.json`: React Three Fiber 9.8, `@react-three/postprocessing` 3.2 on `postprocessing` 6.39, Theatre.js core 0.7 (camera keyframes; Studio is a dev dependency), GSAP 3.15 with ScrollTrigger and `@gsap/react` 2.1. The reel needs none of them except GSAP.
 
 ## What a visitor gets
 
 | Visitor | What they see |
 | --- | --- |
-| No JavaScript, no WebGL2 or a software renderer, Save-Data, a 2g link, or the owner setting `tweaks.experience = explorer` | The stills: the poster behind the hero, then one full-screen still per stop with its caption. This is also what the server renders, so nothing shifts when the page hydrates. |
-| A capable device | The live story on top of the same markup: the stage stays put while the page scrolls. |
-| A capable device with reduced motion | The stills, plus an "Explore in 3D" button. Nothing moves unasked: the explorer opens on request and only the visitor moves the camera (flights become cuts). |
-| A link the browser reports as 3g, under 4 GB of memory, or under 4 threads | The stills, plus a button that names the download ("Load the 3D tour (about 3.6 MB)"). Asked for, the live story starts. |
-| Anyone whose browser takes the GPU context away (it happens to tabs in the background) | The stills come back with an "Explore in 3D" button; the scene starts again on request. Reported once, with `severity: "warning"`. |
-| A device that stays under 20 frames a second at its tier's lowest level for ten seconds (high tier only, see `monitor.ts`) | The stills, for the rest of the visit. |
+| No JavaScript, Save-Data, a 2g link, or the owner setting `tweaks.experience = explorer` | The stills: the poster behind the hero, then one full-screen still per stop with its caption. This is also what the server renders, so nothing shifts when the page hydrates. |
+| Nearly everyone else, whatever the GPU or the memory | The reel on top of the same markup: the stage stays put while the page scrolls, the opening plays under a letterbox, the scroll moves the picture from stop to stop. No 3D code, model or WebGL context is involved. |
+| The same visitor pressing "Explore" | The live 3D scene, fetched then, opening on the shot the reel was showing: orbit, walk, the homes, day and dusk. "Back" lets the scene go and returns to the reel. |
+| A link the browser reports as 3g, under 4 GB of memory, or under 4 threads | The reel, and an Explore button that names the download ("Load the 3D tour (about 3.6 MB)"). |
+| No WebGL2, or a software renderer | The reel without an Explore button. |
+| Reduced motion | The stills, plus an "Explore in 3D" button. Nothing moves unasked: the explorer opens on request and only the visitor moves the camera (flights become cuts). |
+| A browser that will not play video unasked (iOS in Low Power Mode) | The poster until the first touch, then the reel. |
+| Anyone whose browser takes the GPU context away while exploring (it happens to tabs in the background) | The reel comes back with a note; Explore starts the scene again. Reported once, with `severity: "warning"`. |
+| A device that stays under 20 frames a second at its tier's lowest level for ten seconds while exploring (high tier only, see `monitor.ts`) | The reel, without the Explore button, for the rest of the visit. |
+| A reel that fails to play in every codec | The stills, with the "Explore in 3D" button where the device can draw the scene. Reported as `StoryReel`. |
 | An editor in edit mode | The stills, so every caption is on the page and can be edited. |
 
-The canvas is hidden from assistive technology. The captions, in document order, are the story; the link under the last caption leads to the residence finder, which stays the accessible way through the homes.
+The reel and the canvas are hidden from assistive technology. The captions, in document order, are the story; the link under the last caption leads to the residence finder, which stays the accessible way through the homes.
 
 ## How it is put together
 
 ```
 ZaitunExperience.tsx   the only component a page uses: stills, capability, the stage, state
-├─ ExperienceHud.tsx   controls: pause, day or dusk, sound, explore; back, orbit or walk, zoom
+├─ StoryReel.tsx       the story as video: the opening plays, the scroll seeks the tour
+├─ ExperienceHud.tsx   controls: pause, sound, explore; back, orbit or walk, zoom, day or dusk
 ├─ UnitPanel.tsx       the home that was clicked: type, size, status, price, links
 ├─ Joystick.tsx        touch stick for walk mode
 ├─ StoryScroll.tsx     GSAP ScrollTrigger: scroll progress and caption fades        (lazy chunk)
-└─ ExperienceCanvas.tsx   the <Canvas> and the quality level                        (lazy chunk, after three.js)
+└─ ExperienceCanvas.tsx   the <Canvas> and the quality level                        (lazy chunk, after three.js; on "Explore" only)
    └─ ExperienceRoot.tsx  everything inside the canvas, the frame-rate monitor and the render pass
       ├─ ExperienceWorld.tsx  the scene's world + day and dusk + light shafts
-      ├─ StoryRig.tsx         the camera: story, orbit, walk, flights between them
+      ├─ StoryRig.tsx         the camera: orbit, walk, flights between them; the story, for recording
       ├─ UnitTargets.tsx      the homes as click targets, hover and selection veils
+      ├─ ReelCapture.tsx      development only: draws the reel's frames when the capture script asks
       └─ PostFX.tsx           the effect chain                                      (lazy chunk)
 ```
 
-The 3D code arrives as three chunks that are evaluated one after another, so no single task is long: three.js, then the canvas with the scene, then the effect chain (`loadPostFX` in `ExperienceRoot.tsx`). The first frame waits for all three.
+The 3D code arrives as three chunks that are evaluated one after another, so no single task is long: three.js, then the canvas with the scene, then the effect chain (`loadPostFX` in `ExperienceRoot.tsx`). The explorer's first frame waits for all three. None of it is asked for until a visitor presses "Explore".
 
 Plain modules:
 
 | File | What it holds |
 | --- | --- |
+| `reel.ts` | The reel's timeline and files: how long the opening is, where a sequence position is in the tour file, the two shapes (wide, tall) and their addresses. Safe to import on the page side. |
 | `beats.ts` | The timeline without geometry: the five stops, the scroll-to-sequence mapping, the playhead easing. Safe to import on the page side. |
 | `story.ts` | The camera keys, placed from `layout.ts`: four openings (one per start view) and the scroll path. |
 | `storySheet.ts` | The keys as a Theatre.js sheet; `storyPose(view, position)` is what the rig plays. |
 | `story.theatre.json` | `null`, or a state exported from Theatre Studio (see below). |
-| `early.ts` | What runs before any of this code has arrived: an inline script at the top of the experience that decides as `capability.ts` does, preloads the tier's first model and the texture decoder, and keeps the stills from being fetched where the live story is coming. Also the download sizes named in the offer. |
+| `early.ts` | What runs before any of this code has arrived: an inline script after the reel's video elements that decides as `capability.ts` `playsReel` does, gives the opening its file and plays it, and keeps the stills from being fetched where the reel is coming. Also the explorer's first files (preloaded when it is asked for) and the download sizes named on its button. |
 | `compileAhead.ts` | Shader programs made ready before the frame that needs them: `compileAhead` (a dry frame handed to `compileAsync`) and `warmUp` (first uses spread over hidden frames). Both take a `draw` function, so they work for any effect chain. |
 | `monitor.ts` | The frame-rate monitor behind the quality levels: when to step down or up, cooldowns for a level that failed, and when to give up. |
 | `quality.ts` | The four quality levels and which effects each runs. |
@@ -59,11 +66,11 @@ Plain modules:
 
 ## The story
 
-The camera plays one Theatre.js sequence, 86 units long (`beats.ts`):
+The story is one Theatre.js sequence, 86 units long (`beats.ts`). Visitors see it as the reel; the live camera plays it only when the reel is recorded (see "The reel" below), so what follows describes both.
 
-- **0 to 14, the opening.** Holds still on its poster frame for 2 seconds (`INTRO_HOLD_SECONDS`), then plays by the clock under a 2.39:1 letterbox, which opens at the visitor's first scroll, key or touch. Each owner start view (`tweaks.startView`) has its own opening: it starts on that view's poster frame and ends outside the main gate. A scroll during the opening fast-forwards it along its path.
+- **0 to 14, the opening.** Holds still on its poster frame for 2 seconds (`INTRO_HOLD_SECONDS`), then plays by the clock under a 2.39:1 letterbox, which opens at the visitor's first scroll, key or touch. Each owner start view (`tweaks.startView`) has its own opening: it starts on that view's poster frame and ends outside the main gate. A scroll during the opening cuts to the tour (the reel) or fast-forwards the live camera along its path (a recording).
 - **14 to 86, the tour.** Follows the scroll: entrance, boulevard, courtyard villa (home ZH-V05), garden and amenities, aerial. Each stop's panel adds one fifth to the progress as it rises to fill the screen. The camera stays with the captions: the playhead closes on the scroll within a fraction of a second (a flick through the whole tour is caught up within a second), always gliding along the authored path, never jumping. Only one caption shows at a time, however fast the scroll. The last stop holds the final aerial for almost half a screen more; its caption leaves just before the stage does.
-- **A visitor who stays at the top** and does nothing for five seconds after the opening (counted once the camera is back at the gate) gets the scene's slow circuit (`tourPose` in `../scene/viewpoints.ts`); the first scroll brings the camera back.
+- **A visitor who stays at the top**: the reel rests on the gate. (The live story drifted into the scene's slow circuit after five seconds, `tourPose` in `../scene/viewpoints.ts`; the reel does not record it.)
 
 `story.test.ts` flies the whole sequence and fails if the camera passes through the ground, a building, a lamp or a tree crown, pans faster than 32 degrees per sequence second, or fails to ease into a resting frame.
 
@@ -136,6 +143,30 @@ Nothing is drawn to the screen until the scene's shaders are ready. While the po
 ### A page Next keeps hidden
 
 Next keeps the page it navigates away from, hidden in React Activity, and shows it again on the way back. React Three Fiber's loop runs outside React and no prop reaches a hidden canvas, so `ZaitunExperience` pauses the scene from a layout effect's cleanup (`ExperienceControl`, implemented by `sceneControl` in `ExperienceRoot.tsx`) and resumes it when the page is shown again. The sound is stopped the same way and picks up where it was; it is closed only once the page has left the document.
+
+## The reel
+
+`public/sawad/reel/` holds ten clips in three codecs (30 files), 30 frames a second, no audio, with a content hash in each name (`reelSources()` in `reel.ts` gives the address):
+
+- `zaitun-opening-<flight|street|terrace|aerial>-<wide|tall>.mp4`: the 16-second opening for each owner start view. The clock plays it. It has a key frame every 60 frames.
+- `zaitun-tour-<wide|tall>.mp4`: the tour, 721 frames (24 seconds, ten frames for each sequence second). It is never played, only sought by the scroll, so it has a key frame every 10 frames. Its first frame is the frame every opening ends on.
+- The codec is in the name: `-av1`, `-hevc`, and no suffix for H.264. The browser gets the first of those it says it "probably" plays (`playableCodecs`; the early script asks the same question). A file that fails all the same is replaced by the next codec and reported as a warning; only H.264 failing ends the reel and brings the stills back.
+- Wide is 1920 x 1080. Tall is 720 x 1280, the middle strip of the wide frame, for screens taller than they are wide (`reelShape`).
+
+Every frame is drawn by the live scene in its capture mode (`ReelCapture.tsx`, `/?reel=1&view=<view>`), at 3840 x 2160, with every plant at its finest level (`SceneDetail` context "max" in `../scene/SceneVegetation.tsx`; it applies to the capture only). Nothing changes detail as the camera comes closer, and two recordings of the same frame are byte-identical.
+
+To record again:
+
+```sh
+npm run dev:lan                                        # capture mode is development-only; use localhost
+pnpm install --dir scripts/perf --ignore-workspace     # once
+node scripts/render-story-reel.mjs http://localhost:3000 [--views flight,street] [--codecs av1,hevc] [--no-tour] [--encode-only] [--no-encode]
+node scripts/blender/version-assets.mjs                # the content hashes in the file names
+```
+
+Frames go to `scripts/blender/out/reel/frames/` (not in git); a stopped run resumes. ffmpeg with libsvtav1, libx265 and libx264 must be on the PATH (or set `FFMPEG`). The encode settings are `ENCODE` and `codecArgs` in the script. The three codecs are set to about the same quality (VMAF 81 to 85 on the wide flight opening and the wide tour), so AV1 is the smallest file, not the sharpest. Change them there.
+
+Record the reel again after any change to the story camera (`story.ts`, or `story.theatre.json`), to the scene's look (light, sky, water, plants, the dusk settle) or to the model. Until then the reel shows the old world and the explorer the new one. `story.test.ts` does not see the difference.
 
 ## Stills
 

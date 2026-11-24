@@ -6,7 +6,7 @@ import { reportError } from "@/lib/monitoring";
 import { CAMERA_FAR, CAMERA_NEAR, EXPOSURE } from "../scene/SceneCanvas";
 import { viewpoints } from "../scene/viewpoints";
 import { ExperienceRoot, type ExperienceRootProps } from "./ExperienceRoot";
-import { pixelRatio, startQuality, stepQuality, type QualityLevel } from "./quality";
+import { REEL_QUALITY, pixelRatio, startQuality, stepQuality, type QualityLevel } from "./quality";
 import { openStoryStudio, storyPose } from "./storySheet";
 
 export type ExperienceCanvasProps = Omit<ExperienceRootProps, "level" | "onReady" | "onQuality" | "playing"> & {
@@ -34,17 +34,17 @@ export function pinnedLevel(): QualityLevel | null {
  * so the first frame is the finished picture. It also holds the quality level, which the frame
  * rate moves within the device's tier.
  */
-export default function ExperienceCanvas({ playing, moving = true, tier, view, mode, holdAt = null, ...rest }: ExperienceCanvasProps) {
+export default function ExperienceCanvas({ playing, moving = true, tier, view, mode, holdAt = null, reel = false, startAt = null, ...rest }: ExperienceCanvasProps) {
   const [ready, setReady] = useState(false);
-  const [level, setLevel] = useState(() => pinnedLevel() ?? startQuality(tier));
+  const [level, setLevel] = useState<QualityLevel>(() => (reel ? 3 : (pinnedLevel() ?? startQuality(tier))));
   // The opening shot. Later moves go through the rig, not through this prop.
   const [camera] = useState(() => {
-    const start = mode === "story" ? storyPose(view, holdAt ?? 0) : viewpoints("zaitun").aerial;
+    const start = mode === "story" ? storyPose(view, holdAt ?? 0) : startAt !== null ? storyPose(view, startAt) : viewpoints("zaitun").aerial;
     return { fov: start.fov, near: CAMERA_NEAR, far: CAMERA_FAR, position: start.position };
   });
   // The Canvas re-applies `dpr` whenever it re-renders, so it must follow the level: a fixed start
   // ratio would undo every level change on the next state change around it (ledger T17).
-  const dpr = pixelRatio(level, window.devicePixelRatio);
+  const dpr = reel ? REEL_QUALITY.maxDpr : pixelRatio(level, window.devicePixelRatio);
   // Development only: `?studio=1` opens Theatre Studio on the story sheet (see README.md).
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
@@ -52,12 +52,13 @@ export default function ExperienceCanvas({ playing, moving = true, tier, view, m
     openStoryStudio().catch((err) => reportError("ExperienceCanvas", err, { stage: "theatre-studio" }));
   }, []);
   // A capture holds its level: stills must not depend on how fast the capturing machine is.
-  const onQuality = useCallback((direction: 1 | -1) => setLevel((l) => (holdAt === null && pinnedLevel() === null ? stepQuality(l, direction, tier) : l)), [holdAt, tier]);
+  const onQuality = useCallback((direction: 1 | -1) => setLevel((l) => (holdAt === null && !reel && pinnedLevel() === null ? stepQuality(l, direction, tier) : l)), [holdAt, reel, tier]);
 
   return (
     <Canvas
       flat
-      frameloop={!ready ? "never" : playing ? "always" : "demand"}
+      // The reel is recorded frame by frame: its capture draws each one (ReelCapture.tsx).
+      frameloop={!ready || reel ? "never" : playing ? "always" : "demand"}
       dpr={dpr}
       shadows={tier === "high" ? "percentage" : false}
       gl={RENDERER}
@@ -65,7 +66,7 @@ export default function ExperienceCanvas({ playing, moving = true, tier, view, m
       resize={RESIZE}
       style={STYLE}
     >
-      <ExperienceRoot {...rest} tier={tier} level={level} view={view} mode={mode} holdAt={holdAt} playing={moving} onReady={() => setReady(true)} onQuality={onQuality} />
+      <ExperienceRoot {...rest} tier={tier} level={level} view={view} mode={mode} holdAt={holdAt} reel={reel} startAt={startAt} playing={moving} onReady={() => setReady(true)} onQuality={onQuality} />
     </Canvas>
   );
 }

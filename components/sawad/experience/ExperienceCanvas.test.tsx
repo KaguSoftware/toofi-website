@@ -34,6 +34,7 @@ vi.mock("./ExperienceRoot", () => ({
 import { CAMERA_FAR, CAMERA_NEAR, EXPOSURE } from "../scene/SceneCanvas";
 import { viewpoints } from "../scene/viewpoints";
 import ExperienceCanvas, { pinnedLevel, type ExperienceCanvasProps } from "./ExperienceCanvas";
+import { REEL_QUALITY } from "./quality";
 import { storyPose } from "./storySheet";
 import { initialRigState } from "./types";
 import { emptyInput } from "./walk";
@@ -114,6 +115,26 @@ describe("ExperienceCanvas", () => {
     render(<ExperienceCanvas {...base} mode="orbit" />);
     const aerial = viewpoints("zaitun").aerial;
     expect(canvas().camera).toMatchObject({ fov: aerial.fov, position: aerial.position });
+  });
+
+  it("opens an explorer asked for from the reel on the shot the reel was showing", () => {
+    render(<ExperienceCanvas {...base} mode="orbit" startAt={48} />);
+    const shot = storyPose("flight", 48);
+    expect(canvas().camera).toMatchObject({ fov: shot.fov, position: shot.position });
+    expect(root().startAt).toBe(48);
+  });
+
+  it("records the reel frame by frame: no loop of its own, the reel's quality, and no steps", () => {
+    render(<ExperienceCanvas {...base} reel />);
+    expect(canvas().frameloop).toBe("never");
+    act(() => root().onReady?.());
+    // Ready or not, playing or not: every frame is drawn when the capture asks for it.
+    expect(canvas().frameloop).toBe("never");
+    expect(canvas().dpr).toBe(REEL_QUALITY.maxDpr);
+    expect(root().reel).toBe(true);
+    expect(root().level).toBe(3);
+    act(() => root().onQuality?.(-1));
+    expect(root().level).toBe(3);
   });
 
   it("steps the quality level with the frame rate, within the tier's range", () => {

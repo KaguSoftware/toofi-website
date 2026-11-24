@@ -19,6 +19,12 @@ export type ExperienceHudProps = {
   prompt: boolean;
   /** A hint for the current way of exploring, for its first seconds. */
   hint: boolean;
+  /** False leaves the pause button out of the story: nothing is moving by itself (the reel's opening has ended). */
+  canPause?: boolean;
+  /** False leaves the day and dusk button out: the reel is recorded by day; the explorer has both. */
+  canDusk?: boolean;
+  /** The explore button's text where it should say more (the download it starts); null leaves the button out (no 3D on this device). */
+  exploreLabel?: string | null;
   exploreButton: RefObject<HTMLButtonElement | null>;
   backButton: RefObject<HTMLButtonElement | null>;
   onPlaying: (playing: boolean) => void;
@@ -36,7 +42,7 @@ const EXPLORE_MODES: ExploreMode[] = ["orbit", "walk"];
 
 /**
  * The controls over the scene. In the story: pause, day or dusk, sound, and the way into free
- * exploring. While exploring: the way back, orbit or walk, zoom and reset, day or dusk, sound.
+ * exploring (the reel has no dusk, and no pause once its opening has ended). While exploring: the way back, orbit or walk, zoom and reset, day or dusk, sound.
  * Every control is a real button with a text label or an accessible name; pressed states are
  * announced with aria-pressed. While the sound is on, the music's credit shows under the
  * controls: its licence (CC BY) asks for that.
@@ -51,6 +57,9 @@ export function ExperienceHud({
   introDone,
   prompt,
   hint,
+  canPause = true,
+  canDusk = true,
+  exploreLabel,
   exploreButton,
   backButton,
   onPlaying,
@@ -64,11 +73,14 @@ export function ExperienceHud({
   const exploring = mode !== "story";
   const dusk = daylight === "dusk";
 
-  const ambience = (
+  const daylightButton = (
+    <button type="button" className="xp__btn" aria-pressed={dusk} aria-label={dusk ? labels.toDay : labels.toDusk} onClick={() => onDaylight(dusk ? "day" : "dusk")}>
+      {dusk ? <SunIcon /> : <MoonIcon />}
+    </button>
+  );
+  const ambience = !canDusk && !exploring && !soundAvailable ? null : (
     <div className="xp__group">
-      <button type="button" className="xp__btn" aria-pressed={dusk} aria-label={dusk ? labels.toDay : labels.toDusk} onClick={() => onDaylight(dusk ? "day" : "dusk")}>
-        {dusk ? <SunIcon /> : <MoonIcon />}
-      </button>
+      {canDusk || exploring ? daylightButton : null}
       {soundAvailable ? (
         <button type="button" className="xp__btn" aria-pressed={sound} aria-label={sound ? labels.soundOff : labels.soundOn} onClick={() => onSound(!sound)}>
           {sound ? <SoundOnIcon /> : <SoundOffIcon />}
@@ -128,16 +140,20 @@ export function ExperienceHud({
   return (
     <div className="xp__hud" data-hud="story">
       <div className="xp__tools">
-        <div className="xp__group">
-          <button type="button" className="xp__btn" aria-pressed={!playing} aria-label={playing ? labels.pause : labels.play} onClick={() => onPlaying(!playing)}>
-            {playing ? <PauseIcon /> : <PlayIcon />}
-          </button>
-        </div>
+        {canPause ? (
+          <div className="xp__group">
+            <button type="button" className="xp__btn" aria-pressed={!playing} aria-label={playing ? labels.pause : labels.play} onClick={() => onPlaying(!playing)}>
+              {playing ? <PauseIcon /> : <PlayIcon />}
+            </button>
+          </div>
+        ) : null}
         {ambience}
-        <button ref={exploreButton} type="button" className="xp__btn xp__btn--text xp__explore" onClick={() => onMode("orbit")}>
-          <CompassIcon />
-          <span>{labels.explore}</span>
-        </button>
+        {exploreLabel !== null ? (
+          <button ref={exploreButton} type="button" className="xp__btn xp__btn--text xp__explore" onClick={() => onMode("orbit")}>
+            <CompassIcon />
+            <span>{exploreLabel ?? labels.explore}</span>
+          </button>
+        ) : null}
         {credit}
       </div>
       {prompt ? (

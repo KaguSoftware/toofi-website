@@ -144,6 +144,65 @@ describe("ExperienceHud in the story", () => {
   });
 });
 
+describe("ExperienceHud over the reel", () => {
+  it("leaves the pause button out once nothing moves by itself", () => {
+    const h = setup({ canPause: false });
+    expect(screen.queryByRole("button", { name: "Pause" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Play" })).toBeNull();
+    // The rest of the story's controls stay.
+    expect(screen.getByRole("button", { name: "Sound on" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Explore the compound" })).toBeTruthy();
+    h.rerender(<ExperienceHud {...h.props} canPause />);
+    expect(screen.getByRole("button", { name: "Pause" })).toBeTruthy();
+  });
+
+  it("leaves the day and dusk button out of the story, and keeps the sound", () => {
+    const h = setup({ canDusk: false });
+    expect(screen.queryByRole("button", { name: /Show (dusk|day)/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Sound on" }));
+    expect(h.onSound).toHaveBeenCalledWith(true);
+  });
+
+  it("shows neither where the reel has no dusk and the browser no sound", () => {
+    const { container } = setup({ canDusk: false, soundAvailable: false });
+    expect(screen.queryByRole("button", { name: /Show (dusk|day)|Sound/ })).toBeNull();
+    // No empty group is left behind: pause and explore are all there is.
+    expect(Array.from(container.querySelectorAll(".xp__tools button"), (b) => b.getAttribute("aria-label") ?? b.textContent)).toEqual(["Pause", "Explore the compound"]);
+  });
+
+  it("keeps day and dusk while exploring, whatever the story shows", () => {
+    const h = setup({ mode: "orbit", canDusk: false });
+    fireEvent.click(screen.getByRole("button", { name: "Show dusk" }));
+    expect(h.onDaylight).toHaveBeenCalledWith("dusk");
+  });
+
+  it("says what the explore button will download where it is given other words", () => {
+    const h = setup({ exploreLabel: "Load the 3D tour (about 3.6 MB)" });
+    expect(screen.queryByRole("button", { name: "Explore the compound" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Load the 3D tour (about 3.6 MB)" }));
+    expect(h.onMode).toHaveBeenCalledWith("orbit");
+  });
+
+  it("uses its own words for the explore button when given none", () => {
+    setup({ exploreLabel: undefined });
+    expect(screen.getByRole("button", { name: "Explore the compound" })).toBeTruthy();
+  });
+
+  it("has no explore button on a device without 3D, and still its other controls and the prompt", () => {
+    const h = setup({ exploreLabel: null });
+    expect(screen.queryByRole("button", { name: /Explore|Load the 3D/ })).toBeNull();
+    expect(h.props.exploreButton.current).toBeNull();
+    expect(screen.getByRole("button", { name: "Pause" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Skip the intro" })).toBeTruthy();
+  });
+
+  it("hands the explore button to the page, which returns the focus to it", () => {
+    const exploreButton = { current: null as HTMLButtonElement | null };
+    setup({ exploreButton, exploreLabel: "Load the 3D tour (about 6.1 MB)" });
+    expect(exploreButton.current).toBe(screen.getByRole("button", { name: "Load the 3D tour (about 6.1 MB)" }));
+  });
+});
+
 describe("ExperienceHud while exploring", () => {
   it("shows back, the mode group and orbit tools, and fires them", () => {
     const h = setup({ mode: "orbit", hint: true });

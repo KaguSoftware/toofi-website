@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fpsBounds, pixelRatio, QUALITY, QUALITY_RANGE, startQuality, stepQuality, type QualityLevel } from "./quality";
+import { fpsBounds, pixelRatio, QUALITY, QUALITY_RANGE, REEL_QUALITY, startQuality, stepQuality, type QualityLevel } from "./quality";
 
 describe("quality ranges", () => {
   it("start inside their own range", () => {
@@ -27,6 +27,13 @@ describe("quality ranges", () => {
       expect(QUALITY[l].grain).toBe(true);
       expect(QUALITY[l].vignette).toBe(true);
     }
+  });
+});
+
+describe("the reel's quality", () => {
+  it("is the top level's effects, supersampled, without grain", () => {
+    expect(REEL_QUALITY).toEqual({ ...QUALITY[3], maxDpr: 2, grain: false });
+    expect(REEL_QUALITY.maxDpr).toBeGreaterThan(QUALITY[3].maxDpr);
   });
 });
 

@@ -1,35 +1,27 @@
-import {
-  HIGH_TIER_MEMORY_GB,
-  HIGH_TIER_THREADS,
-  MIN_MEMORY_GB,
-  MIN_THREADS,
-  OFFERED_NETWORKS,
-  PHONE_SHORT_SIDE,
-  PROBE_KEY,
-  REFUSED_NETWORKS,
-  SOFTWARE_RENDERER,
-  WEAK_GPU,
-} from "../scene/capability";
+import { REFUSED_NETWORKS } from "../scene/capability";
 import { assetUrl } from "../scene/assetUrl";
-import type { QualityTier } from "../scene/types";
+import type { QualityTier, ViewId } from "../scene/types";
+import { REEL_CODECS, REEL_TYPE, reelSources, type ReelShape } from "./reel";
 
 /**
  * What the page does before its JavaScript arrives (T1, T8).
  *
- * The server cannot know the device, so it renders the stills, and the 3D code decides the rest
- * about two seconds into a phone's load. Two things cannot wait that long:
+ * The server cannot know the device, so it renders the stills and two empty video elements, and
+ * the page's code decides the rest about two seconds into a phone's load. Two things cannot wait
+ * that long:
  *
- * - The first model file. Asked for by the 3D code it starts 2.6 s in; a preload hint starts it
- *   with the document (live scene 5.43 → 5.18 s on the phone profile, S6-1). The tier is the
- *   browser's choice, so the hint cannot come from the server.
+ * - The reel's opening (reel.ts). Started by the page's code it would begin after hydration; the
+ *   inline script gives the video its file and plays it while the document is still being parsed,
+ *   so the story moves about as soon as the poster has painted.
  * - The story stills. Lazy images load as soon as they are near the screen, which is before
- *   React can hide them, so one or two were downloaded on the live path and never shown (S3-6).
+ *   React can hide them, so one or two were downloaded and never shown (S3-6).
  *
- * A small inline script at the top of the experience makes the same decision capability.ts
- * makes, from the same constants; early.test.ts holds the two to each other.
+ * The script makes the same decision capability.ts `playsReel` makes, from the same constants;
+ * early.test.ts holds the two to each other. It asks for no WebGL context and no model: the 3D
+ * loads only when a visitor opens the explorer (`preloadFirstAssets`, called then).
  */
 
-/** Set on the experience's root by the early script when the live story is coming (experience.css hides the stills on it). */
+/** Set on the experience's root by the early script when the reel is coming (experience.css hides the stills on it). */
 export const EARLY_ATTR = "data-early";
 
 /**
@@ -48,9 +40,10 @@ export const DECODER_URLS: readonly string[] = ["basis_transcoder.js", "basis_tr
 export const firstAssets = (tier: QualityTier): string[] => [FIRST_MODEL_URL[tier], ...DECODER_URLS];
 
 /**
- * What a visitor downloads before the live scene, in megabytes on the wire, for the offer's
- * label (T37). From the rig after F2A (perf/FINDINGS.md, section 1): 3.60 MB on the phone
- * profile, 6.11 MB on desktop. Update them when RS has measured the fixed site.
+ * What a visitor downloads before the live scene, in megabytes on the wire, for the label of the
+ * button that opens the explorer on a slow link or a small device (T37). From the rig after F2A
+ * (perf/FINDINGS.md, section 1): 3.60 MB on the phone profile, 6.11 MB on desktop. Update them
+ * when RS has measured the fixed site.
  */
 export const LIVE_DOWNLOAD_MB: Record<QualityTier, number> = { low: 3.6, high: 6.1 };
 
@@ -74,48 +67,39 @@ export function preloadFirstAssets(tier: QualityTier, doc: Document = document):
 
 const json = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c");
 
+/** How the early script finds the opening's video element inside the experience's root (StoryReel.tsx renders it). */
+export const OPENING_VIDEO_SELECTOR = 'video[data-reel="opening"]';
+
 /**
- * The early decision as source text: a function of the experience's root element. It mirrors
- * `render3D` and `qualityTier` of capability.ts with one shortcut: a phone-class device is not
- * asked for a WebGL context here (that costs it about 60 ms before first paint), so a phone
- * without WebGL2 gets a preload it will not use and its stills a moment late. A desktop-class
- * device is asked, because the GPU's name decides its tier; the answer is left on `window` for
- * capability.ts, so the context is still made only once.
+ * The early decision as source text: a function of the experience's root element and the
+ * opening's files for each shape, best codec first, as [type, address] pairs. It mirrors
+ * `playsReel` of capability.ts and `reelShape` and `playableCodecs` of reel.ts. Where the reel plays, it marks the root (experience.css then keeps the stills from
+ * loading) and starts the opening: muted and inline, which is what lets a browser play it unasked.
+ * A browser that still refuses (iOS in Low Power Mode) keeps the poster; StoryReel.tsx starts the
+ * video at the visitor's first touch.
  */
-export const EARLY_FUNCTION = `function(root){
+export const EARLY_FUNCTION = `function(root,files){
 var n=navigator,c=n.connection||{},w=window;
 var mm=function(q){return typeof w.matchMedia==="function"&&w.matchMedia(q).matches};
+if(!root)return;
 if(c.saveData)return;
-if(c.effectiveType&&${json([...REFUSED_NETWORKS, ...OFFERED_NETWORKS])}.indexOf(c.effectiveType)>=0)return;
-if(n.deviceMemory<${MIN_MEMORY_GB}||n.hardwareConcurrency<${MIN_THREADS})return;
+if(c.effectiveType&&${json([...REFUSED_NETWORKS])}.indexOf(c.effectiveType)>=0)return;
 if(mm("(prefers-reduced-motion: reduce)"))return;
-var s=w.screen,side=s&&s.width>0&&s.height>0?Math.min(s.width,s.height):undefined;
-var tier="high";
-if(w.innerWidth<${PHONE_SHORT_SIDE}||side<${PHONE_SHORT_SIDE}||mm("(pointer: coarse)")||n.deviceMemory<${HIGH_TIER_MEMORY_GB}||n.hardwareConcurrency<${HIGH_TIER_THREADS})tier="low";
-else{
-var p={webgl2:false};
-try{
-var gl=document.createElement("canvas").getContext("webgl2");
-if(gl){
-var x=gl.getExtension&&gl.getExtension("WEBGL_debug_renderer_info");
-var r=gl.getParameter&&gl.getParameter(x?x.UNMASKED_RENDERER_WEBGL:gl.RENDERER);
-p={webgl2:true,renderer:typeof r==="string"&&r?r:undefined};
-var l=gl.getExtension&&gl.getExtension("WEBGL_lose_context");
-if(l)l.loseContext();
-}
-}catch(e){p={webgl2:false}}
-w[${json(PROBE_KEY)}]=p;
-if(!p.webgl2||${String(SOFTWARE_RENDERER)}.test(p.renderer||""))return;
-if(${String(WEAK_GPU)}.test(p.renderer||""))tier="low";
-}
-if(root)root.setAttribute(${json(EARLY_ATTR)},"story");
-var have={},links=document.head.querySelectorAll('link[rel="preload"]');
-for(var i=0;i<links.length;i++)have[links[i].getAttribute("href")]=1;
-(${json({ high: firstAssets("high"), low: firstAssets("low") })})[tier].forEach(function(u){
-if(have[u])return;
-var k=document.createElement("link");k.rel="preload";k.setAttribute("as","fetch");k.crossOrigin="anonymous";k.href=u;document.head.appendChild(k);
-});
+root.setAttribute(${json(EARLY_ATTR)},"story");
+var v=root.querySelector(${json(OPENING_VIDEO_SELECTOR)});
+if(!v)return;
+v.muted=true;v.defaultMuted=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";
+var f=files[w.innerHeight>w.innerWidth?"tall":"wide"];
+for(var i=0;i<f.length;i++)if(!f[i][0]||v.canPlayType(f[i][0])==="probably"){v.src=f[i][1];break}
+try{var p=v.play();if(p&&p.catch)p.catch(function(){})}catch(e){}
 }`;
 
-/** The inline script: the early decision, run on the element the script tag sits in. */
-export const EARLY_SCRIPT = `(${EARLY_FUNCTION})(document.currentScript&&document.currentScript.parentElement)`;
+/**
+ * The inline script for a start view: the early decision, run on the experience the script tag
+ * sits in. It goes after the reel's video elements and before the stills.
+ */
+export function earlyScript(view: ViewId): string {
+  const pairs = (shape: ReelShape) => REEL_CODECS.map((codec) => [REEL_TYPE[codec], reelSources(view, shape, codec).opening]);
+  const files = { wide: pairs("wide"), tall: pairs("tall") };
+  return `(${EARLY_FUNCTION})(document.currentScript&&document.currentScript.closest&&document.currentScript.closest(".xp"),${json(files)})`;
+}

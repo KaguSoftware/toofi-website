@@ -8,7 +8,8 @@
  *   node scripts/blender/version-assets.mjs           version what the pipelines wrote, rewrite the map
  *   node scripts/blender/version-assets.mjs --check   exit 1 if a file is unversioned or the map is stale
  *
- * The pipelines (export-final.sh, export-far.sh, diet.mjs, build.sh, bake-lightmaps.sh) keep writing
+ * The pipelines (export-final.sh, export-far.sh, diet.mjs, build.sh, bake-lightmaps.sh, and
+ * scripts/render-story-reel.mjs for the reel's video files) keep writing
  * stable names (`compound-zaitun-far-low.glb`); this script, their last step, renames each to
  * `compound-zaitun-far-low.<hash>.glb`, removes the version it replaces, and writes the map from
  * stable public paths to versioned ones (`components/sawad/scene/assetVersions.json`), which the
@@ -32,10 +33,12 @@ export const MAP_PATH = join(ROOT, "components/sawad/scene/assetVersions.json");
  * What is versioned: every file the scene fetches. The model folder's JSON files are build reports,
  * never fetched, and keep their names. In the lightmap folder the PNGs left are the ones the scene
  * fetches (the dusk ground pages); the masters live in scripts/blender/lightmaps/ (ledger T49).
+ * The reel is the story as video (scripts/render-story-reel.mjs writes it, experience/reel.ts names it).
  */
 export const SCOPE = [
   { dir: "sawad/models", match: /\.glb$/ },
   { dir: "sawad/lightmaps/zaitun", match: /\.(ktx2|json|png)$/ },
+  { dir: "sawad/reel", match: /\.mp4$/ },
 ];
 /** KTX2Loader fetches these two by name from its transcoder path: the folder carries the version. */
 export const BASIS = { dir: "sawad/basis", files: ["basis_transcoder.js", "basis_transcoder.wasm"] };
@@ -43,7 +46,7 @@ export const BASIS = { dir: "sawad/basis", files: ["basis_transcoder.js", "basis
 export const HASH_LENGTH = 10;
 const HASHED = new RegExp(`^(.+)\\.([0-9a-f]{${HASH_LENGTH}})(\\.[A-Za-z0-9]+)$`);
 /** Public paths that carry a version: safe to cache for a year (`Cache-Control: public, max-age=31536000, immutable`). */
-export const VERSIONED_PATTERN = new RegExp(`^/sawad/(models/[^/]+\\.[0-9a-f]{${HASH_LENGTH}}\\.glb|lightmaps/[^/]+/[^/]+\\.[0-9a-f]{${HASH_LENGTH}}\\.(ktx2|json|png)|basis/[0-9a-f]{${HASH_LENGTH}}/basis_transcoder\\.(js|wasm))$`);
+export const VERSIONED_PATTERN = new RegExp(`^/sawad/(models/[^/]+\\.[0-9a-f]{${HASH_LENGTH}}\\.glb|lightmaps/[^/]+/[^/]+\\.[0-9a-f]{${HASH_LENGTH}}\\.(ktx2|json|png)|reel/[^/]+\\.[0-9a-f]{${HASH_LENGTH}}\\.mp4|basis/[0-9a-f]{${HASH_LENGTH}}/basis_transcoder\\.(js|wasm))$`);
 
 /** The first HASH_LENGTH hex digits of the SHA-256 of some bytes. */
 export function hashOf(...buffers) {

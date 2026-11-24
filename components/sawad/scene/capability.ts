@@ -65,6 +65,17 @@ export function render3D(env: CapabilityEnv): Render3D {
   return "yes";
 }
 
+/**
+ * Whether this device plays the story reel: the story as video (experience/reel.ts). It needs no
+ * GPU and little memory, so only what was declined is refused: Save-Data, a 2g link, and reduced
+ * motion (nothing may move unasked). A "3g" report plays it: video starts on what has arrived.
+ */
+export function playsReel(env: Pick<CapabilityEnv, "saveData" | "effectiveType" | "reducedMotion">): boolean {
+  if (env.saveData) return false;
+  if (env.effectiveType && REFUSED_NETWORKS.includes(env.effectiveType)) return false;
+  return !env.reducedMotion;
+}
+
 /** Whether this device should load the 3D scene unasked. The poster is the fallback. */
 export function canRender3D(env: CapabilityEnv): boolean {
   return render3D(env) === "yes";
