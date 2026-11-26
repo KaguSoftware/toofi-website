@@ -980,11 +980,9 @@ h3 {
 .home-hero__panel {
   position: relative;
   z-index: 2;
-  /* A quiet caption card, not a slab: the scene stays the picture. */
-  background: color-mix(in oklab, var(--night) 78%, transparent);
+  /* No card: the title and lead sit straight on the scene. */
+  background: none;
   color: var(--on-night-muted);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   padding: var(--space-5) var(--gutter) var(--space-4);
 }
 .home-hero__title {
@@ -1027,7 +1025,6 @@ h3 {
     width: min(26rem, 34%);
     margin-inline-start: max(var(--gutter), calc((100% - var(--container)) / 2));
     padding: var(--space-6) var(--space-6) var(--space-5);
-    box-shadow: var(--shadow-md, var(--shadow-lg));
   }
 }
 
@@ -1036,11 +1033,9 @@ h3 {
   display: grid;
   gap: var(--space-4);
   padding: var(--space-6);
-  /* Same dark glass as the hero card above it. */
-  border: 1px solid oklch(1 0 0 / 0.08);
-  background: color-mix(in oklab, var(--night) 78%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  /* No panel of its own: the fields sit straight on the page. */
+  border: 0;
+  background: none;
   color: var(--on-night-muted);
 }
 .search-strip .field__label {
