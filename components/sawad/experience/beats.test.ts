@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { approach, BEATS, beatAt, HEAD_MAX_SPEED, HEAD_RATE, glide, GLIDE_MIN_SPEED, GLIDE_SECONDS, INTRO_SECONDS, scrollToPosition, STORY_END } from "./beats";
+import { approach, BEATS, beatAt, follow, HEAD_MAX_SPEED, HEAD_RATE, glide, GLIDE_MIN_SPEED, GLIDE_SECONDS, INTRO_SECONDS, REEL_SMOOTH_SECONDS, scrollToPosition, STORY_END } from "./beats";
 
 describe("BEATS", () => {
   it("run contiguously from the end of the intro to the end of the story", () => {
@@ -156,5 +156,110 @@ describe("glide", () => {
     expect(glide({ head: 40, speed: 3 }, 40, 1 / 60)).toEqual({ head: 40, speed: 0 });
     const state = { head: 20, speed: 4 };
     expect(glide(state, 30, 0)).toBe(state);
+  });
+});
+
+describe("follow", () => {
+  type State = { head: number; velocity: number };
+  const DT = 1 / 60;
+  /** Steps a state toward a goal that may move (a function of time), returning every state on the way. */
+  const run = (start: State, goal: number | ((t: number) => number), seconds: number, dt = DT): State[] => {
+    const path = [start];
+    let state = start;
+    for (let t = 0; t < seconds - 1e-9; t += dt) {
+      state = follow(state.head, state.velocity, typeof goal === "number" ? goal : goal(t + dt), dt);
+      path.push(state);
+    }
+    return path;
+  };
+  const speeds = (path: State[], dt = DT) => path.slice(1).map((s, i) => (s.head - path[i].head) / dt);
+
+  it("changes nothing for a step of zero or less", () => {
+    expect(follow(20, 4, 30, 0)).toEqual({ head: 20, velocity: 4 });
+    expect(follow(20, 4, 30, -1)).toEqual({ head: 20, velocity: 4 });
+    expect(follow(20, 4, 30, Number.NaN)).toEqual({ head: 20, velocity: 4 });
+  });
+
+  it("eases in from rest, with no overshoot in either direction", () => {
+    for (const goal of [30, 10]) {
+      const path = run({ head: 20, velocity: 0 }, goal, 3);
+      const first = Math.abs(path[1].head - 20);
+      expect(first).toBeGreaterThan(0);
+      // Its first step is smaller than the plain ease's.
+      expect(first).toBeLessThan(Math.abs(approach(20, goal, DT) - 20));
+      for (const s of path) expect((s.head - goal) * Math.sign(20 - goal)).toBeGreaterThanOrEqual(-1e-9);
+      expect(path.at(-1)).toEqual({ head: goal, velocity: 0 });
+    }
+  });
+
+  it("coasts on after a steady scroll stops, slowing to rest on the goal", () => {
+    const rate = 10; // sequence seconds a second
+    const scrolled = run({ head: 20, velocity: 0 }, (t) => 20 + rate * t, 2);
+    const end = scrolled.at(-1)!;
+    const goal = 20 + rate * 2;
+    // The scroll stops here. The playhead is behind and still moving 0.1 s later.
+    expect(end.head).toBeLessThan(goal);
+    const rest = run(end, goal, 3);
+    expect(rest[Math.round(0.1 / DT)].velocity).toBeGreaterThan(1);
+    const v = rest.map((s) => s.velocity);
+    for (let i = 1; i < v.length; i++) expect(v[i]).toBeLessThanOrEqual(v[i - 1] + 1e-9);
+    expect(rest.every((s) => s.head <= goal)).toBe(true);
+    expect(rest.at(-1)).toEqual({ head: goal, velocity: 0 });
+  });
+
+  it("trails a steady scroll by about the smoothing time times its speed", () => {
+    for (const rate of [2, 10, 40]) {
+      const path = run({ head: 20, velocity: 0 }, (t) => 20 + rate * t, 3);
+      const lag = 20 + rate * 3 - path.at(-1)!.head;
+      expect(lag).toBeCloseTo(REEL_SMOOTH_SECONDS * rate, 0);
+      expect(Math.abs(lag - REEL_SMOOTH_SECONDS * rate)).toBeLessThan(0.1 * REEL_SMOOTH_SECONDS * rate + 0.05);
+    }
+  });
+
+  it("goes no faster than its top speed, and catches up with a flick through the whole story", () => {
+    const path = run({ head: 14, velocity: 0 }, 86, 4);
+    for (const s of speeds(path)) expect(Math.abs(s)).toBeLessThanOrEqual(HEAD_MAX_SPEED + 1e-9);
+    for (const s of path) expect(Math.abs(s.velocity)).toBeLessThanOrEqual(HEAD_MAX_SPEED + 1e-9);
+    expect(Math.abs(86 - path[Math.round(1.5 / DT)].head)).toBeLessThan(0.5);
+    expect(path[Math.round(3 / DT)]).toEqual({ head: 86, velocity: 0 });
+    // And backwards, the same.
+    const back = run({ head: 86, velocity: 0 }, 14, 4);
+    for (const s of speeds(back)) expect(Math.abs(s)).toBeLessThanOrEqual(HEAD_MAX_SPEED + 1e-9);
+    expect(back[Math.round(3 / DT)]).toEqual({ head: 14, velocity: 0 });
+  });
+
+  it("rests on the goal once it is within a hair of it and nearly still", () => {
+    expect(follow(40, 0, 40, DT)).toEqual({ head: 40, velocity: 0 });
+    expect(follow(40 - 5e-5, 5e-3, 40, DT)).toEqual({ head: 40, velocity: 0 });
+  });
+
+  it("stops on the goal rather than passing it, even from a fast run", () => {
+    const next = follow(29.9, 90, 30, 0.1);
+    expect(next).toEqual({ head: 30, velocity: 0 });
+  });
+
+  it("turns round smoothly when the scroll does", () => {
+    const path = run({ head: 30, velocity: 20 }, 25, 3);
+    const v = speeds(path);
+    expect(v[0]).toBeGreaterThan(0);
+    expect(path.at(-1)).toEqual({ head: 25, velocity: 0 });
+  });
+
+  it("honours its own smoothing time and top speed", () => {
+    let fast = { head: 0, velocity: 0 };
+    let loose = { head: 0, velocity: 0 };
+    for (let i = 0; i < 30; i++) {
+      fast = follow(fast.head, fast.velocity, 10, DT, 0.1);
+      loose = follow(loose.head, loose.velocity, 10, DT, 0.6);
+    }
+    expect(fast.head).toBeGreaterThan(loose.head);
+    const capped = follow(0, 0, 100, 0.05, 0.3, 5);
+    expect(capped.head).toBeLessThanOrEqual(5 * 0.3);
+    expect(Math.abs(capped.velocity)).toBeLessThanOrEqual(5);
+  });
+
+  it("survives a smoothing time of zero", () => {
+    const next = follow(0, 0, 10, DT, 0);
+    expect(Number.isFinite(next.head) && Number.isFinite(next.velocity)).toBe(true);
   });
 });

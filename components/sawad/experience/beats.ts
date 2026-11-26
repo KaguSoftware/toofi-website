@@ -125,6 +125,39 @@ export function glide(state: Glide, goal: number, dt: number, seconds = GLIDE_SE
   return { head, speed };
 }
 
+/** How far behind the scroll the reel's playhead runs, in seconds: the time the spring takes to close on a goal that moves steadily at one unit a second. */
+export const REEL_SMOOTH_SECONDS = 0.3;
+
+/**
+ * The reel's playhead as a critically damped spring (Unity's SmoothDamp). Unlike `approach` it
+ * carries its velocity from one frame to the next: it eases away from rest, trails a steady scroll
+ * by about `smoothTime` times its speed, and when the scroll stops it coasts to rest along a curve
+ * instead of halting. It never passes the goal, and its speed stays within ±maxSpeed. Returns the
+ * new head and velocity; a step of zero or less changes nothing.
+ */
+export function follow(head: number, velocity: number, goal: number, dt: number, smoothTime = REEL_SMOOTH_SECONDS, maxSpeed = HEAD_MAX_SPEED): { head: number; velocity: number } {
+  if (!(dt > 0)) return { head, velocity };
+  const time = Math.max(1e-4, smoothTime);
+  const omega = 2 / time;
+  const x = omega * dt;
+  const decay = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  // The pull is limited so a far goal is approached at the top speed, not jumped to.
+  const reach = maxSpeed * time;
+  const gap = Math.max(-reach, Math.min(reach, head - goal));
+  const target = head - gap;
+  const pull = (velocity + omega * gap) * dt;
+  let v = (velocity - omega * pull) * decay;
+  let next = target + (gap + pull) * decay;
+  // Never past the goal: stop on it.
+  if (goal - head > 0 === next > goal) return { head: goal, velocity: 0 };
+  v = Math.max(-maxSpeed, Math.min(maxSpeed, v));
+  if (Math.abs(goal - next) < 1e-4 && Math.abs(v) < 1e-2) {
+    next = goal;
+    v = 0;
+  }
+  return { head: next, velocity: v };
+}
+
 /** Seconds after the intro without any input before the camera drifts into the slow circuit. */
 export const AMBIENT_IDLE_SECONDS = 5;
 /** Seconds to ease from the gate shot into the circuit. */

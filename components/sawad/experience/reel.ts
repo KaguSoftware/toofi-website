@@ -10,8 +10,9 @@ import { INTRO_HOLD_SECONDS, INTRO_SECONDS, STORY_END } from "./beats";
  *
  * - the opening, played by the clock: the hold on the poster frame, then the flight to the gate,
  *   one per owner start view;
- * - the tour, which the scroll moves through: it is never played, only sought, so it is encoded
- *   with a key frame every few frames.
+ * - the tour, which the scroll moves through: it is never played. Where the browser has WebCodecs
+ *   the page decodes it itself into a window of frames around the playhead (reelDecoder.ts); the
+ *   others seek a <video> to each frame. It has a key frame every TOUR_GOP frames.
  *
  * This module is the timeline both sides agree on, without any 3D code: safe on the page side.
  */
@@ -30,6 +31,16 @@ export const TOUR_FRAMES_PER_UNIT = 20;
 export const TOUR_FRAMES = (STORY_END - INTRO_SECONDS) * TOUR_FRAMES_PER_UNIT;
 /** The tour file's length in seconds. */
 export const TOUR_SECONDS = TOUR_FRAMES / REEL_FPS;
+
+/**
+ * Frames from one key frame of the tour to the next (scripts/render-story-reel.mjs `ENCODE`; its
+ * test holds them equal). One sequence second, so every stop is a key frame. Forward the decoder
+ * simply runs on; backward it decodes the group before the playhead in one burst from its key frame.
+ */
+export const TOUR_GOP = 20;
+
+/** The most decoded tour frames the page holds at once (reelDecoder.ts): about 3 MB each in wide, 1 MB in tall. */
+export const TOUR_FRAME_CAP: Record<"wide" | "tall", number> = { wide: 60, tall: 40 };
 
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Number.isFinite(x) ? x : lo));
 

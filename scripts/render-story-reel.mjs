@@ -80,9 +80,13 @@ export const outFile = (part, view, shape, dir = OUT_DIR, codec = "h264") => joi
 
 /**
  * How each file is encoded. The opening is played, so it gets an ordinary two-second group of
- * pictures and B-frames. The tour is never played, only sought as the page scrolls: a key frame
- * every twenty frames (one sequence second, so every stop is one) and, in HEVC and H.264, no
- * B-frames.
+ * pictures and B-frames. The tour is never played: the page decodes it itself with WebCodecs into a
+ * window of frames around the playhead (reelDecoder.ts), or, without WebCodecs, seeks a <video>.
+ * A key frame every twenty frames (reel.ts `TOUR_GOP`; one sequence second, so every stop is one)
+ * and, in HEVC and H.264, no B-frames: forward the decoder simply runs on, and only scrolling back
+ * needs the key frames, one burst from the key frame before the playhead. (Every frame a key frame
+ * was tried for the seeking <video>: 57 to 65 MB for the wide tour against 25 to 29, and still only
+ * barely smooth.)
  *
  * The tour is also seen a frame at a time, so its frames must all be of one quality. Encoders give
  * key frames more bits than the frames between them, and at a strong setting the whole picture's

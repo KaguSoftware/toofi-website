@@ -97,6 +97,8 @@ describe("the reel's capture script", () => {
     // A seek decodes a handful of frames at most: close key frames, no B-frames, no extra ones at cuts.
     // Key frames fall on whole sequence seconds, so every stop of the story is one.
     expect(Number(arg(tour, "-g"))).toBeLessThanOrEqual(20);
+    // The page's decoder (reelDecoder.ts) counts on the same spacing.
+    expect(script.ENCODE.tour.gop).toBe(reel.TOUR_GOP);
     expect(reel.TOUR_FRAMES_PER_UNIT % Number(arg(tour, "-g"))).toBe(0);
     for (const beat of BEATS) expect(Math.round(reel.tourTime(beat.at) * reel.REEL_FPS) % Number(arg(tour, "-g"))).toBe(0);
     expect(arg(tour, "-keyint_min")).toBe(arg(tour, "-g"));
